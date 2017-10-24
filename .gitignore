@@ -193,3 +193,4 @@ env-python3-keras110/
 .idea/
 out.txt
 tmp/
+.Rhistory

@@ -39,16 +39,18 @@ def __main__():
     # optional (and default values)
     verbose = 1
 
-    lstm_size = 64
-    dropout = 0.9  # empirically tested on dev set
-    nb_epoch = 5  # empirically tested on dev set
-    max_len = 100  # padding length
-    batch_size = 32
+    lstm_size = 64  # default: 64
+    dropout = 0.9  # default: 0.9 - empirically tested on dev set
+    nb_epoch = 5  # default: 5 - empirically tested on dev set
+    max_len = 100  # default: 100 - padding length
+    batch_size = 32  # default: 32
+    pre_seed = 123456  # default: 12345
+    no_of_runs = 5  # default: 3
 
     print('Loading data...')
 
     current_dir = os.getcwd()
-    w2v = "/embeddings_cache_file_word2vec.pkl.bz2"
+    w2v = "/embeddings_cache_file_word2vec.pkl.bz2"  # default
     d2v = "/embeddings_cache_file_dict2vec.pkl.bz2"
     d2v_pf = "/embeddings_cache_file_dict2vec_prov_freq.pkl.bz2"
     ftx = "/embeddings_cache_file_fastText.pkl.bz2"
@@ -88,10 +90,10 @@ def __main__():
     all_runs_report = []  # list of dict
 
     # 3 repeats to show how much randomness is in it
-    for i in range(1, 4):
+    for i in range(1, no_of_runs+1):
         print("Run: ", i)
 
-        np.random.seed(12345 + i)  # for reproducibility
+        np.random.seed(pre_seed + i)  # for reproducibility
 
         # simple bidi-lstm model
         # model = get_attention_lstm(word_index_to_embeddings_map, max_len, rich_context=False, dropout=dropout, lstm_size=lstm_size)

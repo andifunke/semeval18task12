@@ -1,6 +1,8 @@
 import bz2
 import os
 import unicodedata
+import json
+from pprint import pprint
 
 import numpy as np
 import six.moves.cPickle as cPickle
@@ -193,8 +195,27 @@ def prepare_word_embeddings_cache(input_folders_with_csv_files,
     print('All folders:', all_folders)
     frequencies_provided = freq
     frequencies_actual = load_vocabulary_frequencies(all_folders)
-    frequencies = frequencies_provided
 
+    words_comparison = {'words_freq': set(frequencies_provided),
+                        'words_data': set(frequencies_actual)}
+    words_comparison['words_diff'] = words_comparison['words_freq'] - words_comparison['words_data']
+    # print(words_comparison['words_freq'])
+    # print(len(words_comparison['words_freq']))
+    # print(words_comparison['words_data'])
+    # print(len(words_comparison['words_data']))
+    # print(words_comparison['words_diff'])
+    # print(len(words_comparison['words_diff']))
+    for k, v in words_comparison.items():
+        words_comparison[k] = list(v)
+        words_comparison[k].sort()
+    print(words_comparison)
+    with open(r'words_comparison.json', 'w') as fp:
+        json.dump(words_comparison, fp, indent='\t')
+
+    if True:
+        quit()
+
+    frequencies = frequencies_provided
     print(len(frequencies_provided), "provided vocabulary size loaded")
     print(len(frequencies_actual), "actual vocabulary size loaded")
 
