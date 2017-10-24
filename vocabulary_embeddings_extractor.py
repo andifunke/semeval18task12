@@ -196,35 +196,47 @@ def prepare_word_embeddings_cache(input_folders_with_csv_files,
     frequencies_provided = freq
     frequencies_actual = load_vocabulary_frequencies(all_folders)
 
-    words_comparison = {'words_freq': set(frequencies_provided),
-                        'words_data': set(frequencies_actual)}
-    words_comparison['words_diff'] = words_comparison['words_freq'] - words_comparison['words_data']
-    # print(words_comparison['words_freq'])
-    # print(len(words_comparison['words_freq']))
-    # print(words_comparison['words_data'])
-    # print(len(words_comparison['words_data']))
-    # print(words_comparison['words_diff'])
-    # print(len(words_comparison['words_diff']))
-    for k, v in words_comparison.items():
-        words_comparison[k] = list(v)
-        words_comparison[k].sort()
-    print(words_comparison)
-    with open(r'words_comparison.json', 'w') as fp:
-        json.dump(words_comparison, fp, indent='\t')
-
-    if True:
+    if False:
+        words_comparison = {'words_freq': set(frequencies_provided),
+                            'words_data': set(frequencies_actual)}
+        words_comparison['words_diff'] = words_comparison['words_freq'] - words_comparison['words_data']
+        # print(words_comparison['words_freq'])
+        # print(len(words_comparison['words_freq']))
+        # print(words_comparison['words_data'])
+        # print(len(words_comparison['words_data']))
+        # print(words_comparison['words_diff'])
+        # print(len(words_comparison['words_diff']))
+        for k, v in words_comparison.items():
+            words_comparison[k] = list(v)
+            words_comparison[k].sort()
+        print(words_comparison)
+        with open(r'words_comparison.json', 'w') as fp:
+            json.dump(words_comparison, fp, indent='\t')
         quit()
 
     frequencies = frequencies_provided
-    print(len(frequencies_provided), "provided vocabulary size loaded")
-    print(len(frequencies_actual), "actual vocabulary size loaded")
+    print(len(frequencies_provided), "provided vocabulary size")
+    print(len(frequencies_actual), "actual vocabulary size")
 
     word_embedding_map = extract_embeddings_vectors_for_given_words(embeddings_file_name, embeddings_file_type,
                                                                     frequencies)
 
+    # print(word_embedding_map)
     print(len(word_embedding_map), "words with embeddings found")
 
-    cPickle.dump((frequencies, word_embedding_map), bz2.BZ2File(output_embeddings_cache_file, 'wb'))
+    if True:
+        word_embedding_map_serializable = {}
+        for k, v in word_embedding_map.items():
+            word_embedding_map_serializable[k] = list(v)
+        with open(output_embeddings_cache_file + '.json', 'w') as fp:
+            json.dump(word_embedding_map_serializable, fp, indent='\t')
+        words_missing = {'missing': list(set(frequencies) - set(word_embedding_map))}
+        words_missing['missing'].sort()
+        print(words_missing)
+        with open(output_embeddings_cache_file + '_missing.json', 'w') as fp:
+            json.dump(words_missing, fp, indent='\t')
+
+    cPickle.dump((frequencies, word_embedding_map), bz2.BZ2File(output_embeddings_cache_file + '.pkl.bz2', 'wb'))
 
     print("Saved to " + output_embeddings_cache_file)
 

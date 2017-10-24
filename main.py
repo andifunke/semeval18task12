@@ -1,4 +1,6 @@
 import os
+import sys
+import getopt
 
 import numpy as np
 from keras.preprocessing import sequence
@@ -6,7 +8,7 @@ from keras.utils.np_utils import accuracy
 
 import data_loader
 import vocabulary_embeddings_extractor
-from models import get_attention_lstm, get_attention_lstm_intra_warrant
+from models import get_attention_lstm_intra_warrant
 
 
 def get_predicted_labels(predicted_probabilities):
@@ -35,18 +37,43 @@ def get_predicted_labels(predicted_probabilities):
     return predicted_labels
 
 
-def __main__():
+def __main__(argv):
+    try:
+        opts, args = getopt.getopt(argv, '', ['verbose=',
+                                              'lstm_size=',
+                                              'dropout=',
+                                              'nb_epoch=',
+                                              'max_len=',
+                                              'batch_size=',
+                                              'pre_seed=',
+                                              'no_of_runs='])
+    except getopt.GetoptError:
+        print('argument error')
+        sys.exit(2)
+
     # optional (and default values)
-    verbose = 1
+    options = dict(verbose=1, lstm_size=64, dropout=0.9, nb_epoch=5, max_len=100, batch_size=32, pre_seed=12345,
+                   no_of_runs=3)
 
-    lstm_size = 64  # default: 64
-    dropout = 0.9  # default: 0.9 - empirically tested on dev set
-    nb_epoch = 5  # default: 5 - empirically tested on dev set
-    max_len = 100  # default: 100 - padding length
-    batch_size = 32  # default: 32
-    pre_seed = 123456  # default: 12345
-    no_of_runs = 5  # default: 3
+    for opt, arg in opts:
+        if opt == '--verbose':
+            options['verbose'] = arg
+        elif opt == '--lstm_size':
+            options['lstm_size'] = arg
+        elif opt == '--dropout':
+            options['dropout'] = arg
+        elif opt == '--nb_epoch':
+            options['nb_epoch'] = arg
+        elif opt == '--max_len':
+            options['max_len'] = arg
+        elif opt == '--batch_size':
+            options['batch_size'] = arg
+        elif opt == '--pre_seed':
+            options['pre_seed'] = arg
+        elif opt == '--no_of_runs':
+            options['no_of_runs'] = arg
 
+    print('parameters:', options)
     print('Loading data...')
 
     current_dir = os.getcwd()
@@ -75,14 +102,14 @@ def __main__():
 
     # pad all sequences
     (train_warrant0_list, train_warrant1_list, train_reason_list, train_claim_list, train_debate_meta_data_list) = [
-        sequence.pad_sequences(x, maxlen=max_len) for x in
+        sequence.pad_sequences(x, maxlen=options['max_len']) for x in
         (train_warrant0_list, train_warrant1_list, train_reason_list, train_claim_list, train_debate_meta_data_list)]
     (test_warrant0_list, test_warrant1_list, test_reason_list, test_claim_list, test_debate_meta_data_list) = [
-        sequence.pad_sequences(x, maxlen=max_len) for x in
+        sequence.pad_sequences(x, maxlen=options['max_len']) for x in
         (test_warrant0_list, test_warrant1_list, test_reason_list, test_claim_list, test_debate_meta_data_list)]
 
     (dev_warrant0_list, dev_warrant1_list, dev_reason_list, dev_claim_list, dev_debate_meta_data_list) = [
-        sequence.pad_sequences(x, maxlen=max_len) for x in (dev_warrant0_list, dev_warrant1_list, dev_reason_list,
+        sequence.pad_sequences(x, maxlen=options['max_len']) for x in (dev_warrant0_list, dev_warrant1_list, dev_reason_list,
                                                             dev_claim_list, dev_debate_meta_data_list)]
     assert train_warrant0_list.shape == train_warrant1_list.shape == train_reason_list.shape == train_claim_list.shape == train_debate_meta_data_list.shape
 
@@ -90,10 +117,10 @@ def __main__():
     all_runs_report = []  # list of dict
 
     # 3 repeats to show how much randomness is in it
-    for i in range(1, no_of_runs+1):
+    for i in range(1, options['no_of_runs']+1):
         print("Run: ", i)
 
-        np.random.seed(pre_seed + i)  # for reproducibility
+        np.random.seed(options['pre_seed'] + i)  # for reproducibility
 
         # simple bidi-lstm model
         # model = get_attention_lstm(word_index_to_embeddings_map, max_len, rich_context=False, dropout=dropout, lstm_size=lstm_size)
@@ -102,27 +129,29 @@ def __main__():
         # intra-warrant attention
         # model = get_attention_lstm_intra_warrant(word_index_to_embeddings_map, max_len, rich_context=False, dropout=dropout, lstm_size=lstm_size)
         # intra-warrant w/ context
-        model = get_attention_lstm_intra_warrant(word_index_to_embeddings_map, max_len, rich_context=True, dropout=dropout, lstm_size=lstm_size)
+        model = get_attention_lstm_intra_warrant(word_index_to_embeddings_map,
+                                                 options['max_len'], rich_context=True, dropout=options['dropout'],
+                                                 lstm_size=options['lstm_size'])
 
         model.fit(
             {'sequence_layer_warrant0_input': train_warrant0_list, 'sequence_layer_warrant1_input': train_warrant1_list,
              'sequence_layer_reason_input': train_reason_list, 'sequence_layer_claim_input': train_claim_list,
              'sequence_layer_debate_input': train_debate_meta_data_list},
-            train_correct_label_w0_or_w1_list, nb_epoch=nb_epoch, batch_size=batch_size, verbose=verbose,
-            validation_split=0.1)
+            train_correct_label_w0_or_w1_list, nb_epoch=options['nb_epoch'], batch_size=options['batch_size'],
+            verbose=options['verbose'], validation_split=0.1)
 
         # model predictions
         predicted_probabilities_dev = model.predict(
             {'sequence_layer_warrant0_input': dev_warrant0_list, 'sequence_layer_warrant1_input': dev_warrant1_list,
              'sequence_layer_reason_input': dev_reason_list, 'sequence_layer_claim_input': dev_claim_list,
              'sequence_layer_debate_input': dev_debate_meta_data_list},
-            batch_size=batch_size, verbose=1)
+            batch_size=options['batch_size'], verbose=1)
 
         predicted_probabilities_test = model.predict(
             {'sequence_layer_warrant0_input': test_warrant0_list, 'sequence_layer_warrant1_input': test_warrant1_list,
              'sequence_layer_reason_input': test_reason_list, 'sequence_layer_claim_input': test_claim_list,
              'sequence_layer_debate_input': test_debate_meta_data_list},
-            batch_size=batch_size, verbose=1)
+            batch_size=options['batch_size'], verbose=1)
 
         predicted_labels_dev = get_predicted_labels(predicted_probabilities_dev)
         predicted_labels_test = get_predicted_labels(predicted_probabilities_test)
@@ -191,4 +220,4 @@ def print_error_analysis_dev(ids: set) -> None:
 
 
 if __name__ == "__main__":
-    __main__()
+    __main__(sys.argv[1:])

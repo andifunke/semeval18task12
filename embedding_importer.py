@@ -10,9 +10,9 @@ current_dir = os.getcwd()
 
 d2v = r'/home/andreas/workspace/sem_train/remote_vectors/dict2vec/dict2vec-vectors-dim300.vec'
 ftx = r'/home/andreas/workspace/sem_train/remote_vectors/fastText/wiki.en.vec'
-vocex.prepare_word_embeddings_cache([current_dir + '/data/'], current_dir + '/embeddings_cache_file_dict2vec_prov_freq.pkl.bz2',
-                                    embeddings_file_name=d2v)
-vocex.prepare_word_embeddings_cache([current_dir + '/data/'], current_dir + '/embeddings_cache_file_fastText_prov_freq.pkl.bz2',
+#vocex.prepare_word_embeddings_cache([current_dir + '/data/'], current_dir + '/embeddings_cache_file_dict2vec_prov_freq',
+#                                    embeddings_file_name=d2v)
+vocex.prepare_word_embeddings_cache([current_dir + '/data/'], current_dir + '/embeddings_cache_file_fastText_prov_freq',
                                     embeddings_file_name=ftx)
 
 # i = 0
