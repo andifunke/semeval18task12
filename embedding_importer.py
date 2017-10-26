@@ -1,35 +1,44 @@
 import os
-import numpy as np
-import vocabulary_embeddings_extractor as vocex
-import json
+import pandas as pd
+import vocabulary_embeddings_extractor as vx
 
-current_dir = os.getcwd()
-# out_file = current_dir + "dict2vec_embedding_cache.json"
-# embeddings_cache_file = current_dir + "/embeddings_cache_file_word2vec.pkl.bz2"
-# freq, embedding_map = vocex.load_word_frequencies_and_embeddings(embeddings_cache_file)
 
-d2v = r'/home/andreas/workspace/sem_train/remote_vectors/dict2vec/dict2vec-vectors-dim300.vec'
-ftx = r'/home/andreas/workspace/sem_train/remote_vectors/fastText/wiki.en.vec'
-#vocex.prepare_word_embeddings_cache([current_dir + '/data/'], current_dir + '/embeddings_cache_file_dict2vec_prov_freq',
-#                                    embeddings_file_name=d2v)
-vocex.prepare_word_embeddings_cache([current_dir + '/data/'], current_dir + '/embeddings_cache_file_fastText_prov_freq',
-                                    embeddings_file_name=ftx)
+def extract_words_from_embedding(infile, outfile, engine):
+    if engine == 'pandas':
+        # faster, but uses more memory
+        df = pd.read_csv(infile, usecols=[0, 1], sep=' ', header=None, engine='c', dtype={0: str, 1: str})
+        df.sort_values(by=[0], inplace=True)
+        df.to_csv(outfile, sep=' ', columns=0)
+    else:
+        # file too big => different approach
+        fr = open(infile, 'r')
+        out = []
+        for line in fr:
+            word = line.split()[0]
+            out.append(word)
+        out.sort()
+        with open(outfile, 'w') as fw:
+            fw.write(str(out))
 
-# i = 0
-# dic = dict()
-# with open(path + file, 'r', encoding='utf-8') as f:
-#     for line in f:
-#         # print('line:', line)
-#         token = line.split()
-#         # print('token:', token)
-#         word = token.pop(0)
-#         # print('word:', word)
-#         if word in embedding_map:
-#             dic[word] = np.asfarray(token)
-#             # print('dic:', dic)
-#             i += 1
-#             if i > 10:
-#                 break
-#
-# with open(out_file, 'w') as of:
-#     json.dump(dic, of)
+
+if __name__ == "__main__":
+
+    current_dir = os.getcwd()
+    wv_folder = r'/home/andreas/workspace/sem_train/remote_vectors/'
+    d2v = wv_folder + r'dict2vec/dict2vec-vectors-dim300.vec'
+    ftx = wv_folder + r'fastText/wiki.en.vec'
+    if True:
+        vx.prepare_word_embeddings_cache([current_dir + '/data/'],
+                                         current_dir + '/embeddings_cache_file_dict2vec_prov_freq_lc',
+                                         embeddings_file_name=d2v,
+                                         use_lower=True,
+                                         use_provided_frequencies=True)
+    if True:
+        vx.prepare_word_embeddings_cache([current_dir + '/data/'],
+                                         current_dir + '/embeddings_cache_file_fastText_prov_freq_lc',
+                                         embeddings_file_name=ftx,
+                                         use_lower= True,
+                                         use_provided_frequencies = True)
+    if False:
+        extract_words_from_embedding(d2v, 'd2v_words.txt', engine='pandas')
+        extract_words_from_embedding(ftx, 'ftx_words.txt')

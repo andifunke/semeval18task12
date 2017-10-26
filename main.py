@@ -1,8 +1,12 @@
 import os
 import sys
 import getopt
+import datetime
 
 import numpy as np
+import pandas as pd
+from collections import OrderedDict
+from pprint import pprint
 from keras.preprocessing import sequence
 from keras.utils.np_utils import accuracy
 
@@ -42,47 +46,57 @@ def __main__(argv):
         opts, args = getopt.getopt(argv, '', ['verbose=',
                                               'lstm_size=',
                                               'dropout=',
-                                              'nb_epoch=',
-                                              'max_len=',
+                                              'epochs=',
+                                              'padding=',
                                               'batch_size=',
                                               'pre_seed=',
-                                              'no_of_runs='])
+                                              'runs=',
+                                              'embedding='])
     except getopt.GetoptError:
         print('argument error')
         sys.exit(2)
 
     # optional (and default values)
-    options = dict(verbose=1, lstm_size=64, dropout=0.9, nb_epoch=5, max_len=100, batch_size=32, pre_seed=12345,
-                   no_of_runs=3)
+    options = dict(verbose=1, lstm_size=64, dropout=0.9, epochs=5, padding=100, batch_size=32, pre_seed=12345,
+                   runs=3, embedding='w2v')
+    test = False
+
+    current_dir = os.getcwd()
+    emb_dir = current_dir + '/embedding_caches/'
+    embedding_files = dict(w2v="embeddings_cache_file_word2vec.pkl.bz2",
+                           d2v="embeddings_cache_file_dict2vec.pkl.bz2",
+                           d2v_pf="embeddings_cache_file_dict2vec_prov_freq.pkl.bz2",
+                           d2v_pf_lc="embeddings_cache_file_dict2vec_prov_freq_lc.pkl.bz2",
+                           d2v_pf_lc2="embeddings_cache_file_dict2vec_prov_freq_lc2.pkl.bz2",
+                           ftx="embeddings_cache_file_fastText.pkl.bz2",
+                           ftx_pf="embeddings_cache_file_fastText_prov_freq.pkl.bz2",
+                           ftx_pf_lc="embeddings_cache_file_fastText_prov_freq_lc.pkl.bz2",
+                           ftx_pf_lc2="embeddings_cache_file_fastText_prov_freq_lc2.pkl.bz2")
 
     for opt, arg in opts:
         if opt == '--verbose':
-            options['verbose'] = arg
+            options['verbose'] = int(arg)
         elif opt == '--lstm_size':
-            options['lstm_size'] = arg
+            options['lstm_size'] = int(arg)
         elif opt == '--dropout':
-            options['dropout'] = arg
-        elif opt == '--nb_epoch':
-            options['nb_epoch'] = arg
-        elif opt == '--max_len':
-            options['max_len'] = arg
+            options['dropout'] = float(arg)
+        elif opt == '--epochs':
+            options['epochs'] = int(arg)
+        elif opt == '--padding':
+            options['padding'] = int(arg)
         elif opt == '--batch_size':
-            options['batch_size'] = arg
+            options['batch_size'] = int(arg)
         elif opt == '--pre_seed':
-            options['pre_seed'] = arg
-        elif opt == '--no_of_runs':
-            options['no_of_runs'] = arg
+            options['pre_seed'] = int(arg)
+        elif opt == '--runs':
+            options['runs'] = int(arg)
+        elif opt == '--embedding':
+            options['embedding'] = arg
 
     print('parameters:', options)
-    print('Loading data...')
 
-    current_dir = os.getcwd()
-    w2v = "/embeddings_cache_file_word2vec.pkl.bz2"  # default
-    d2v = "/embeddings_cache_file_dict2vec.pkl.bz2"
-    d2v_pf = "/embeddings_cache_file_dict2vec_prov_freq.pkl.bz2"
-    ftx = "/embeddings_cache_file_fastText.pkl.bz2"
-    ftx_pf = "/embeddings_cache_file_fastText_prov_freq.pkl.bz2"
-    embeddings_cache_file = current_dir + ftx_pf
+    print('Loading data...')
+    embeddings_cache_file = emb_dir + embedding_files[options['embedding']]
 
     # load pre-extracted word-to-index maps and pre-filtered Glove embeddings
     word_to_indices_map, word_index_to_embeddings_map = \
@@ -96,28 +110,35 @@ def __main__(argv):
      dev_reason_list, dev_claim_list, dev_debate_meta_data_list) = \
         data_loader.load_single_file(current_dir + '/data/dev.tsv', word_to_indices_map)
 
-    (test_instance_id_list, test_warrant0_list, test_warrant1_list, test_correct_label_w0_or_w1_list,
-     test_reason_list, test_claim_list, test_debate_meta_data_list) = \
-        data_loader.load_single_file(current_dir + '/data/dev.tsv', word_to_indices_map) # used to be test.tsv
+    if test:  # only if test.tsv is available
+        (test_instance_id_list, test_warrant0_list, test_warrant1_list, test_correct_label_w0_or_w1_list,
+            test_reason_list, test_claim_list, test_debate_meta_data_list) = \
+            data_loader.load_single_file(current_dir + '/data/test.tsv', word_to_indices_map)
 
     # pad all sequences
     (train_warrant0_list, train_warrant1_list, train_reason_list, train_claim_list, train_debate_meta_data_list) = [
-        sequence.pad_sequences(x, maxlen=options['max_len']) for x in
+        sequence.pad_sequences(x, maxlen=options['padding']) for x in
         (train_warrant0_list, train_warrant1_list, train_reason_list, train_claim_list, train_debate_meta_data_list)]
-    (test_warrant0_list, test_warrant1_list, test_reason_list, test_claim_list, test_debate_meta_data_list) = [
-        sequence.pad_sequences(x, maxlen=options['max_len']) for x in
-        (test_warrant0_list, test_warrant1_list, test_reason_list, test_claim_list, test_debate_meta_data_list)]
+
+    if test:  # only if test.tsv is available
+        (test_warrant0_list, test_warrant1_list, test_reason_list, test_claim_list, test_debate_meta_data_list) = [
+            sequence.pad_sequences(x, maxlen=options['padding']) for x in
+            (test_warrant0_list, test_warrant1_list, test_reason_list, test_claim_list, test_debate_meta_data_list)]
 
     (dev_warrant0_list, dev_warrant1_list, dev_reason_list, dev_claim_list, dev_debate_meta_data_list) = [
-        sequence.pad_sequences(x, maxlen=options['max_len']) for x in (dev_warrant0_list, dev_warrant1_list, dev_reason_list,
-                                                            dev_claim_list, dev_debate_meta_data_list)]
-    assert train_warrant0_list.shape == train_warrant1_list.shape == train_reason_list.shape == train_claim_list.shape == train_debate_meta_data_list.shape
+        sequence.pad_sequences(x, maxlen=options['padding']) for x in (dev_warrant0_list,
+                                                                       dev_warrant1_list,
+                                                                       dev_reason_list,
+                                                                       dev_claim_list,
+                                                                       dev_debate_meta_data_list)]
+    assert train_reason_list.shape == train_warrant0_list.shape == \
+        train_warrant1_list.shape == train_claim_list.shape == train_debate_meta_data_list.shape
 
     # ---------------
     all_runs_report = []  # list of dict
 
     # 3 repeats to show how much randomness is in it
-    for i in range(1, options['no_of_runs']+1):
+    for i in range(1, options['runs']+1):
         print("Run: ", i)
 
         np.random.seed(options['pre_seed'] + i)  # for reproducibility
@@ -130,49 +151,75 @@ def __main__(argv):
         # model = get_attention_lstm_intra_warrant(word_index_to_embeddings_map, max_len, rich_context=False, dropout=dropout, lstm_size=lstm_size)
         # intra-warrant w/ context
         model = get_attention_lstm_intra_warrant(word_index_to_embeddings_map,
-                                                 options['max_len'], rich_context=True, dropout=options['dropout'],
+                                                 options['padding'],
+                                                 rich_context=True,
+                                                 dropout=options['dropout'],
                                                  lstm_size=options['lstm_size'])
 
         model.fit(
-            {'sequence_layer_warrant0_input': train_warrant0_list, 'sequence_layer_warrant1_input': train_warrant1_list,
-             'sequence_layer_reason_input': train_reason_list, 'sequence_layer_claim_input': train_claim_list,
+            {'sequence_layer_warrant0_input': train_warrant0_list,
+             'sequence_layer_warrant1_input': train_warrant1_list,
+             'sequence_layer_reason_input': train_reason_list,
+             'sequence_layer_claim_input': train_claim_list,
              'sequence_layer_debate_input': train_debate_meta_data_list},
-            train_correct_label_w0_or_w1_list, nb_epoch=options['nb_epoch'], batch_size=options['batch_size'],
-            verbose=options['verbose'], validation_split=0.1)
+            train_correct_label_w0_or_w1_list,
+            nb_epoch=options['epochs'],
+            batch_size=options['batch_size'],
+            verbose=options['verbose'],
+            validation_split=0.1)
 
         # model predictions
         predicted_probabilities_dev = model.predict(
-            {'sequence_layer_warrant0_input': dev_warrant0_list, 'sequence_layer_warrant1_input': dev_warrant1_list,
-             'sequence_layer_reason_input': dev_reason_list, 'sequence_layer_claim_input': dev_claim_list,
+            {'sequence_layer_warrant0_input': dev_warrant0_list,
+             'sequence_layer_warrant1_input': dev_warrant1_list,
+             'sequence_layer_reason_input': dev_reason_list,
+             'sequence_layer_claim_input': dev_claim_list,
              'sequence_layer_debate_input': dev_debate_meta_data_list},
-            batch_size=options['batch_size'], verbose=1)
+            batch_size=options['batch_size'],
+            verbose=1)
 
-        predicted_probabilities_test = model.predict(
-            {'sequence_layer_warrant0_input': test_warrant0_list, 'sequence_layer_warrant1_input': test_warrant1_list,
-             'sequence_layer_reason_input': test_reason_list, 'sequence_layer_claim_input': test_claim_list,
-             'sequence_layer_debate_input': test_debate_meta_data_list},
-            batch_size=options['batch_size'], verbose=1)
+        if test:
+            predicted_probabilities_test = model.predict(
+                {'sequence_layer_warrant0_input': test_warrant0_list,
+                 'sequence_layer_warrant1_input': test_warrant1_list,
+                 'sequence_layer_reason_input': test_reason_list,
+                 'sequence_layer_claim_input': test_claim_list,
+                 'sequence_layer_debate_input': test_debate_meta_data_list},
+                batch_size=options['batch_size'],
+                verbose=1)
 
         predicted_labels_dev = get_predicted_labels(predicted_probabilities_dev)
-        predicted_labels_test = get_predicted_labels(predicted_probabilities_test)
+        if test:
+            predicted_labels_test = get_predicted_labels(predicted_probabilities_test)
 
-        assert isinstance(test_correct_label_w0_or_w1_list, list)
-        assert isinstance(test_correct_label_w0_or_w1_list[0], int)
-        assert len(test_correct_label_w0_or_w1_list) == len(predicted_labels_test)
+        assert isinstance(dev_correct_label_w0_or_w1_list, list)
+        assert isinstance(dev_correct_label_w0_or_w1_list[0], int)
+        assert len(dev_correct_label_w0_or_w1_list) == len(predicted_labels_dev)
+        if test:
+            assert isinstance(test_correct_label_w0_or_w1_list, list)
+            assert isinstance(test_correct_label_w0_or_w1_list[0], int)
+            assert len(test_correct_label_w0_or_w1_list) == len(predicted_labels_test)
+
         acc_dev = accuracy(dev_correct_label_w0_or_w1_list, predicted_labels_dev)
-        acc_test = accuracy(test_correct_label_w0_or_w1_list, predicted_labels_test)
         print('Dev accuracy:', acc_dev)
-        print('Test accuracy:', acc_test)
+        if test:
+            acc_test = accuracy(test_correct_label_w0_or_w1_list, predicted_labels_test)
+            print('Test accuracy:', acc_test)
         # update report
         report = dict()
         report['acc_dev'] = acc_dev
-        report['acc_test'] = acc_test
+        if test:
+            report['acc_test'] = acc_test
         report['gold_labels_dev'] = dev_correct_label_w0_or_w1_list
-        report['gold_labels_test'] = test_correct_label_w0_or_w1_list
+        if test:
+            report['gold_labels_test'] = test_correct_label_w0_or_w1_list
         report['predicted_labels_dev'] = predicted_labels_dev
-        report['predicted_labels_test'] = predicted_labels_test
-        report['ids_test'] = test_instance_id_list
+        if test:
+            report['predicted_labels_test'] = predicted_labels_test
         report['ids_dev'] = dev_instance_id_list
+        if test:
+            report['ids_test'] = test_instance_id_list
+
         all_runs_report.append(report)
         # report_description = description + str(args).replace("\n", " ")
         # finish_report(report, report_description, output_file)
@@ -181,9 +228,10 @@ def __main__(argv):
     print("Acc dev")
     for r in all_runs_report:
         print("%.3f\t" % r['acc_dev'], end='')
-    print("\nAcc test")
-    for r in all_runs_report:
-        print("%.3f\t" % r['acc_test'], end='')
+    if test:
+        print("\nAcc test")
+        for r in all_runs_report:
+            print("%.3f\t" % r['acc_test'], end='')
     print("\nInstances correct")
     for r in all_runs_report:
         good_ids = set()
@@ -195,6 +243,53 @@ def __main__(argv):
                 wrong_ids.add(instance_id)
         print("Good_ids\t", good_ids)
         print("Wrong_ids\t", wrong_ids)
+
+    results = OrderedDict([('embedding', embedding_files[options['embedding']].split('.')[0]),
+                           ('vocabulary', len(word_index_to_embeddings_map)),
+                           ('words in embeddings', ''),
+                           ('dimensionality', len(word_index_to_embeddings_map[0])),
+                           ('backend', 'Theano'),  # TODO
+                           ('classifier', 'AttentionLSTM'),  # TODO
+                           ('verbose', options['verbose']),
+                           ('lstm_size', options['lstm_size']),
+                           ('dropout', options['dropout']),
+                           ('epochs', options['epochs']),
+                           ('padding', options['padding']),
+                           ('batch_size', options['batch_size']),
+                           ('pre_seed', options['pre_seed']),
+                           ('runs', options['runs']),
+                           ('acc run1', all_runs_report[0]['acc_dev'])])
+    if len(all_runs_report) > 1:
+        results['acc run2'] = all_runs_report[1]['acc_dev']
+    else:
+        results['acc run2'] = ''
+    if len(all_runs_report) > 2:
+        results['acc run3'] = all_runs_report[2]['acc_dev']
+    else:
+        results['acc run3'] = ''
+    if len(all_runs_report) > 3:
+        results['acc run4'] = all_runs_report[3]['acc_dev']
+    else:
+        results['acc run4'] = ''
+    if len(all_runs_report) > 4:
+        results['acc run5'] = all_runs_report[4]['acc_dev']
+    else:
+        results['acc run5'] = ''
+    sum_ = 0
+    for r in all_runs_report:
+        sum_ += r['acc_dev']
+    results['Avg'] = sum_ / len(all_runs_report)
+
+    pprint(results)
+    keys = list(results.keys())
+    values = list(results.values())
+    out = ",".join(keys) + '\n'
+    out += ",".join(map(str, values))
+
+    # write report file
+    dt = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S-%f')
+    with open('tmp/report_' + dt + '.csv', 'w') as fw:
+        fw.write(out)
 
 
 def print_error_analysis_dev(ids: set) -> None:

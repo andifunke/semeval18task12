@@ -29,9 +29,10 @@ def tokenize(s):
     return result
 
 
-def load_vocabulary_frequencies(files):
+def load_vocabulary_frequencies(files, use_lower=False):
     """
     Loads vocabulary with frequencies from given documents sorted by frequency
+    :param use_lower:
     :param files: list of input files in the format label TAB title TAB text; they can be csv or gzipped csv
     """
     assert isinstance(files, list)
@@ -58,6 +59,8 @@ def load_vocabulary_frequencies(files):
                 # we have to again convert from bytes to string in Python3... ugly... :/
                 l = line
                 if isinstance(line, bytes):
+                    if use_lower:
+                        line.lower()
                     l = line.decode('utf-8').strip()
 
                 split = l.split("\t")
@@ -167,11 +170,14 @@ def extract_embeddings_vectors_for_given_words(embeddings_file_name, file_type, 
 def prepare_word_embeddings_cache(input_folders_with_csv_files,
                                   output_embeddings_cache_file,
                                   embeddings_file_type='word2vec',
-                                  embeddings_file_name='/usr/local/data/GoogleNews-vectors-negative300.bin'):
+                                  embeddings_file_name='/usr/local/data/GoogleNews-vectors-negative300.bin',
+                                  use_lower=False,
+                                  use_provided_frequencies=False):
     """
     This is the main method to prepare a smaller embeddings cache for a limited vocabulary that
     is important for the experiments, as loading the full Glove into memory would be just
     too ineffective.
+    :param use_lower: use lower case, but also tokenize more strictly
     :param input_folders_with_csv_files: a list of folders that contain csv files
     :param output_embeddings_cache_file: output file for storing word frequencies and embeddings
     :param embeddings_file_name: file with embeddings; default word2vec txt file
@@ -181,6 +187,24 @@ def prepare_word_embeddings_cache(input_folders_with_csv_files,
     provided_file = 'embeddings_cache_file_word2vec.pkl.bz2'
     print("Loading provided vocabulary and embeddings...")
     freq, embeddings_map = load_word_frequencies_and_embeddings(provided_file)
+
+    if use_lower:
+        freq_lc = {}
+        for k, v in freq.items():
+            if '-' in k:
+                ks = k.split('-')
+            elif '\'' in k:
+                ks = k.split('\'')
+                # experimental
+                # ks[1] = '\'' + ks[1]
+            else:
+                ks = [k]
+            for token in ks:
+                if token.lower() not in freq_lc:
+                    freq_lc[token.lower()] = v
+                else:
+                    freq_lc[token.lower()] += v
+        freq = freq_lc
 
     # a bit of defensive programming never hurts :)
     if not isinstance(input_folders_with_csv_files, list):
@@ -194,8 +218,9 @@ def prepare_word_embeddings_cache(input_folders_with_csv_files,
 
     print('All folders:', all_folders)
     frequencies_provided = freq
-    frequencies_actual = load_vocabulary_frequencies(all_folders)
+    frequencies_actual = load_vocabulary_frequencies(all_folders, use_lower)
 
+    # for testing
     if False:
         words_comparison = {'words_freq': set(frequencies_provided),
                             'words_data': set(frequencies_actual)}
@@ -214,7 +239,11 @@ def prepare_word_embeddings_cache(input_folders_with_csv_files,
             json.dump(words_comparison, fp, indent='\t')
         quit()
 
-    frequencies = frequencies_provided
+    if use_provided_frequencies:
+        frequencies = frequencies_provided
+    else:
+        frequencies = frequencies_actual
+
     print(len(frequencies_provided), "provided vocabulary size")
     print(len(frequencies_actual), "actual vocabulary size")
 
