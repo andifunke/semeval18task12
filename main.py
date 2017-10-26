@@ -92,6 +92,17 @@ def __main__(argv):
             options['runs'] = int(arg)
         elif opt == '--embedding':
             options['embedding'] = arg
+        # TODO:
+        # optimizer
+        # loss
+        # activation function
+        # validation_split
+        # model
+        # rich_context = 0
+        # full embeddings
+        # combined embeddings (2x no_of_channels or 2x dimensionality)
+        # spelling
+        # backend
 
     print('parameters:', options)
 
