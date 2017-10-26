@@ -4,15 +4,11 @@ import getopt
 import datetime
 
 import numpy as np
-import pandas as pd
 from collections import OrderedDict
 from pprint import pprint
-from keras.preprocessing import sequence
-from keras.utils.np_utils import accuracy
 
 import data_loader
 import vocabulary_embeddings_extractor
-from models import get_attention_lstm_intra_warrant
 
 
 def get_predicted_labels(predicted_probabilities):
@@ -43,8 +39,7 @@ def get_predicted_labels(predicted_probabilities):
 
 def __main__(argv):
     try:
-        opts, args = getopt.getopt(argv, '', ['verbose=',
-                                              'lstm_size=',
+        opts, args = getopt.getopt(argv, '', ['lstm_size=',
                                               'dropout=',
                                               'epochs=',
                                               'padding=',
@@ -74,9 +69,7 @@ def __main__(argv):
                            ftx_pf_lc2="embeddings_cache_file_fastText_prov_freq_lc2.pkl.bz2")
 
     for opt, arg in opts:
-        if opt == '--verbose':
-            options['verbose'] = int(arg)
-        elif opt == '--lstm_size':
+        if opt == '--lstm_size':
             options['lstm_size'] = int(arg)
         elif opt == '--dropout':
             options['dropout'] = float(arg)
@@ -126,6 +119,8 @@ def __main__(argv):
             test_reason_list, test_claim_list, test_debate_meta_data_list) = \
             data_loader.load_single_file(current_dir + '/data/test.tsv', word_to_indices_map)
 
+    np.random.seed(options['pre_seed'])  # for reproducibility
+    from keras.preprocessing import sequence
     # pad all sequences
     (train_warrant0_list, train_warrant1_list, train_reason_list, train_claim_list, train_debate_meta_data_list) = [
         sequence.pad_sequences(x, maxlen=options['padding']) for x in
@@ -153,6 +148,10 @@ def __main__(argv):
         print("Run: ", i)
 
         np.random.seed(options['pre_seed'] + i)  # for reproducibility
+        print(np.random.randint(100000))
+        # continue
+        from keras.utils.np_utils import accuracy
+        from models import get_attention_lstm_intra_warrant
 
         # simple bidi-lstm model
         # model = get_attention_lstm(word_index_to_embeddings_map, max_len, rich_context=False, dropout=dropout, lstm_size=lstm_size)
@@ -243,17 +242,18 @@ def __main__(argv):
         print("\nAcc test")
         for r in all_runs_report:
             print("%.3f\t" % r['acc_test'], end='')
-    print("\nInstances correct")
-    for r in all_runs_report:
-        good_ids = set()
-        wrong_ids = set()
-        for i, (g, p, instance_id) in enumerate(zip(r['gold_labels_dev'], r['predicted_labels_dev'], r['ids_dev'])):
-            if g == p:
-                good_ids.add(instance_id)
-            else:
-                wrong_ids.add(instance_id)
-        print("Good_ids\t", good_ids)
-        print("Wrong_ids\t", wrong_ids)
+    if False:
+        print("\nInstances correct")
+        for r in all_runs_report:
+            good_ids = set()
+            wrong_ids = set()
+            for i, (g, p, instance_id) in enumerate(zip(r['gold_labels_dev'], r['predicted_labels_dev'], r['ids_dev'])):
+                if g == p:
+                    good_ids.add(instance_id)
+                else:
+                    wrong_ids.add(instance_id)
+            print("Good_ids\t", good_ids)
+            print("Wrong_ids\t", wrong_ids)
 
     results = OrderedDict([('embedding', embedding_files[options['embedding']].split('.')[0]),
                            ('vocabulary', len(word_index_to_embeddings_map)),
@@ -261,7 +261,6 @@ def __main__(argv):
                            ('dimensionality', len(word_index_to_embeddings_map[0])),
                            ('backend', 'Theano'),  # TODO
                            ('classifier', 'AttentionLSTM'),  # TODO
-                           ('verbose', options['verbose']),
                            ('lstm_size', options['lstm_size']),
                            ('dropout', options['dropout']),
                            ('epochs', options['epochs']),
@@ -294,8 +293,8 @@ def __main__(argv):
     pprint(results)
     keys = list(results.keys())
     values = list(results.values())
-    out = ",".join(keys) + '\n'
-    out += ",".join(map(str, values))
+    out = "\t".join(keys) + '\n'
+    out += "\t".join(map(str, values))
 
     # write report file
     dt = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S-%f')
