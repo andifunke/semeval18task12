@@ -45,6 +45,7 @@ def __main__(argv):
                                               'padding=',
                                               'batch_size=',
                                               'pre_seed=',
+                                              'run=',
                                               'runs=',
                                               'embedding='])
     except getopt.GetoptError:
@@ -53,7 +54,7 @@ def __main__(argv):
 
     # optional (and default values)
     options = dict(verbose=1, lstm_size=64, dropout=0.9, epochs=5, padding=100, batch_size=32, pre_seed=12345,
-                   runs=3, embedding='w2v')
+                   run=0, runs=3, embedding='w2v')
     test = False
 
     current_dir = os.getcwd()
@@ -81,25 +82,36 @@ def __main__(argv):
             options['batch_size'] = int(arg)
         elif opt == '--pre_seed':
             options['pre_seed'] = int(arg)
+        elif opt == '--run':
+            options['run'] = int(arg)
         elif opt == '--runs':
             options['runs'] = int(arg)
         elif opt == '--embedding':
             options['embedding'] = arg
-        # TODO:
-        # optimizer
-        # loss
-        # activation function
-        # validation_split
-        # model
-        # rich_context = 0
-        # full embeddings
-        # combined embeddings (2x no_of_channels or 2x dimensionality)
-        # spelling
-        # backend
+
+    # run := a distinct run with its own seed (preferable)
+    # run overrides (number of) runs
+    if options['run'] > 0:
+        options['runs'] == 1
+        options['distinct run'] = True
+    np.random.seed(options['pre_seed'])  # for reproducibility
+    from keras.preprocessing import sequence
+
+    # TODO:
+    # optimizer
+    # loss
+    # activation function
+    # validation_split
+    # model
+    # rich_context = 0
+    # full embeddings
+    # combined embeddings (2x no_of_channels or 2x dimensionality)
+    # spelling
+    # backend
 
     print('parameters:', options)
 
-    print('Loading data...')
+    # print('Loading data...')
     embeddings_cache_file = emb_dir + embedding_files[options['embedding']]
 
     # load pre-extracted word-to-index maps and pre-filtered Glove embeddings
@@ -119,8 +131,6 @@ def __main__(argv):
             test_reason_list, test_claim_list, test_debate_meta_data_list) = \
             data_loader.load_single_file(current_dir + '/data/test.tsv', word_to_indices_map)
 
-    np.random.seed(options['pre_seed'])  # for reproducibility
-    from keras.preprocessing import sequence
     # pad all sequences
     (train_warrant0_list, train_warrant1_list, train_reason_list, train_claim_list, train_debate_meta_data_list) = [
         sequence.pad_sequences(x, maxlen=options['padding']) for x in
@@ -143,13 +153,46 @@ def __main__(argv):
     # ---------------
     all_runs_report = []  # list of dict
 
+    results = OrderedDict([('embedding', embedding_files[options['embedding']].split('.')[0]),
+                           ('vocabulary', len(word_index_to_embeddings_map)),
+                           ('words in embeddings', ''),
+                           ('dimensionality', len(word_index_to_embeddings_map[0])),
+                           ('backend', 'Theano'),  # TODO
+                           ('classifier', 'AttentionLSTM'),  # TODO
+                           ('lstm_size', options['lstm_size']),
+                           ('dropout', options['dropout']),
+                           ('epochs', options['epochs']),
+                           ('padding', options['padding']),
+                           ('batch_size', options['batch_size']),
+                           ('pre_seed', options['pre_seed']),
+                           ('runs', options['runs']),
+                           ('run1 seed', ''),
+                           ('run1 acc', ''),
+                           ('run2 seed', ''),
+                           ('run2 acc', ''),
+                           ('run3 seed', ''),
+                           ('run3 acc', ''),
+                           ('run4 seed', ''),
+                           ('run4 acc', ''),
+                           ('run5 seed', ''),
+                           ('run5 acc', '')])
+
+
     # 3 repeats to show how much randomness is in it
     for i in range(1, options['runs']+1):
-        print("Run: ", i)
 
-        np.random.seed(options['pre_seed'] + i)  # for reproducibility
-        print(np.random.randint(100000))
-        # continue
+        if options['distinct run']:
+            run = options['run']
+        else:
+            run = i
+
+        run_seed = results['run' + str(run) + ' seed'] = options['pre_seed'] + run
+        np.random.seed(run_seed)  # for reproducibility <- meh
+
+        print("Run: ", run)
+        print('seed=' + str(run_seed), 'random int=' + str(np.random.randint(100000)))
+
+        # ugly:
         from keras.utils.np_utils import accuracy
         from models import get_attention_lstm_intra_warrant
 
@@ -217,7 +260,8 @@ def __main__(argv):
             print('Test accuracy:', acc_test)
         # update report
         report = dict()
-        report['acc_dev'] = acc_dev
+        results['run' + str(run) + ' acc'] = report['acc_dev'] = acc_dev
+
         if test:
             report['acc_test'] = acc_test
         report['gold_labels_dev'] = dev_correct_label_w0_or_w1_list
@@ -237,54 +281,24 @@ def __main__(argv):
     # show report
     print("Acc dev")
     for r in all_runs_report:
-        print("%.3f\t" % r['acc_dev'], end='')
+        print("%.3f\t" % r['acc_dev'])
+    for r in all_runs_report:
+        good_ids = set()
+        wrong_ids = set()
+        for i, (g, p, instance_id) in enumerate(zip(r['gold_labels_dev'], r['predicted_labels_dev'], r['ids_dev'])):
+            if g == p:
+                good_ids.add(instance_id)
+            else:
+                wrong_ids.add(instance_id)
+    if False:
+        print("\nInstances correct")
+        print("Good_ids\t", good_ids)
+        print("Wrong_ids\t", wrong_ids)
     if test:
         print("\nAcc test")
         for r in all_runs_report:
             print("%.3f\t" % r['acc_test'], end='')
-    if False:
-        print("\nInstances correct")
-        for r in all_runs_report:
-            good_ids = set()
-            wrong_ids = set()
-            for i, (g, p, instance_id) in enumerate(zip(r['gold_labels_dev'], r['predicted_labels_dev'], r['ids_dev'])):
-                if g == p:
-                    good_ids.add(instance_id)
-                else:
-                    wrong_ids.add(instance_id)
-            print("Good_ids\t", good_ids)
-            print("Wrong_ids\t", wrong_ids)
 
-    results = OrderedDict([('embedding', embedding_files[options['embedding']].split('.')[0]),
-                           ('vocabulary', len(word_index_to_embeddings_map)),
-                           ('words in embeddings', ''),
-                           ('dimensionality', len(word_index_to_embeddings_map[0])),
-                           ('backend', 'Theano'),  # TODO
-                           ('classifier', 'AttentionLSTM'),  # TODO
-                           ('lstm_size', options['lstm_size']),
-                           ('dropout', options['dropout']),
-                           ('epochs', options['epochs']),
-                           ('padding', options['padding']),
-                           ('batch_size', options['batch_size']),
-                           ('pre_seed', options['pre_seed']),
-                           ('runs', options['runs']),
-                           ('acc run1', all_runs_report[0]['acc_dev'])])
-    if len(all_runs_report) > 1:
-        results['acc run2'] = all_runs_report[1]['acc_dev']
-    else:
-        results['acc run2'] = ''
-    if len(all_runs_report) > 2:
-        results['acc run3'] = all_runs_report[2]['acc_dev']
-    else:
-        results['acc run3'] = ''
-    if len(all_runs_report) > 3:
-        results['acc run4'] = all_runs_report[3]['acc_dev']
-    else:
-        results['acc run4'] = ''
-    if len(all_runs_report) > 4:
-        results['acc run5'] = all_runs_report[4]['acc_dev']
-    else:
-        results['acc run5'] = ''
     sum_ = 0
     for r in all_runs_report:
         sum_ += r['acc_dev']
@@ -295,6 +309,9 @@ def __main__(argv):
     values = list(results.values())
     out = "\t".join(keys) + '\n'
     out += "\t".join(map(str, values))
+    out += "\n\nInstances correct"
+    out += "\nGood_ids\t" + str(good_ids)
+    out += "\nWrong_ids\t" + str(wrong_ids)
 
     # write report file
     dt = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S-%f')

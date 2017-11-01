@@ -347,7 +347,7 @@ def load_cached_vocabulary_and_embeddings(serialized_file='vocabulary.embeddings
     :return: a tuple (word frequencies map, embeddings map)
     """
     # load
-    print("Loading chached vocabulary and embeddings...")
+    # print("Loading chached vocabulary and embeddings...")
     freq, embeddings_map = load_word_frequencies_and_embeddings(serialized_file)
     print('vocabulary size:', len(freq))
     # print('embeddings_map:', embeddings_map.__class__.__name__)
