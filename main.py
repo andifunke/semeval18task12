@@ -9,7 +9,7 @@ from pprint import pprint
 
 import data_loader
 import vocabulary_embeddings_extractor
-
+import timeit
 
 def get_predicted_labels(predicted_probabilities):
     """
@@ -38,6 +38,8 @@ def get_predicted_labels(predicted_probabilities):
 
 
 def __main__(argv):
+    start = timeit.default_timer()
+
     try:
         opts, args = getopt.getopt(argv, '', ['lstm_size=',
                                               'dropout=',
@@ -165,20 +167,20 @@ def __main__(argv):
                            ('runs', options['runs']),
                            ('run', options['run']),
                            ('run1 seed', ''),
-                           ('run1 acc', ''),
                            ('run2 seed', ''),
-                           ('run2 acc', ''),
                            ('run3 seed', ''),
-                           ('run3 acc', ''),
                            ('run4 seed', ''),
-                           ('run4 acc', ''),
                            ('run5 seed', ''),
+                           ('run1 acc', ''),
+                           ('run2 acc', ''),
+                           ('run3 acc', ''),
+                           ('run4 acc', ''),
                            ('run5 acc', '')])
 
     for i in range(options['run'], options['run'] + options['runs']):
 
         run_seed = results['run' + str(i) + ' seed'] = options['pre_seed'] + i
-        np.random.seed(run_seed)  # for reproducibility <- meh
+        np.random.seed(run_seed)  # for reproducibility
 
         print("Run: ", i)
         print('seed=' + str(run_seed), 'random int=' + str(np.random.randint(100000)))
@@ -305,6 +307,9 @@ def __main__(argv):
     dt = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S-%f')
     with open('tmp/report_' + dt + '.csv', 'w') as fw:
         fw.write(out)
+
+    stop = timeit.default_timer()
+    print('calculated run time:', stop - start)
 
 
 def print_error_analysis_dev(ids: set) -> None:
