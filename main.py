@@ -54,7 +54,7 @@ def __main__(argv):
 
     # optional (and default values)
     options = dict(verbose=1, lstm_size=64, dropout=0.9, epochs=5, padding=100, batch_size=32, pre_seed=12345,
-                   run=0, runs=3, embedding='w2v')
+                          run=1, runs=1, embedding='w2v')
     test = False
 
     current_dir = os.getcwd()
@@ -89,13 +89,10 @@ def __main__(argv):
         elif opt == '--embedding':
             options['embedding'] = arg
 
-    # run := a distinct run with its own seed (preferable)
-    # run overrides (number of) runs
-    if options['run'] > 0:
-        options['runs'] == 1
-        options['distinct run'] = True
     np.random.seed(options['pre_seed'])  # for reproducibility
     from keras.preprocessing import sequence
+    from keras.utils.np_utils import accuracy
+    from models import get_attention_lstm_intra_warrant
 
     # TODO:
     # optimizer
@@ -128,7 +125,7 @@ def __main__(argv):
 
     if test:  # only if test.tsv is available
         (test_instance_id_list, test_warrant0_list, test_warrant1_list, test_correct_label_w0_or_w1_list,
-            test_reason_list, test_claim_list, test_debate_meta_data_list) = \
+         test_reason_list, test_claim_list, test_debate_meta_data_list) = \
             data_loader.load_single_file(current_dir + '/data/test.tsv', word_to_indices_map)
 
     # pad all sequences
@@ -148,7 +145,7 @@ def __main__(argv):
                                                                        dev_claim_list,
                                                                        dev_debate_meta_data_list)]
     assert train_reason_list.shape == train_warrant0_list.shape == \
-        train_warrant1_list.shape == train_claim_list.shape == train_debate_meta_data_list.shape
+           train_warrant1_list.shape == train_claim_list.shape == train_debate_meta_data_list.shape
 
     # ---------------
     all_runs_report = []  # list of dict
@@ -166,6 +163,7 @@ def __main__(argv):
                            ('batch_size', options['batch_size']),
                            ('pre_seed', options['pre_seed']),
                            ('runs', options['runs']),
+                           ('run', options['run']),
                            ('run1 seed', ''),
                            ('run1 acc', ''),
                            ('run2 seed', ''),
@@ -177,24 +175,13 @@ def __main__(argv):
                            ('run5 seed', ''),
                            ('run5 acc', '')])
 
+    for i in range(options['run'], options['run'] + options['runs']):
 
-    # 3 repeats to show how much randomness is in it
-    for i in range(1, options['runs']+1):
-
-        if options['distinct run']:
-            run = options['run']
-        else:
-            run = i
-
-        run_seed = results['run' + str(run) + ' seed'] = options['pre_seed'] + run
+        run_seed = results['run' + str(i) + ' seed'] = options['pre_seed'] + i
         np.random.seed(run_seed)  # for reproducibility <- meh
 
-        print("Run: ", run)
+        print("Run: ", i)
         print('seed=' + str(run_seed), 'random int=' + str(np.random.randint(100000)))
-
-        # ugly:
-        from keras.utils.np_utils import accuracy
-        from models import get_attention_lstm_intra_warrant
 
         # simple bidi-lstm model
         # model = get_attention_lstm(word_index_to_embeddings_map, max_len, rich_context=False, dropout=dropout, lstm_size=lstm_size)
@@ -260,7 +247,7 @@ def __main__(argv):
             print('Test accuracy:', acc_test)
         # update report
         report = dict()
-        results['run' + str(run) + ' acc'] = report['acc_dev'] = acc_dev
+        results['run' + str(i) + ' acc'] = report['acc_dev'] = acc_dev
 
         if test:
             report['acc_test'] = acc_test
@@ -307,11 +294,12 @@ def __main__(argv):
     pprint(results)
     keys = list(results.keys())
     values = list(results.values())
-    out = "\t".join(keys) + '\n'
-    out += "\t".join(map(str, values))
-    out += "\n\nInstances correct"
-    out += "\nGood_ids\t" + str(good_ids)
-    out += "\nWrong_ids\t" + str(wrong_ids)
+    out = ''
+    # out += "\t".join(keys) + '\n'
+    out += "\t".join(map(str, values)) + "\n"
+    # out += "\n\nInstances correct"
+    # out += "\nGood_ids\t" + str(good_ids)
+    # out += "\nWrong_ids\t" + str(wrong_ids)
 
     # write report file
     dt = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S-%f')
