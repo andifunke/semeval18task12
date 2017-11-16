@@ -173,7 +173,8 @@ def __main__(argv):
     # ---------------
     all_runs_report = []  # list of dict
 
-    results = OrderedDict([('embedding', embedding_files[options['embedding']].split('.')[0]),
+    results = OrderedDict([('timestamp', ''),
+                           ('embedding', embedding_files[options['embedding']].split('.')[0]),
                            ('embeddings', options['embeddings']),
                            ('vocabulary', len(word_index_to_embeddings_map)),
                            ('words in embeddings', ''),
@@ -333,6 +334,8 @@ def __main__(argv):
     results['Avg'] = sum_ / len(all_runs_report)
 
     pprint(results)
+    dt = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S-%f')
+    results['timestamp'] = dt
     keys = list(results.keys())
     values = list(results.values())
     out = ''
@@ -343,7 +346,6 @@ def __main__(argv):
     # out += "\nWrong_ids\t" + str(wrong_ids)
 
     # write report file
-    dt = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S-%f')
     with open('tmp/report_' + dt + '.csv', 'w') as fw:
         fw.write(out)
 

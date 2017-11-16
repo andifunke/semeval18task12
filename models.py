@@ -146,7 +146,6 @@ def get_attention_lstm_intra_warrant(word_index_to_embeddings_map, max_len, rich
     bidi_lstm_layer_debate = Bidirectional(
         LSTM(lstm_size, return_sequences=True), name='BiDiLSTM Context')(embedded_layer_debate_input)
 
-
     if rich_embedding:
         embedded_layer_warrant0_input2 = Embedding(
             embeddings2.shape[0], embeddings2.shape[1], input_length=max_len, weights=[embeddings2], mask_zero=True)(
@@ -182,42 +181,48 @@ def get_attention_lstm_intra_warrant(word_index_to_embeddings_map, max_len, rich
     max_pool_lambda_layer.supports_masking = True
     # two attention vectors
 
-    all_input_layers = [bidi_lstm_layer_reason, bidi_lstm_layer_claim, bidi_lstm_layer_debate]
-    utilized_input_layers = []
-    for i in range(rich_context):
-        utilized_input_layers.append(all_input_layers[i])
-
-    if rich_embedding:
-        all_input_layers2 = [bidi_lstm_layer_reason_2, bidi_lstm_layer_claim_2, bidi_lstm_layer_debate_2]
-        utilized_input_layers2 = []
-        for i in range(rich_context):
-            utilized_input_layers2.append(all_input_layers2[i])
-
-    layers_w0 = [bidi_lstm_layer_warrant1] + utilized_input_layers
-    layers_w1 = [bidi_lstm_layer_warrant0] + utilized_input_layers
-    if rich_embedding:
-        layers_w0.extend([bidi_lstm_layer_warrant1_2] + utilized_input_layers2)
-        layers_w1.extend([bidi_lstm_layer_warrant0_2] + utilized_input_layers2)
-
-    print('number of input layers w0:', len(layers_w0))
-    print('number of input layers w1:', len(layers_w1))
-
-    if len(layers_w0) > 1:
-        layers_w0_merge = merge(layers_w0, mode='concat')
-        layers_w1_merge = merge(layers_w1, mode='concat')
-    else:
-        layers_w0_merge = layers_w0
-        layers_w1_merge = layers_w1
-
-    attention_vector_for_w0 = max_pool_lambda_layer(layers_w0_merge)
-    attention_vector_for_w1 = max_pool_lambda_layer(layers_w1_merge)
-
-#    if rich_context:
-#        attention_vector_for_w0 = max_pool_lambda_layer(merge([bidi_lstm_layer_reason, bidi_lstm_layer_claim, bidi_lstm_layer_warrant1, bidi_lstm_layer_debate], mode='concat'))
-#        attention_vector_for_w1 = max_pool_lambda_layer(merge([bidi_lstm_layer_reason, bidi_lstm_layer_claim, bidi_lstm_layer_warrant0, bidi_lstm_layer_debate], mode='concat'))
+#    all_input_layers = [bidi_lstm_layer_reason, bidi_lstm_layer_claim, bidi_lstm_layer_debate]
+#    utilized_input_layers = []
+#    for i in range(rich_context):
+#        utilized_input_layers.append(all_input_layers[i])
+#
+#    if rich_embedding:
+#        all_input_layers2 = [bidi_lstm_layer_reason_2, bidi_lstm_layer_claim_2, bidi_lstm_layer_debate_2]
+#        utilized_input_layers2 = []
+#        for i in range(rich_context):
+#            utilized_input_layers2.append(all_input_layers2[i])
+#
+#    layers_w0 = [bidi_lstm_layer_warrant1] + utilized_input_layers
+#    layers_w1 = [bidi_lstm_layer_warrant0] + utilized_input_layers
+#    if rich_embedding:
+#        layers_w0.extend([bidi_lstm_layer_warrant1_2] + utilized_input_layers2)
+#        layers_w1.extend([bidi_lstm_layer_warrant0_2] + utilized_input_layers2)
+#
+#    print('number of input layers w0:', len(layers_w0))
+#    print('number of input layers w1:', len(layers_w1))
+#
+#    if len(layers_w0) > 1:
+#        layers_w0_merge = merge(layers_w0, mode='concat')
+#        layers_w1_merge = merge(layers_w1, mode='concat')
 #    else:
-#        attention_vector_for_w0 = max_pool_lambda_layer(merge([bidi_lstm_layer_reason, bidi_lstm_layer_claim, bidi_lstm_layer_warrant1], mode='concat'))
-#        attention_vector_for_w1 = max_pool_lambda_layer(merge([bidi_lstm_layer_reason, bidi_lstm_layer_claim, bidi_lstm_layer_warrant0], mode='concat'))
+#        layers_w0_merge = layers_w0
+#        layers_w1_merge = layers_w1
+#
+#    attention_vector_for_w0 = max_pool_lambda_layer(layers_w0_merge)
+#    attention_vector_for_w1 = max_pool_lambda_layer(layers_w1_merge)
+
+    if rich_context:
+        attention_vector_for_w0 = max_pool_lambda_layer(
+            merge([bidi_lstm_layer_reason, bidi_lstm_layer_claim, bidi_lstm_layer_warrant1, bidi_lstm_layer_debate],
+                  mode='concat'))
+        attention_vector_for_w1 = max_pool_lambda_layer(
+            merge([bidi_lstm_layer_reason, bidi_lstm_layer_claim, bidi_lstm_layer_warrant0, bidi_lstm_layer_debate],
+                  mode='concat'))
+    else:
+        attention_vector_for_w0 = max_pool_lambda_layer(
+            merge([bidi_lstm_layer_reason, bidi_lstm_layer_claim, bidi_lstm_layer_warrant1], mode='concat'))
+        attention_vector_for_w1 = max_pool_lambda_layer(
+            merge([bidi_lstm_layer_reason, bidi_lstm_layer_claim, bidi_lstm_layer_warrant0], mode='concat'))
 
     attention_warrant0 = AttentionLSTM(lstm_size, attention_vector_for_w0)(bidi_lstm_layer_warrant0)
     attention_warrant1 = AttentionLSTM(lstm_size, attention_vector_for_w1)(bidi_lstm_layer_warrant1)

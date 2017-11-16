@@ -18,6 +18,7 @@
 # --activation2 sigmoid		 | * AdvancedActivationLayers: LeakyReLU, PReLU, ELU, ThresholdedReLU
 # --vsplit 0.1
 # --rich 3 | 0, 1, 2, 3
+# -- embeddings 1 | 2
 
 #OMP_NUM_THREADS=2
 #THEANO_FLAGS=device=cuda0
@@ -32,19 +33,19 @@ cmd="env-python3-keras110/bin/python3 main.py"
 # args[2]=" --rich 2"
 # args[3]=" --rich 3"
 
-args[0]="--epochs 8 batch_size 16 --optimizer RMSprop"
-args[1]="--epochs 8 batch_size 16 --vsplit 0.2"
-args[2]="--epochs 8 batch_size 16 --optimizer RMSprop --vsplit 0.2"
-args[3]="--epochs 8 batch_size 16"
+args[0]="--epochs 8 --batch_size 16 --runs 1 --run 2"
+args[1]="--embeddings 2 --rich 1"
+args[2]="--embeddings 2 --rich 2"
+args[3]="--embeddings 2 --rich 3"
 
 
 # test default
 # args[0]="--epochs 2 --runs 3 --run 1 --batch_size 64 --padding 50"
 
 eval ${ev} ${cmd} ${args[0]} &
-eval ${ev} ${cmd} ${args[1]} &
-eval ${ev} ${cmd} ${args[2]} &
-eval ${ev} ${cmd} ${args[3]} &
+#eval ${ev} ${cmd} ${args[1]} &
+#eval ${ev} ${cmd} ${args[2]} &
+#eval ${ev} ${cmd} ${args[3]} &
 #wait
 #eval ${ev} ${cmd} ${args[4]} &
 #eval ${ev} ${cmd} ${args[5]} &
