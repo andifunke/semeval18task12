@@ -42,7 +42,7 @@ args[3]="--embeddings 2 --rich 3"
 # test default
 # args[0]="--epochs 2 --runs 3 --run 1 --batch_size 64 --padding 50"
 
-eval ${ev} ${cmd} ${args[0]} &
+#eval ${ev} ${cmd} ${args[0]} &
 #eval ${ev} ${cmd} ${args[1]} &
 #eval ${ev} ${cmd} ${args[2]} &
 #eval ${ev} ${cmd} ${args[3]} &
@@ -57,7 +57,7 @@ eval ${ev} ${cmd} ${args[0]} &
 #eval ${ev} ${cmd} ${args[10]} &
 #eval ${ev} ${cmd} ${args[11]} &
 
-# THEANO_FLAGS='device=cpu,warn.round=False' KERAS_BACKEND=theano env-python3-keras110/bin/python3 main.py --epochs 1 --runs 1 --run 1 --batch_size 64 --padding 50
+THEANO_FLAGS='device=cpu,warn.round=False' KERAS_BACKEND=theano env-python3-keras110/bin/python3 main.py --epochs 1 --runs 1 --run 1 --batch_size 64 --padding 50
 # cd workspace/sem_train/experiments/src/main/python/
 # source env-python3-keras110/bin/activate
 # bash ./run_batch.sh

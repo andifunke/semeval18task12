@@ -201,8 +201,11 @@ def __main__(argv):
                            ('run4 seed', ''),
                            ('run5 seed', ''),
                            ('run1 acc', ''),
+#                           ('run1 acc2', ''),
                            ('run2 acc', ''),
+#                           ('run2 acc2', ''),
                            ('run3 acc', ''),
+#                           ('run3 acc2', ''),
                            ('run4 acc', ''),
                            ('run5 acc', '')])
 
@@ -284,6 +287,7 @@ def __main__(argv):
 
         acc_dev = accuracy(dev_correct_label_w0_or_w1_list, predicted_labels_dev)
         print('Dev accuracy:', acc_dev)
+
         if test:
             acc_test = accuracy(test_correct_label_w0_or_w1_list, predicted_labels_test)
             print('Test accuracy:', acc_test)
@@ -309,16 +313,36 @@ def __main__(argv):
 
     # show report
     print("Acc dev")
-    for r in all_runs_report:
-        print("%.3f\t" % r['acc_dev'])
-    for r in all_runs_report:
+
+    dt = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S-%f')
+    results['timestamp'] = dt
+    pprint(results)
+
+    for idx, r in enumerate(all_runs_report):
         good_ids = set()
         wrong_ids = set()
+        answer = ''
         for i, (g, p, instance_id) in enumerate(zip(r['gold_labels_dev'], r['predicted_labels_dev'], r['ids_dev'])):
             if g == p:
                 good_ids.add(instance_id)
             else:
                 wrong_ids.add(instance_id)
+            print(idx, i, g, p, instance_id)
+            answer += instance_id + '\t' + str(g) + '\n'
+
+        # calculate scorer accuracy
+        r['scorer_accuracy'] = len(good_ids) / (len(good_ids) + len(wrong_ids))
+        print("%.3f\t" % r['acc_dev'])
+        print("%.3f\t" % r['scorer_accuracy'])
+
+        # write answer file
+        answer = '#id\tcorrectLabelW0orW1\n' + answer
+        with open('tmp/answer_' + str(idx) + '_' + dt + '.txt', 'w') as fw:
+            fw.write(answer)
+#        df = pd.DataFrame({'#id': r['ids_dev'],
+#                           'correctLabelW0orW1': r['gold_labels_dev']})
+#        df.to_csv('tmp/answer_' + str(idx) + '_' + dt + '.txt', sep='\t', index=None)
+
     if False:
         print("\nInstances correct")
         print("Good_ids\t", good_ids)
@@ -328,32 +352,17 @@ def __main__(argv):
         for r in all_runs_report:
             print("%.3f\t" % r['acc_test'], end='')
 
-    sum_ = 0
-    for r in all_runs_report:
-        sum_ += r['acc_dev']
-    results['Avg'] = sum_ / len(all_runs_report)
-
-    pprint(results)
-    dt = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S-%f')
-    results['timestamp'] = dt
-    keys = list(results.keys())
-    values = list(results.values())
-    out = ''
-    # out += "\t".join(keys) + '\n'
-    out += "\t".join(map(str, values)) + "\n"
-    # out += "\n\nInstances correct"
-    # out += "\nGood_ids\t" + str(good_ids)
-    # out += "\nWrong_ids\t" + str(wrong_ids)
+    # calculate average accuracy over all runs
+    # sum_ = 0
+    # for r in all_runs_report:
+    #     sum_ += r['acc_dev']
+    # results['Avg'] = sum_ / len(all_runs_report)
 
     # write report file
+    values = list(results.values())
+    out = "\t".join(map(str, values)) + "\n"
     with open('tmp/report_' + dt + '.csv', 'w') as fw:
         fw.write(out)
-
-    # write answer file
-    for idx, r in enumerate(all_runs_report):
-        df = pd.DataFrame({'#id': r['ids_dev'],
-                           'correctLabelW0orW1': r['predicted_labels_dev']})
-        df.to_csv('tmp/answer_' + str(idx) + '_' + dt + '.txt', sep='\t', index=None)
 
     stop = timeit.default_timer()
     print('calculated run time:', stop - start)
