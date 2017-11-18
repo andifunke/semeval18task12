@@ -120,6 +120,7 @@ def __main__(argv):
 
     # TODO:
     # model
+    # train with or without swap
     # full embeddings
     # combined embeddings (2x no_of_channels or 2x dimensionality)
     # reduced number of channels
@@ -140,11 +141,11 @@ def __main__(argv):
 
     (train_instance_id_list, train_warrant0_list, train_warrant1_list, train_correct_label_w0_or_w1_list,
      train_reason_list, train_claim_list, train_debate_meta_data_list) = \
-        data_loader.load_single_file(current_dir + '/data/train-w-swap.tsv', word_to_indices_map)
+        data_loader.load_single_file(current_dir + '/data/train/train-w-swap-full.txt', word_to_indices_map)
 
     (dev_instance_id_list, dev_warrant0_list, dev_warrant1_list, dev_correct_label_w0_or_w1_list,
      dev_reason_list, dev_claim_list, dev_debate_meta_data_list) = \
-        data_loader.load_single_file(current_dir + '/data/dev.tsv', word_to_indices_map)
+        data_loader.load_single_file(current_dir + '/data/dev/dev-full.txt', word_to_indices_map)
 
     if test:  # only if test.tsv is available
         (test_instance_id_list, test_warrant0_list, test_warrant1_list, test_correct_label_w0_or_w1_list,
@@ -328,7 +329,7 @@ def __main__(argv):
             else:
                 wrong_ids.add(instance_id)
             print(idx, i, g, p, instance_id)
-            answer += instance_id + '\t' + str(g) + '\n'
+            answer += instance_id + '\t' + str(p) + '\n'
 
         # calculate scorer accuracy
         r['scorer_accuracy'] = len(good_ids) / (len(good_ids) + len(wrong_ids))
