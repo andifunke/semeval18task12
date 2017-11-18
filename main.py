@@ -3,7 +3,6 @@ import sys
 import getopt
 import datetime
 import numpy as np
-import pandas as pd
 from collections import OrderedDict
 from pprint import pprint
 import data_loader
@@ -115,7 +114,6 @@ def __main__(argv):
 
     np.random.seed(options['pre_seed'])  # for reproducibility
     from keras.preprocessing import sequence
-    from keras.utils.np_utils import accuracy
     from models import get_attention_lstm_intra_warrant
 
     # TODO:
@@ -147,20 +145,10 @@ def __main__(argv):
      dev_reason_list, dev_claim_list, dev_debate_meta_data_list) = \
         data_loader.load_single_file(current_dir + '/data/dev/dev-full.txt', word_to_indices_map)
 
-    if test:  # only if test.tsv is available
-        (test_instance_id_list, test_warrant0_list, test_warrant1_list, test_correct_label_w0_or_w1_list,
-         test_reason_list, test_claim_list, test_debate_meta_data_list) = \
-            data_loader.load_single_file(current_dir + '/data/test.tsv', word_to_indices_map)
-
     # pad all sequences
     (train_warrant0_list, train_warrant1_list, train_reason_list, train_claim_list, train_debate_meta_data_list) = [
         sequence.pad_sequences(x, maxlen=options['padding']) for x in
         (train_warrant0_list, train_warrant1_list, train_reason_list, train_claim_list, train_debate_meta_data_list)]
-
-    if test:  # only if test.tsv is available
-        (test_warrant0_list, test_warrant1_list, test_reason_list, test_claim_list, test_debate_meta_data_list) = [
-            sequence.pad_sequences(x, maxlen=options['padding']) for x in
-            (test_warrant0_list, test_warrant1_list, test_reason_list, test_claim_list, test_debate_meta_data_list)]
 
     (dev_warrant0_list, dev_warrant1_list, dev_reason_list, dev_claim_list, dev_debate_meta_data_list) = [
         sequence.pad_sequences(x, maxlen=options['padding']) for x in (dev_warrant0_list,
@@ -174,7 +162,10 @@ def __main__(argv):
     # ---------------
     all_runs_report = []  # list of dict
 
-    results = OrderedDict([('timestamp', ''),
+    dt = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S-%f')
+
+    results = OrderedDict([('timestamp', dt),
+                           ('runtime', ''),
                            ('embedding', embedding_files[options['embedding']].split('.')[0]),
                            ('embeddings', options['embeddings']),
                            ('vocabulary', len(word_index_to_embeddings_map)),
@@ -202,22 +193,20 @@ def __main__(argv):
                            ('run4 seed', ''),
                            ('run5 seed', ''),
                            ('run1 acc', ''),
-#                           ('run1 acc2', ''),
                            ('run2 acc', ''),
-#                           ('run2 acc2', ''),
                            ('run3 acc', ''),
-#                           ('run3 acc2', ''),
                            ('run4 acc', ''),
                            ('run5 acc', '')])
 
-    for i in range(options['run'], options['run'] + options['runs']):
+    for run_idx in range(options['run'], options['run'] + options['runs']):
 
-        run_seed = results['run' + str(i) + ' seed'] = options['pre_seed'] + i
+        run_seed = results['run' + str(run_idx) + ' seed'] = options['pre_seed'] + run_idx
         np.random.seed(run_seed)  # for reproducibility
 
-        print("Run: ", i)
+        print("Run: ", run_idx)
         print('seed=' + str(run_seed), 'random int=' + str(np.random.randint(100000)))
 
+        # some alternative models
         # simple bidi-lstm model
         # model = get_attention_lstm(word_index_to_embeddings_map, max_len, rich_context=False, dropout=dropout, lstm_size=lstm_size)
         # simple bidi-lstm model w/ context
@@ -231,7 +220,7 @@ def __main__(argv):
                          loss=options['loss'],
                          activation1=options['activation1'],
                          activation2=options['activation2'])
-        # double input layers with extra exmbedding
+        # double input layers with extra embedding
         if options['embeddings'] > 1:
             arguments['embeddings2'] = word_index_to_embeddings_map2
 
@@ -262,111 +251,54 @@ def __main__(argv):
             batch_size=options['batch_size'],
             verbose=1)
 
-        if test:
-            predicted_probabilities_test = model.predict(
-                {'sequence_layer_warrant0_input': test_warrant0_list,
-                 'sequence_layer_warrant1_input': test_warrant1_list,
-                 'sequence_layer_reason_input': test_reason_list,
-                 'sequence_layer_claim_input': test_claim_list,
-                 'sequence_layer_debate_input': test_debate_meta_data_list},
-                batch_size=options['batch_size'],
-                verbose=1)
-
         predicted_labels_dev = get_predicted_labels(predicted_probabilities_dev)
         # print(predicted_labels_dev)
-
-        if test:
-            predicted_labels_test = get_predicted_labels(predicted_probabilities_test)
 
         assert isinstance(dev_correct_label_w0_or_w1_list, list)
         assert isinstance(dev_correct_label_w0_or_w1_list[0], int)
         assert len(dev_correct_label_w0_or_w1_list) == len(predicted_labels_dev)
-        if test:
-            assert isinstance(test_correct_label_w0_or_w1_list, list)
-            assert isinstance(test_correct_label_w0_or_w1_list[0], int)
-            assert len(test_correct_label_w0_or_w1_list) == len(predicted_labels_test)
 
-        acc_dev = accuracy(dev_correct_label_w0_or_w1_list, predicted_labels_dev)
-        print('Dev accuracy:', acc_dev)
-
-        if test:
-            acc_test = accuracy(test_correct_label_w0_or_w1_list, predicted_labels_test)
-            print('Test accuracy:', acc_test)
         # update report
         report = dict()
-        results['run' + str(i) + ' acc'] = report['acc_dev'] = acc_dev
-
-        if test:
-            report['acc_test'] = acc_test
         report['gold_labels_dev'] = dev_correct_label_w0_or_w1_list
-        if test:
-            report['gold_labels_test'] = test_correct_label_w0_or_w1_list
         report['predicted_labels_dev'] = predicted_labels_dev
-        if test:
-            report['predicted_labels_test'] = predicted_labels_test
         report['ids_dev'] = dev_instance_id_list
-        if test:
-            report['ids_test'] = test_instance_id_list
 
-        all_runs_report.append(report)
-        # report_description = description + str(args).replace("\n", " ")
-        # finish_report(report, report_description, output_file)
-
-    # show report
-    print("Acc dev")
-
-    dt = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S-%f')
-    results['timestamp'] = dt
-    pprint(results)
-
-    for idx, r in enumerate(all_runs_report):
         good_ids = set()
         wrong_ids = set()
         answer = ''
-        for i, (g, p, instance_id) in enumerate(zip(r['gold_labels_dev'], r['predicted_labels_dev'], r['ids_dev'])):
+        for g, p, instance_id in zip(report['gold_labels_dev'], report['predicted_labels_dev'], report['ids_dev']):
             if g == p:
                 good_ids.add(instance_id)
             else:
                 wrong_ids.add(instance_id)
-            print(idx, i, g, p, instance_id)
             answer += instance_id + '\t' + str(p) + '\n'
 
         # calculate scorer accuracy
-        r['scorer_accuracy'] = len(good_ids) / (len(good_ids) + len(wrong_ids))
-        print("%.3f\t" % r['acc_dev'])
-        print("%.3f\t" % r['scorer_accuracy'])
+        results['run' + str(run_idx) + ' acc'] = report['acc_dev'] = len(good_ids) / (len(good_ids) + len(wrong_ids))
+        print("%.3f\t" % report['acc_dev'])
 
         # write answer file
         answer = '#id\tcorrectLabelW0orW1\n' + answer
-        with open('tmp/answer_' + str(idx) + '_' + dt + '.txt', 'w') as fw:
+        with open('tmp/answer_' + str(run_idx) + '_' + dt + '.txt', 'w') as fw:
             fw.write(answer)
-#        df = pd.DataFrame({'#id': r['ids_dev'],
-#                           'correctLabelW0orW1': r['gold_labels_dev']})
-#        df.to_csv('tmp/answer_' + str(idx) + '_' + dt + '.txt', sep='\t', index=None)
 
-    if False:
-        print("\nInstances correct")
-        print("Good_ids\t", good_ids)
-        print("Wrong_ids\t", wrong_ids)
-    if test:
-        print("\nAcc test")
-        for r in all_runs_report:
-            print("%.3f\t" % r['acc_test'], end='')
+        if False:
+            print("\nInstances correct")
+            print("Good_ids\t", good_ids)
+            print("Wrong_ids\t", wrong_ids)
 
-    # calculate average accuracy over all runs
-    # sum_ = 0
-    # for r in all_runs_report:
-    #     sum_ += r['acc_dev']
-    # results['Avg'] = sum_ / len(all_runs_report)
+        all_runs_report.append(report)
+
+    # show report
+    results['runtime'] = timeit.default_timer() - start
+    pprint(results)
 
     # write report file
     values = list(results.values())
     out = "\t".join(map(str, values)) + "\n"
     with open('tmp/report_' + dt + '.csv', 'w') as fw:
         fw.write(out)
-
-    stop = timeit.default_timer()
-    print('calculated run time:', stop - start)
 
 
 def print_error_analysis_dev(ids: set) -> None:
@@ -386,7 +318,6 @@ def print_error_analysis_dev(ids: set) -> None:
         assert len(split_line) == 8
 
         instance_id = split_line[0]
-
         if instance_id in ids:
             print(line.strip())
 
