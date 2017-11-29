@@ -2,7 +2,7 @@ import bz2
 import os
 import unicodedata
 import json
-from pprint import pprint
+# from pprint import pprint
 
 import numpy as np
 import six.moves.cPickle as cPickle

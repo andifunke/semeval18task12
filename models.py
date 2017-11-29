@@ -4,26 +4,14 @@ Neural models
 
 import keras
 import numpy as np
-from keras.engine import Input
-from keras.engine import Model
-
-from keras.layers import Activation, concatenate
-from keras.layers import Convolution1D
-from keras.layers import Flatten
-from keras.layers import Lambda
-from keras.layers import MaxPooling1D
+from keras.engine import Input, Model
+from keras.layers import concatenate, Lambda, Dense, Dropout, Embedding, LSTM, Bidirectional
 from theano.scalar import float32
-from keras.preprocessing import sequence
-from keras.models import Sequential
-from keras.layers import Dense, Dropout, Embedding, LSTM, Bidirectional #, Merge
-import keras.backend as K
-
-from attention_lstm import AttentionLSTM
+# from attention_lstm import AttentionLSTM
 
 
-def pred(y_true, y_pred):
-    return K.mean(y_pred)
-
+# def pred(y_true, y_pred):
+#    return K.mean(y_pred)
 
 
 def get_attention_lstm(word_index_to_embeddings_map, max_len, rich_context: bool = False, **kwargs):
@@ -81,8 +69,8 @@ def get_attention_lstm(word_index_to_embeddings_map, max_len, rich_context: bool
     max_pool_lambda_layer.supports_masking = True
     attention_vector = max_pool_lambda_layer(context_concat)
 
-    attention_warrant0 = AttentionLSTM(lstm_size, attention_vector)(embedded_layer_warrant0_input)
-    attention_warrant1 = AttentionLSTM(lstm_size, attention_vector)(embedded_layer_warrant1_input)
+    attention_warrant0 = LSTM(lstm_size, attention_vector)(embedded_layer_warrant0_input)
+    attention_warrant1 = LSTM(lstm_size, attention_vector)(embedded_layer_warrant1_input)
 
     # concatenate them
     dropout_layer = Dropout(dropout)(concatenate([attention_warrant0, attention_warrant1]))
@@ -252,7 +240,7 @@ def get_attention_lstm_intra_warrant(word_index_to_embeddings_map, max_len, rich
                           sequence_layer_claim_input, sequence_layer_debate_input], outputs=output_layer)
     model.compile(loss=loss, optimizer=optimizer, metrics=['accuracy'])
 
-    from keras.utils import plot_model
-    plot_model(model, show_shapes=True, to_file='tmp/model-lstm.png')
+    # from keras.utils import plot_model
+    # plot_model(model, show_shapes=True, to_file='tmp/model-lstm.png')
 
     return model

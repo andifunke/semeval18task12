@@ -1,11 +1,11 @@
 import gzip
 import os.path
-from typing import Dict, Tuple, List
+# from typing import Dict, Tuple, List
 
 import vocabulary_embeddings_extractor
 
 
-def string_to_indices(string: str, word_to_indices_map_param: Dict, nb_words: int = None) -> List:
+def string_to_indices(string: str, word_to_indices_map_param: dict, nb_words: int = None) -> list:
     """
     Tokenizes a string and converts to indices specified in word_to_indices_map; performs also OOV replacement
     :param string: string
@@ -25,7 +25,7 @@ def string_to_indices(string: str, word_to_indices_map_param: Dict, nb_words: in
     return word_indices_list
 
 
-def load_single_instance_from_line(line: str, word_to_indices_map: Dict, nb_words: int = None) -> Tuple:
+def load_single_instance_from_line(line: str, word_to_indices_map: dict, nb_words: int = None) -> tuple:
     """
     Load a single training/test instance from a single line int tab-separated format
     :param line: string line
@@ -60,7 +60,7 @@ def load_single_instance_from_line(line: str, word_to_indices_map: Dict, nb_word
     return instance_id, warrant0, warrant1, correct_label_w0_or_w1, reason, claim, debate_meta_data
 
 
-def load_single_file(file_name: str, word_to_indices_map: Dict, nb_words: int = None) -> Tuple:
+def load_single_file(file_name: str, word_to_indices_map: dict, nb_words: int = None) -> tuple:
     """
     Loads a single train/test file and returns a tuple of lists
     :param file_name: full file name
