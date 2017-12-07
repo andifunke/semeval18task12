@@ -10,10 +10,6 @@ from theano.scalar import float32
 # from attention_lstm import AttentionLSTM
 
 
-# def pred(y_true, y_pred):
-#    return K.mean(y_pred)
-
-
 def get_attention_lstm(word_index_to_embeddings_map, max_len, rich_context: bool = False, **kwargs):
     # converting embeddings to numpy 2d array: shape = (vocabulary_size, 300)
     embeddings = np.asarray([np.array(x, dtype=float32) for x in word_index_to_embeddings_map.values()])
@@ -232,9 +228,10 @@ def get_attention_lstm_intra_warrant(word_index_to_embeddings_map, max_len, rich
     # and add one extra layer with ReLU
     # dense1 = Dense(int(lstm_size / 2), activation=activation1)(dropout_layer)
     dense1 = Dense(int(lstm_size / 1), activation=activation1)(dropout_layer)
-    dense2 = Dense(int(lstm_size / 2), activation=activation1)(dense1)
-    dense3 = Dense(int(lstm_size / 4), activation=activation1)(dense2)
-    output_layer = Dense(1, activation=activation2)(dense3)
+    # dense2 = Dense(int(lstm_size / 2), activation=activation1)(dense1)
+    # dense3 = Dense(int(lstm_size / 4), activation=activation1)(dense2)
+    pre_out = dense1
+    output_layer = Dense(1, activation=activation2)(pre_out)
 
     model = Model(inputs=[sequence_layer_warrant0_input, sequence_layer_warrant1_input, sequence_layer_reason_input,
                           sequence_layer_claim_input, sequence_layer_debate_input], outputs=output_layer)

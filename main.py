@@ -1,13 +1,18 @@
-import sys
 import datetime
-import numpy as np
+import json
+import sys
+import timeit
 from collections import OrderedDict
 from pprint import pprint
+import numpy as np
 import data_loader
-import timeit
-import json
 import vocabulary_embeddings_extractor
 from argument_parser import get_options
+from classes import Data
+
+
+def pred(y_true, y_pred):
+    pass
 
 
 def get_predicted_labels(predicted_probabilities):
@@ -57,186 +62,221 @@ def detail_model(m):
     print('config:', m.get_config())
 
 
-def __main__(argv):
-    start = timeit.default_timer()
+def predict(run_idx, model, data, o, write_answer=False, epoch=0, pred_acc=0):
+    # model predictions
+    predicted_probabilities_dev = model.predict(
+        {'sequence_layer_warrant0_input': data.dev_warrant0_list,
+         'sequence_layer_warrant1_input': data.dev_warrant1_list,
+         'sequence_layer_reason_input': data.dev_reason_list,
+         'sequence_layer_claim_input': data.dev_claim_list,
+         'sequence_layer_debate_input': data.dev_debate_meta_data_list,
+         },
+        batch_size=32,  # options['batch_size'],
+        verbose=0)
+    predicted_labels_dev = get_predicted_labels(predicted_probabilities_dev)
 
-    options, emb_files = get_options()
-    np.random.seed(options['pre_seed'])  # for reproducibility
+    # print(predicted_labels_dev)
+    assert isinstance(data.dev_correct_label_w0_or_w1_list, list)
+    assert isinstance(data.dev_correct_label_w0_or_w1_list[0], int)
+    assert len(data.dev_correct_label_w0_or_w1_list) == len(predicted_labels_dev)
+
+    # update report
+    gold_labels_dev = data.dev_correct_label_w0_or_w1_list
+    predicted_labels_dev = predicted_labels_dev
+    ids_dev = data.dev_instance_id_list
+    good_ids = set()
+    wrong_ids = set()
+    answer = ''
+    for g, p, instance_id in zip(gold_labels_dev, predicted_labels_dev, ids_dev):
+        if g == p:
+            good_ids.add(instance_id)
+        else:
+            wrong_ids.add(instance_id)
+        answer += instance_id + '\t' + str(p) + '\n'
+
+    # calculate scorer accuracy
+    acc_dev = len(good_ids) / (len(good_ids) + len(wrong_ids))
+    # print("acc_dev = %.3f\t" % acc_dev)
+
+    # write answer file
+    if write_answer:
+        answer = '#id\tcorrectLabelW0orW1\n' + answer
+        with open('{}answer_{}_rn{:02d}_ep{:02d}_ac{:.3f}.txt'
+                  .format(o['out_path'], o['dt'], run_idx, epoch, pred_acc), 'w') as fw:
+            fw.write(answer)
+
+    if False:
+        print("\nInstances correct")
+        print("Good_ids\t", good_ids)
+        print("Wrong_ids\t", wrong_ids)
+
+    return acc_dev
+
+
+def __main__():
+    start = timeit.default_timer()
+    o, emb_files = get_options()
+    dt = o['dt'] = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S-%f')
+
+    np.random.seed(o['pre_seed'])  # for reproducibility
     from keras.preprocessing import sequence
+    from keras.models import Sequential, Model
     from keras import callbacks
     from models import get_attention_lstm_intra_warrant
 
-    print('parameters:', options)
+    # Creating a Callback subclass that stores each epoch prediction
+    class PredictionReport(callbacks.Callback):
+        head_written = False
 
-    # embedding 1
+        def __init__(self, idx, modl):
+            self.idx = idx
+            self.set_model(modl)
+            self.best_epoch = dict(epoch=0,
+                                   pred_acc=0,
+                                   val_acc=0,
+                                   config=None,
+                                   weights=None)
+
+        def on_epoch_end(self, epoch, logs={}):
+            results['val_acc'] = logs['val_acc']
+            if o['verbose'] > 1:
+                print('\npredict:', end='')
+            results['epoch'] = epoch + 1
+            results['runtime'] = timeit.default_timer() - start
+            results['pred_acc'] = predict(self.idx, self.model, data=d, o=o)
+            if results['pred_acc'] > self.best_epoch['pred_acc']:
+                self.best_epoch['epoch'] = epoch + 1
+                self.best_epoch['pred_acc'] = results['pred_acc']
+                self.best_epoch['val_acc'] = results['val_acc']
+                self.best_epoch['config'] = self.model.get_config()
+                self.best_epoch['weights'] = self.model.get_weights()
+            print('run {:02d} epoch {:02d} has finished with pred_acc={:.3f}, val_acc={:.3f} | '
+                  'best epoch: {:02d}, pred_acc={:.3f}, val_acc={:.3f}'
+                  .format(self.idx, epoch + 1, results['pred_acc'], results['val_acc'],
+                          self.best_epoch['epoch'], self.best_epoch['pred_acc'], self.best_epoch['val_acc']))
+            if o['verbose'] > 1:
+                pprint(results)
+            # write report file
+            values = list(results.values())
+            out = "\t".join(map(str, values)) + "\n"
+            # write headline before first data-line
+            if not PredictionReport.head_written:
+                keys = list(results.keys())
+                out = "\t".join(map(str, keys)) + "\n" + out
+                PredictionReport.head_written = True
+            filename = '{}report_{}.csv'.format(o['out_path'], dt)
+            with open(filename, 'a') as fw:
+                fw.write(out)
+
+    # 1st embedding
     # loading data
-    embeddings_cache_file = options['code_path'] + options['emb_dir'] + emb_files[options['embedding']]
+    embeddings_cache_file = o['code_path'] + o['emb_dir'] + emb_files[o['embedding']]
     # load pre-extracted word-to-index maps and pre-filtered Glove embeddings
     word_to_indices_map, word_index_to_embeddings_map = \
         vocabulary_embeddings_extractor.load_cached_vocabulary_and_embeddings(embeddings_cache_file)
 
     # 2nd embedding ?
-    if options['embedding2'] != '':
-        embeddings_cache_file2 = options['code_path'] + options['emb_dir'] + emb_files[options['embedding2']]
+    word_index_to_embeddings_map2 = None
+    if o['embedding2'] != '':
+        embeddings_cache_file2 = o['code_path'] + o['emb_dir'] + emb_files[o['embedding2']]
         word_to_indices_map2, word_index_to_embeddings_map2 = \
             vocabulary_embeddings_extractor.load_cached_vocabulary_and_embeddings(embeddings_cache_file2)
 
+    d = Data()
     # loads data and replaces words with indices from embedding cache
-    (train_instance_id_list, train_warrant0_list, train_warrant1_list, train_correct_label_w0_or_w1_list,
-     train_reason_list, train_claim_list, train_debate_meta_data_list) = \
-        data_loader.load_single_file(options['code_path'] + 'data/train-w-swap.tsv', word_to_indices_map)
+    (d.train_instance_id_list, d.train_warrant0_list, d.train_warrant1_list, d.train_correct_label_w0_or_w1_list,
+     d.train_reason_list, d.train_claim_list, d.train_debate_meta_data_list) = \
+        data_loader.load_single_file(o['code_path'] + 'data/train-w-swap-full_challenge.tsv', word_to_indices_map)
     # print('loaded', train_reason_list)
 
-    (dev_instance_id_list, dev_warrant0_list, dev_warrant1_list, dev_correct_label_w0_or_w1_list,
-     dev_reason_list, dev_claim_list, dev_debate_meta_data_list) = \
-        data_loader.load_single_file(options['code_path'] + 'data/dev.tsv', word_to_indices_map)
+    (d.dev_instance_id_list, d.dev_warrant0_list, d.dev_warrant1_list, d.dev_correct_label_w0_or_w1_list,
+     d.dev_reason_list, d.dev_claim_list, d.dev_debate_meta_data_list) = \
+        data_loader.load_single_file(o['code_path'] + 'data/dev-full_challenge.tsv', word_to_indices_map)
 
     # pad all sequences
-    (train_warrant0_list, train_warrant1_list, train_reason_list, train_claim_list, train_debate_meta_data_list) = [
-        sequence.pad_sequences(x, maxlen=options['padding']) for x in
-        (train_warrant0_list, train_warrant1_list, train_reason_list, train_claim_list, train_debate_meta_data_list)]
+    (d.train_warrant0_list, d.train_warrant1_list, d.train_reason_list, d.train_claim_list,
+     d.train_debate_meta_data_list) = [
+        sequence.pad_sequences(x, maxlen=o['padding']) for x in
+        (d.train_warrant0_list, d.train_warrant1_list, d.train_reason_list, d.train_claim_list,
+         d.train_debate_meta_data_list)]
     # print('padded', train_reason_list)
 
-    (dev_warrant0_list, dev_warrant1_list, dev_reason_list, dev_claim_list, dev_debate_meta_data_list) = [
-        sequence.pad_sequences(x, maxlen=options['padding']) for x in
-        (dev_warrant0_list, dev_warrant1_list, dev_reason_list, dev_claim_list, dev_debate_meta_data_list)]
+    (d.dev_warrant0_list, d.dev_warrant1_list, d.dev_reason_list, d.dev_claim_list, d.dev_debate_meta_data_list) = [
+        sequence.pad_sequences(x, maxlen=o['padding']) for x in
+        (d.dev_warrant0_list, d.dev_warrant1_list, d.dev_reason_list, d.dev_claim_list, d.dev_debate_meta_data_list)]
 
-    assert train_reason_list.shape == train_warrant0_list.shape == \
-           train_warrant1_list.shape == train_claim_list.shape == train_debate_meta_data_list.shape
+    assert d.train_reason_list.shape == d.train_warrant0_list.shape == \
+           d.train_warrant1_list.shape == d.train_claim_list.shape == d.train_debate_meta_data_list.shape
 
     # build model and train
-    all_runs_report = []  # list of dict
-    dt = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S-%f')
+    # all_runs_report = []  # list of dict
     results = OrderedDict(
         [('timestamp', dt),
+         ('run', o['run']),
+         ('epoch', 0),
          ('runtime', ''),
-         ('embedding', emb_files[options['embedding']].split('.')[0]),
-         ('embedding2', options['embedding2']),
+         ('embedding', emb_files[o['embedding']].split('.')[0]),
+         ('embedding2', o['embedding2']),
          ('vocabulary', len(word_index_to_embeddings_map)),
          ('words in embeddings', ''),
          ('dimensionality', len(word_index_to_embeddings_map[0])),
          ('backend', 'Theano'),  # TODO
          ('classifier', 'AttentionLSTM'),  # TODO
-         ('epochs', options['epochs']),
-         ('dropout', options['dropout']),
-         ('lstm_size', options['lstm_size']),
-         ('padding', options['padding']),
-         ('batch_size', options['batch_size']),
-         ('optimizer', options['optimizer']),
-         ('loss', options['loss']),
-         ('activation1', options['activation1']),
-         ('activation2', options['activation2']),
-         ('vsplit', options['vsplit']),
-         ('rich', options['rich']),
-         ('pre_seed', options['pre_seed']),
-         ('runs', options['runs']),
-         ('run', options['run']),
-         ('run1 seed', ''),
-         ('run2 seed', ''),
-         ('run3 seed', ''),
-         ('run4 seed', ''),
-         ('run5 seed', ''),
-         ('run1 acc', ''),
-         ('run2 acc', ''),
-         ('run3 acc', ''),
-         ('run4 acc', ''),
-         ('run5 acc', ''),
+         ('epochs', o['epochs']),
+         ('dropout', o['dropout']),
+         ('lstm_size', o['lstm_size']),
+         ('padding', o['padding']),
+         ('batch_size', o['batch_size']),
+         ('optimizer', o['optimizer']),
+         ('loss', o['loss']),
+         ('activation1', o['activation1']),
+         ('activation2', o['activation2']),
+         ('vsplit', o['vsplit']),
+         ('rich', o['rich']),
+         ('pre_seed', o['pre_seed']),
+         ('runs', o['runs']),
+         ('run seed', ''),
+         ('pred_acc', ''),
+         ('val_acc', ''),
          ]
     )
 
-    def predict(i, m, write_answer=False):
-        # model predictions
-        predicted_probabilities_dev = m.predict(
-            {'sequence_layer_warrant0_input': dev_warrant0_list,
-             'sequence_layer_warrant1_input': dev_warrant1_list,
-             'sequence_layer_reason_input': dev_reason_list,
-             'sequence_layer_claim_input': dev_claim_list,
-             'sequence_layer_debate_input': dev_debate_meta_data_list,
-             },
-            batch_size=options['batch_size'],
-            verbose=1)
-        predicted_labels_dev = get_predicted_labels(predicted_probabilities_dev)
+    for run_idx in range(o['run'], o['run'] + o['runs']):
+        start = timeit.default_timer()
 
-        # print(predicted_labels_dev)
-        assert isinstance(dev_correct_label_w0_or_w1_list, list)
-        assert isinstance(dev_correct_label_w0_or_w1_list[0], int)
-        assert len(dev_correct_label_w0_or_w1_list) == len(predicted_labels_dev)
-
-        # update report
-        rep = dict()
-        rep['gold_labels_dev'] = dev_correct_label_w0_or_w1_list
-        rep['predicted_labels_dev'] = predicted_labels_dev
-        rep['ids_dev'] = dev_instance_id_list
-        good_ids = set()
-        wrong_ids = set()
-        answer = ''
-        for g, p, instance_id in zip(rep['gold_labels_dev'], rep['predicted_labels_dev'], rep['ids_dev']):
-            if g == p:
-                good_ids.add(instance_id)
-            else:
-                wrong_ids.add(instance_id)
-            answer += instance_id + '\t' + str(p) + '\n'
-
-        # calculate scorer accuracy
-        results['run' + str(i) + ' acc'] = rep['acc_dev'] = len(good_ids) / (len(good_ids) + len(wrong_ids))
-        print("%.3f\t" % rep['acc_dev'])
-
-        # write answer file
-        if write_answer:
-            answer = '#id\tcorrectLabelW0orW1\n' + answer
-            with open('out/answer' + str(i) + '_' + dt + '.txt', 'w') as fw:
-                fw.write(answer)
-
-        if False:
-            print("\nInstances correct")
-            print("Good_ids\t", good_ids)
-            print("Wrong_ids\t", wrong_ids)
-
-        return rep
-
-    # Creating a Callback subclass that stores each epoch prediction
-    class PredictionHistory(callbacks.Callback):
-        def __init__(self, idx, modl):
-            self.idx = idx
-            self.set_model(modl)
-
-        def on_epoch_end(self, epoch, logs={}):
-            predict(self.idx, self.model)
-
-    for run_idx in range(options['run'], options['run'] + options['runs']):
-
-        run_seed = results['run' + str(run_idx) + ' seed'] = options['pre_seed'] + run_idx
+        results['run'] = run_idx
+        run_seed = results['run seed'] = o['pre_seed'] + run_idx
         np.random.seed(run_seed)  # for reproducibility
 
         print("Run: ", run_idx)
         print('seed=' + str(run_seed), 'random int=' + str(np.random.randint(100000)))
 
         arguments = dict(
-            dropout=options['dropout'],
-            lstm_size=options['lstm_size'],
-            optimizer=options['optimizer'],
-            loss=options['loss'],
-            activation1=options['activation1'],
-            activation2=options['activation2'],
+            dropout=o['dropout'],
+            lstm_size=o['lstm_size'],
+            optimizer=o['optimizer'],
+            loss=o['loss'],
+            activation1=o['activation1'],
+            activation2=o['activation2'],
         )
 
         # double input layers with extra embedding
-        if options['embedding2'] != '':
+        if word_index_to_embeddings_map2 is not None:
             print('use 2 embeddings in parallel')
             arguments['embeddings2'] = word_index_to_embeddings_map2
 
         model = get_attention_lstm_intra_warrant(
             word_index_to_embeddings_map,
-            options['padding'],
-            rich_context=options['rich'],
+            o['padding'],
+            rich_context=o['rich'],
             **arguments
         )
 
         # define training callbacks
         cb_epoch_csvlogger = callbacks.CSVLogger(
-            filename='out/log_' + dt + '.csv')
+            filename=o['out_path'] + 'log_' + dt + '.csv')
         cb_epoch_checkpoint = callbacks.ModelCheckpoint(
-            filepath='out/model_' + dt + '_{epoch:02d}.hdf5',
+            filepath=o['out_path'] + 'model_' + dt + '_{epoch:02d}.hdf5',
             monitor='val_acc',
             verbose=1,
             save_best_only=True,
@@ -253,40 +293,56 @@ def __main__(argv):
             patience=5,
             verbose=1,
         )
-        cb_epoch_predictions = PredictionHistory(run_idx, model)
+        cb_epoch_predictions = PredictionReport(run_idx, model)
+
+        cbs = [cb_epoch_predictions,
+               # cb_epoch_csvlogger,
+               # cb_epoch_learningratereducer,
+               cb_epoch_stopping,
+               ]
+        if o['save_models']:
+            cbs.append(cb_epoch_checkpoint)
 
         model.fit(
-            {'sequence_layer_warrant0_input': train_warrant0_list,
-             'sequence_layer_warrant1_input': train_warrant1_list,
-             'sequence_layer_reason_input': train_reason_list,
-             'sequence_layer_claim_input': train_claim_list,
-             'sequence_layer_debate_input': train_debate_meta_data_list,
+            {'sequence_layer_warrant0_input': d.train_warrant0_list,
+             'sequence_layer_warrant1_input': d.train_warrant1_list,
+             'sequence_layer_reason_input': d.train_reason_list,
+             'sequence_layer_claim_input': d.train_claim_list,
+             'sequence_layer_debate_input': d.train_debate_meta_data_list,
              },
-            train_correct_label_w0_or_w1_list,
-            epochs=options['epochs'],
-            batch_size=options['batch_size'],
-            verbose=options['verbose'],
-            validation_split=options['vsplit'],
-            callbacks=[cb_epoch_predictions,
-                       cb_epoch_csvlogger,
-                       cb_epoch_checkpoint,
-                       cb_epoch_learningratereducer,
-                       cb_epoch_stopping]
+            d.train_correct_label_w0_or_w1_list,
+            epochs=o['epochs'],
+            batch_size=o['batch_size'],
+            verbose=0,  # o['verbose'],
+            validation_split=o['vsplit'],
+            callbacks=cbs,
         )
 
-        report = predict(run_idx, model)
-        all_runs_report.append(report)
-        # model.save('checkpoints/models_' + str(run_idx) + '_' + dt + '.h5')
-
-    # show report
-    results['runtime'] = timeit.default_timer() - start
-    pprint(results)
-
-    # write report file
-    values = list(results.values())
-    out = "\t".join(map(str, values)) + "\n"
-    with open('out/report_' + dt + '.csv', 'w') as fw:
-        fw.write(out)
+        # save the best model for this run
+        try:
+            best_model = Model.from_config(cb_epoch_predictions.best_epoch['config'])
+            # print(type(best_model))
+            # is comilation necessary?
+            best_model.compile(loss=o['loss'], optimizer=o['optimizer'], metrics=['accuracy'])
+            best_model.set_weights(cb_epoch_predictions.best_epoch['weights'])
+            # print(type(best_model))
+            # predict best model to write answer file with predicted labels
+            predict(run_idx, best_model, d, o,
+                    write_answer=True,
+                    epoch=cb_epoch_predictions.best_epoch['epoch'],
+                    pred_acc=cb_epoch_predictions.best_epoch['pred_acc'])
+            best_model.save('{}model_{}_rn{:02d}_ep{:02d}_ac{:.3f}.hdf5'
+                            .format(o['out_path'], dt,
+                                    run_idx,
+                                    cb_epoch_predictions.best_epoch['epoch'],
+                                    cb_epoch_predictions.best_epoch['pred_acc']))
+        except KeyError:
+            sys.stderr.write('KeyError: couldn\'t save model for timestamp={}, '
+                             'run={:02d}, epoch={:02d}, accuracy={:.3f}\n'
+                             .format(dt,
+                                     run_idx,
+                                     cb_epoch_predictions.best_epoch['epoch'],
+                                     cb_epoch_predictions.best_epoch['pred_acc']))
 
 
 def print_error_analysis_dev(ids: set) -> None:
@@ -311,4 +367,4 @@ def print_error_analysis_dev(ids: set) -> None:
 
 
 if __name__ == "__main__":
-    __main__(sys.argv[1:])
+    __main__()

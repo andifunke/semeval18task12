@@ -28,7 +28,7 @@ def get_options():
     parser.add_argument('--epochs', default=20, type=int,
                         help='maximum number of epochs. training may terminate eralier.')
     parser.add_argument('--padding', default=100, type=int,
-                        help='length of padded vectors. choose -1 for maximum padding.')
+                        help='length of padded vectors. choose <= 0 for maximum padding length (no truncation).')
     parser.add_argument('--batch_size', default=32, type=int,
                         help='size of batch')
     parser.add_argument('--pre_seed', default=12345, type=int,
@@ -63,12 +63,15 @@ def get_options():
                         help='usually leave as is ')
     parser.add_argument('--out_path', default='out/', type=str,
                         help='usually leave as is')
+    parser.add_argument('--save_models', default=False, type=bool,
+                        help='save model with each improving epoch')  # TODO: only save model for best accuracy
 
     options = vars(parser.parse_args())
-    print(options)
+    if options['padding'] < 1:
+        options['padding'] = None
+    # print(options)
 
     # TODO:
-    # max padding length = None
     # validation_data = dev (or dedicated batch)
     # shuffle = False
     # model
@@ -77,6 +80,8 @@ def get_options():
     # combined embeddings (2x no_of_channels or 2x dimensionality)
     # reduced number of channels
     # spelling / pre-processing
-    # backend -> re-write
+    # backend
+    # set trainable=False on embedding (Input?) layers - may not make sense
+    # stateful RNNs - probably doesn't make sense either
 
     return options, emb_files
