@@ -199,4 +199,5 @@ tmp/
 answers/
 models/
 manual/
+hpc/
 checkpoints/

@@ -121,8 +121,16 @@ def __main__():
     np.random.seed(o['pre_seed'])  # for reproducibility
     from keras.preprocessing import sequence
     from keras.models import Sequential, Model
-    from keras import callbacks
+    from keras import callbacks, __version__ as kv, backend as K
     from models import get_attention_lstm_intra_warrant
+    print('Keras version:', kv)
+    backend = K.backend()
+    if backend == 'theano':
+        from theano import __version__ as thv
+        print('Theano version:', thv)
+    elif backend == 'tensorflow':
+        pass
+
 
     # Creating a Callback subclass that stores each epoch prediction
     class PredictionReport(callbacks.Callback):
@@ -238,6 +246,7 @@ def __main__():
          ('run seed', ''),
          ('pred_acc', ''),
          ('val_acc', ''),
+         ('argv', str(sys.argv))
          ]
     )
 
@@ -367,4 +376,5 @@ def print_error_analysis_dev(ids: set) -> None:
 
 
 if __name__ == "__main__":
+    print("Python version:", sys.version)
     __main__()
