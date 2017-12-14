@@ -114,6 +114,7 @@ def predict(run_idx, model, data, o, write_answer=False, epoch=0, pred_acc=0):
 
 
 def __main__():
+    print('argv:', sys.argv[1:])
     start = timeit.default_timer()
     o, emb_files = get_options()
     dt = o['dt'] = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S-%f')
@@ -129,7 +130,8 @@ def __main__():
         from theano import __version__ as thv
         print('Theano version:', thv)
     elif backend == 'tensorflow':
-        pass
+        from tensorflow import __version__ as tfv
+        print('TensorFlow version:', tfv)
 
 
     # Creating a Callback subclass that stores each epoch prediction
@@ -158,10 +160,10 @@ def __main__():
                 self.best_epoch['val_acc'] = results['val_acc']
                 self.best_epoch['config'] = self.model.get_config()
                 self.best_epoch['weights'] = self.model.get_weights()
-            print('run {:02d} epoch {:02d} has finished with pred_acc={:.3f}, val_acc={:.3f} | '
-                  'best epoch: {:02d}, pred_acc={:.3f}, val_acc={:.3f}'
-                  .format(self.idx, epoch + 1, results['pred_acc'], results['val_acc'],
-                          self.best_epoch['epoch'], self.best_epoch['pred_acc'], self.best_epoch['val_acc']))
+            print('run {:02d} epoch {:02d} has finished with, loss={:.3f}, val_acc={:.3f}, pred_acc={:.3f} | '
+                  'best epoch: {:02d}, val_acc={:.3f}, pred_acc={:.3f}'
+                  .format(self.idx, epoch + 1, logs['loss'], results['val_acc'], results['pred_acc'],
+                          self.best_epoch['epoch'], self.best_epoch['val_acc'], self.best_epoch['pred_acc']))
             if o['verbose'] > 1:
                 pprint(results)
             # write report file
@@ -223,13 +225,14 @@ def __main__():
          ('run', o['run']),
          ('epoch', 0),
          ('runtime', ''),
+         ('argv', str(sys.argv[1:])),
          ('embedding', emb_files[o['embedding']].split('.')[0]),
          ('embedding2', o['embedding2']),
          ('vocabulary', len(word_index_to_embeddings_map)),
          ('words in embeddings', ''),
          ('dimensionality', len(word_index_to_embeddings_map[0])),
-         ('backend', 'Theano'),  # TODO
-         ('classifier', 'AttentionLSTM'),  # TODO
+         ('backend', backend),
+         ('classifier', 'LSTM_01'),  # TODO
          ('epochs', o['epochs']),
          ('dropout', o['dropout']),
          ('lstm_size', o['lstm_size']),
@@ -244,9 +247,8 @@ def __main__():
          ('pre_seed', o['pre_seed']),
          ('runs', o['runs']),
          ('run seed', ''),
-         ('pred_acc', ''),
          ('val_acc', ''),
-         ('argv', str(sys.argv))
+         ('pred_acc', ''),
          ]
     )
 
@@ -329,6 +331,8 @@ def __main__():
 
         # save the best model for this run
         try:
+            if o['verbose'] == 2:
+                print('saving model')
             best_model = Model.from_config(cb_epoch_predictions.best_epoch['config'])
             # print(type(best_model))
             # is comilation necessary?

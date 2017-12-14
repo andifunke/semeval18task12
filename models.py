@@ -132,16 +132,16 @@ def get_attention_lstm_intra_warrant(word_index_to_embeddings_map, max_len, rich
         sequence_layer_debate_input)
 
     bidi_lstm_layer_warrant0 = Bidirectional(
-        LSTM(lstm_size, return_sequences=True), name='BiDiLSTM W0')(embedded_layer_warrant0_input)
+        LSTM(lstm_size, return_sequences=True), name='BiDiLSTM_W0')(embedded_layer_warrant0_input)
     bidi_lstm_layer_warrant1 = Bidirectional(
-        LSTM(lstm_size, return_sequences=True), name='BiDiLSTM W1')(embedded_layer_warrant1_input)
+        LSTM(lstm_size, return_sequences=True), name='BiDiLSTM_W1')(embedded_layer_warrant1_input)
     bidi_lstm_layer_reason = Bidirectional(
-        LSTM(lstm_size, return_sequences=True), name='BiDiLSTM Reason')(embedded_layer_reason_input)
+        LSTM(lstm_size, return_sequences=True), name='BiDiLSTM_Reason')(embedded_layer_reason_input)
     bidi_lstm_layer_claim = Bidirectional(
-        LSTM(lstm_size, return_sequences=True), name='BiDiLSTM Claim')(embedded_layer_claim_input)
+        LSTM(lstm_size, return_sequences=True), name='BiDiLSTM_Claim')(embedded_layer_claim_input)
     # add context to the attention layer
     bidi_lstm_layer_debate = Bidirectional(
-        LSTM(lstm_size, return_sequences=True), name='BiDiLSTM Context')(embedded_layer_debate_input)
+        LSTM(lstm_size, return_sequences=True), name='BiDiLSTM_Context')(embedded_layer_debate_input)
 
     if rich_embedding:
         embedded_layer_warrant0_input2 = Embedding(
