@@ -201,3 +201,6 @@ models/
 manual/
 hpc/
 checkpoints/
+figures/
+embedding_caches/
+

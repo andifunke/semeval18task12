@@ -14,6 +14,14 @@ def get_options():
         ftx_pf="embeddings_cache_file_fastText_prov_freq.pkl.bz2",
         ftx_pf_lc="embeddings_cache_file_fastText_prov_freq_lc.pkl.bz2",
         ftx_pf_lc2="embeddings_cache_file_fastText_prov_freq_lc2.pkl.bz2",
+        ce_cb_100="custom_embedding_cb_100.vec",
+        ce_cb_100_lc="custom_embedding_cb_100_lc.vec",
+        ce_cb_300="custom_embedding_cb_300.vec",
+        ce_cb_300_lc="custom_embedding_cb_300_lc.vec",
+        ce_sg_100="custom_embedding_sg_100.vec",
+        ce_sg_100_lc="custom_embedding_sg_100_lc.vec",
+        ce_sg_300="custom_embedding_sg_300.vec",
+        ce_sg_300_lc="custom_embedding_sg_300_lc.vec",
     )
 
     parser = argparse.ArgumentParser(description='semeval 18 task 12 - training project')

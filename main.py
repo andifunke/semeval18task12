@@ -2,6 +2,8 @@ import datetime
 import json
 import sys
 import timeit
+import six.moves.cPickle as cPickle
+# import pickle
 from collections import OrderedDict
 from pprint import pprint
 import numpy as np
@@ -133,7 +135,6 @@ def __main__():
         from tensorflow import __version__ as tfv
         print('TensorFlow version:', tfv)
 
-
     # Creating a Callback subclass that stores each epoch prediction
     class PredictionReport(callbacks.Callback):
         head_written = False
@@ -147,7 +148,9 @@ def __main__():
                                    config=None,
                                    weights=None)
 
-        def on_epoch_end(self, epoch, logs={}):
+        def on_epoch_end(self, epoch, logs=None):
+            if logs is None:
+                logs = dict()
             results['val_acc'] = logs['val_acc']
             if o['verbose'] > 1:
                 print('\npredict:', end='')
@@ -181,9 +184,24 @@ def __main__():
     # 1st embedding
     # loading data
     embeddings_cache_file = o['code_path'] + o['emb_dir'] + emb_files[o['embedding']]
-    # load pre-extracted word-to-index maps and pre-filtered Glove embeddings
-    word_to_indices_map, word_index_to_embeddings_map = \
-        vocabulary_embeddings_extractor.load_cached_vocabulary_and_embeddings(embeddings_cache_file)
+    if o['embedding'][:2] == 'ce':
+        # word_vectors = json.load(open(embeddings_cache_file + '.json', 'r', encoding='utf8'))
+        # word_vectors = {k: np.array(v) for k, v in word_vectors.items()}
+        word_vectors = cPickle.load(open(embeddings_cache_file + '.pickle', 'rb'))
+        print('loading embeddings from', embeddings_cache_file)
+        wv_list = sorted(word_vectors.items())
+        pprint(wv_list[:10], width=1600, compact=True)
+        word_to_indices_map = {item[0]: index for index, item in enumerate(wv_list)}
+        word_index_to_embeddings_map = {index: item[1] for index, item in enumerate(wv_list)}
+    else:
+        # load pre-extracted word-to-index maps and pre-filtered Glove embeddings
+        word_to_indices_map, word_index_to_embeddings_map = \
+            vocabulary_embeddings_extractor.load_cached_vocabulary_and_embeddings(embeddings_cache_file)
+
+    print('word_to_indices_map')
+    pprint(sorted(word_to_indices_map.items())[:10], width=1600, compact=True)
+    print('word_index_to_embeddings_map')
+    pprint(sorted(word_index_to_embeddings_map.items())[:10], width=1600, compact=True)
 
     # 2nd embedding ?
     word_index_to_embeddings_map2 = None
@@ -301,7 +319,7 @@ def __main__():
         )
         cb_epoch_stopping = callbacks.EarlyStopping(
             monitor='val_acc',
-            patience=5,
+            patience=8,  # 5,
             verbose=1,
         )
         cb_epoch_predictions = PredictionReport(run_idx, model)
