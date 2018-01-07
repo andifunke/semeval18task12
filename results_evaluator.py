@@ -36,7 +36,7 @@ COLORS = ('red', 'green', 'blue', 'yellow', 'orange', 'violet')
 MARKERS = ('o', '^', 's', 'p')
 
 # paths
-DAT_DIR = './hpc/results/'
+DAT_DIR = './results/'
 FIG_DIR = './figures/'
 KEYS = [
     'timestamp',
@@ -260,7 +260,8 @@ def reports_evaluator_main(directory=None):
     df = df[KEYS]
     # tprint(df.sort_values('pred_acc', ascending=False), -100)
 
-    if False:
+    # print grouped tables
+    if True:
         dfs = [df]
         dfs_descriptions = ["full data set"]
 
@@ -296,7 +297,7 @@ def reports_evaluator_main(directory=None):
         plot_group(data, ['epoch'], x='batch_size', interval=(1, 20), show=show, ylim=ylim, log=True)
         plot_group(data, ['epoch'], x='vsplit', interval=(1, 20), show=show, ylim=ylim)
 
-    plot = True
+    plot = False
     show = False
     if plot:
         boxplot_group(data, x='backend', show=show, ylim=ylim)

@@ -1,4 +1,5 @@
 import gensim.models.word2vec as wv
+import gensim.models.fasttext as ftx
 import numpy as np
 import pandas as pd
 import spacy
@@ -61,24 +62,22 @@ def custom_embedding_builder_main():
                 sentences.extend(tokenize(item))
                 sentences_lc.extend(tokenize(item, lc=True))
 
-    # s = np.array(sentences)
-    # print(s)
-    # s_lc = np.array(sentences_lc)
-    # print(s_lc)
-    # quit()
-
     for lowercase in [False, True]:
         lc = '_lc' if lowercase else ''
         s = sentences_lc if lowercase else sentences
-        for sg in [0, 1]:
+        for sg in [1]:  # use [0] or [0, 1] for (additional) CBOW
             mdl = 'cb' if sg == 0 else 'sg'
             for size in [100, 300]:
                     print("starting w2v {} modelling, size={:d}".format(mdl, size))
-                    model = wv.Word2Vec(s, size=size, alpha=0.025, window=5, min_count=0, max_vocab_size=None,
-                                        sample=0.001, seed=1, workers=4, min_alpha=0.0001, sg=sg, hs=0, negative=5,
-                                        cbow_mean=1, iter=5, null_word=0, trim_rule=None, sorted_vocab=1,
-                                        batch_words=10000, compute_loss=False)
-                    fname = 'custom_embedding_{}_{:d}{}.vec'.format(mdl, size, lc)
+                    # model = wv.Word2Vec(s, size=size, alpha=0.025, window=5, min_count=0, max_vocab_size=None,
+                    #                     sample=0.001, seed=1, workers=4, min_alpha=0.0001, sg=sg, hs=0, negative=5,
+                    #                     cbow_mean=1, iter=5, null_word=0, trim_rule=None, sorted_vocab=1,
+                    #                     batch_words=10000, compute_loss=False)
+                    model = ftx.FastText(s, size=size, alpha=0.025, window=5, min_count=0, max_vocab_size=None,
+                                         sample=0.001, seed=1, workers=4, min_alpha=0.0001, sg=sg, hs=1, negative=5,
+                                         cbow_mean=1, iter=20, null_word=0, trim_rule=None, sorted_vocab=1,
+                                         batch_words=10000)
+                    fname = DATA_DIR + 'custom_embedding_ftx_hs_iter20_{}_{:d}{}.vec'.format(mdl, size, lc)
                     print("saving vectors to {}".format(fname))
                     model.save(fname)
 
@@ -86,6 +85,7 @@ def custom_embedding_builder_main():
 
 
 if __name__ == '__main__':
+    DATA_DIR = './embedding_caches/'
     SPACY = spacy.load('en')
     # nltk.data.load('tokenizers/punkt/english.pickle')
     custom_embedding_builder_main()

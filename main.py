@@ -1,7 +1,8 @@
 import datetime
+# from time import time
+import timeit
 import json
 import sys
-import timeit
 import six.moves.cPickle as cPickle
 # import pickle
 from collections import OrderedDict
@@ -13,8 +14,7 @@ from argument_parser import get_options
 from classes import Data
 
 
-def pred(y_true, y_pred):
-    pass
+CURRENT_PRED_ACC = 0.0
 
 
 def get_predicted_labels(predicted_probabilities):
@@ -112,6 +112,9 @@ def predict(run_idx, model, data, o, write_answer=False, epoch=0, pred_acc=0):
         print("Good_ids\t", good_ids)
         print("Wrong_ids\t", wrong_ids)
 
+    global CURRENT_PRED_ACC
+    CURRENT_PRED_ACC = acc_dev
+
     return acc_dev
 
 
@@ -125,7 +128,7 @@ def __main__():
     from keras.preprocessing import sequence
     from keras.models import Sequential, Model
     from keras import callbacks, __version__ as kv, backend as K
-    from models import get_attention_lstm_intra_warrant
+    from models import get_lstm_intra_warrant, get_attention_lstm_intra_warrant, get_cnn_lstm
     print('Keras version:', kv)
     backend = K.backend()
     if backend == 'theano':
@@ -156,16 +159,17 @@ def __main__():
                 print('\npredict:', end='')
             results['epoch'] = epoch + 1
             results['runtime'] = timeit.default_timer() - start
-            results['pred_acc'] = predict(self.idx, self.model, data=d, o=o)
+            results['pred_acc'] = logs['dev_pred'] = predict(self.idx, self.model, data=d, o=o)
             if results['pred_acc'] > self.best_epoch['pred_acc']:
                 self.best_epoch['epoch'] = epoch + 1
                 self.best_epoch['pred_acc'] = results['pred_acc']
                 self.best_epoch['val_acc'] = results['val_acc']
                 self.best_epoch['config'] = self.model.get_config()
                 self.best_epoch['weights'] = self.model.get_weights()
-            print('run {:02d} epoch {:02d} has finished with, loss={:.3f}, val_acc={:.3f}, pred_acc={:.3f} | '
+            print('run {:02d} epoch {:02d} has finished with, loss={:.3f}, val_acc={:.3f}, pred_acc={:.3f}, '
                   'best epoch: {:02d}, val_acc={:.3f}, pred_acc={:.3f}'
                   .format(self.idx, epoch + 1, logs['loss'], results['val_acc'], results['pred_acc'],
+                          # logs['dev_pred'],
                           self.best_epoch['epoch'], self.best_epoch['val_acc'], self.best_epoch['pred_acc']))
             if o['verbose'] > 1:
                 pprint(results)
@@ -184,13 +188,17 @@ def __main__():
     # 1st embedding
     # loading data
     embeddings_cache_file = o['code_path'] + o['emb_dir'] + emb_files[o['embedding']]
+    lc = True if ('_lc' in o['embedding'][-4:]) and (o['true_lc']) else False
+    if lc:
+        print('lowercase')
+
     if o['embedding'][:2] == 'ce':
         # word_vectors = json.load(open(embeddings_cache_file + '.json', 'r', encoding='utf8'))
         # word_vectors = {k: np.array(v) for k, v in word_vectors.items()}
         word_vectors = cPickle.load(open(embeddings_cache_file + '.pickle', 'rb'))
-        print('loading embeddings from', embeddings_cache_file)
+        # print('loading embeddings from', embeddings_cache_file)
         wv_list = sorted(word_vectors.items())
-        pprint(wv_list[:10], width=1600, compact=True)
+        # pprint(wv_list[:10], width=1600, compact=True)
         word_to_indices_map = {item[0]: index for index, item in enumerate(wv_list)}
         word_index_to_embeddings_map = {index: item[1] for index, item in enumerate(wv_list)}
     else:
@@ -198,10 +206,10 @@ def __main__():
         word_to_indices_map, word_index_to_embeddings_map = \
             vocabulary_embeddings_extractor.load_cached_vocabulary_and_embeddings(embeddings_cache_file)
 
-    print('word_to_indices_map')
-    pprint(sorted(word_to_indices_map.items())[:10], width=1600, compact=True)
-    print('word_index_to_embeddings_map')
-    pprint(sorted(word_index_to_embeddings_map.items())[:10], width=1600, compact=True)
+    # print('word_to_indices_map')
+    # pprint(sorted(word_to_indices_map.items())[:10], width=1600, compact=True)
+    # print('word_index_to_embeddings_map')
+    # pprint(sorted(word_index_to_embeddings_map.items())[:10], width=1600, compact=True)
 
     # 2nd embedding ?
     word_index_to_embeddings_map2 = None
@@ -214,12 +222,13 @@ def __main__():
     # loads data and replaces words with indices from embedding cache
     (d.train_instance_id_list, d.train_warrant0_list, d.train_warrant1_list, d.train_correct_label_w0_or_w1_list,
      d.train_reason_list, d.train_claim_list, d.train_debate_meta_data_list) = \
-        data_loader.load_single_file(o['code_path'] + 'data/train-w-swap-full_challenge.tsv', word_to_indices_map)
+        data_loader.load_single_file(o['code_path'] + 'data/train-w-swap-full_challenge.tsv', word_to_indices_map,
+                                     lc=lc)
     # print('loaded', train_reason_list)
 
     (d.dev_instance_id_list, d.dev_warrant0_list, d.dev_warrant1_list, d.dev_correct_label_w0_or_w1_list,
      d.dev_reason_list, d.dev_claim_list, d.dev_debate_meta_data_list) = \
-        data_loader.load_single_file(o['code_path'] + 'data/dev-full_challenge.tsv', word_to_indices_map)
+        data_loader.load_single_file(o['code_path'] + 'data/dev-full_challenge.tsv', word_to_indices_map, lc=lc)
 
     # pad all sequences
     (d.train_warrant0_list, d.train_warrant1_list, d.train_reason_list, d.train_claim_list,
@@ -250,7 +259,7 @@ def __main__():
          ('words in embeddings', ''),
          ('dimensionality', len(word_index_to_embeddings_map[0])),
          ('backend', backend),
-         ('classifier', 'LSTM_01'),  # TODO
+         ('classifier', o['classifier']),
          ('epochs', o['epochs']),
          ('dropout', o['dropout']),
          ('lstm_size', o['lstm_size']),
@@ -272,10 +281,13 @@ def __main__():
 
     for run_idx in range(o['run'], o['run'] + o['runs']):
         start = timeit.default_timer()
+        # t0 = time()
 
         results['run'] = run_idx
         run_seed = results['run seed'] = o['pre_seed'] + run_idx
         np.random.seed(run_seed)  # for reproducibility
+        global CURRENT_PRED_ACC
+        CURRENT_PRED_ACC = 0.0
 
         print("Run: ", run_idx)
         print('seed=' + str(run_seed), 'random int=' + str(np.random.randint(100000)))
@@ -287,6 +299,7 @@ def __main__():
             loss=o['loss'],
             activation1=o['activation1'],
             activation2=o['activation2'],
+            dense_factor=o['dense_factor']
         )
 
         # double input layers with extra embedding
@@ -294,7 +307,17 @@ def __main__():
             print('use 2 embeddings in parallel')
             arguments['embeddings2'] = word_index_to_embeddings_map2
 
-        model = get_attention_lstm_intra_warrant(
+        if o['classifier'] == 'LSTM_01':
+            get_model = get_lstm_intra_warrant
+        elif o['classifier'] == 'Att_LSTM_01':
+            get_model = get_attention_lstm_intra_warrant
+        elif o['classifier'] == 'CNN_LSTM_01':
+            get_model = get_cnn_lstm
+        else:
+            o['classifier'] = 'LSTM_01'
+            get_model = get_lstm_intra_warrant
+
+        model = get_model(
             word_index_to_embeddings_map,
             o['padding'],
             rich_context=o['rich'],
@@ -306,26 +329,27 @@ def __main__():
             filename=o['out_path'] + 'log_' + dt + '.csv')
         cb_epoch_checkpoint = callbacks.ModelCheckpoint(
             filepath=o['out_path'] + 'model_' + dt + '_{epoch:02d}.hdf5',
-            monitor='val_acc',
+            monitor='dev_pred',
             verbose=1,
             save_best_only=True,
         )
         cb_epoch_learningratereducer = callbacks.ReduceLROnPlateau(
-            monitor='val_acc',
+            monitor='dev_pred',
             factor=0.5,
-            patience=3,
+            patience=max(1, o['patience'] - 2),
             verbose=1,
             min_lr=0.0001
         )
         cb_epoch_stopping = callbacks.EarlyStopping(
-            monitor='val_acc',
-            patience=8,  # 5,
+            monitor='dev_pred',
+            mode='max',
+            patience=o['patience'],
             verbose=1,
         )
         cb_epoch_predictions = PredictionReport(run_idx, model)
 
         cbs = [cb_epoch_predictions,
-               # cb_epoch_csvlogger,
+               cb_epoch_csvlogger,
                # cb_epoch_learningratereducer,
                cb_epoch_stopping,
                ]
@@ -346,6 +370,8 @@ def __main__():
             validation_split=o['vsplit'],
             callbacks=cbs,
         )
+
+        print('finished in', timeit.default_timer() - start)
 
         # save the best model for this run
         try:
@@ -374,6 +400,16 @@ def __main__():
                                      run_idx,
                                      cb_epoch_predictions.best_epoch['epoch'],
                                      cb_epoch_predictions.best_epoch['pred_acc']))
+
+
+# cheating metric - not working as expected
+def dev_pred(y_true, y_pred):
+    from keras import backend as K
+    global CURRENT_PRED_ACC
+    # print(CURRENT_PRED_ACC)
+    # y = K.mean(y_pred)
+    # print(y)
+    return K.cast(CURRENT_PRED_ACC, 'float32')
 
 
 def print_error_analysis_dev(ids: set) -> None:

@@ -4,16 +4,22 @@ import os.path
 
 import vocabulary_embeddings_extractor
 
+MAX_LEN = 0
 
-def string_to_indices(string: str, word_to_indices_map_param: dict, nb_words: int = None) -> list:
+
+def string_to_indices(string: str, word_to_indices_map_param: dict, nb_words: int = None, lc=False) -> list:
     """
     Tokenizes a string and converts to indices specified in word_to_indices_map; performs also OOV replacement
     :param string: string
     :param word_to_indices_map_param: map (word index, embedding index)
     :param nb_words: all words with higher index are treated as OOV
+    :param lc: use lowercase on all tokens
     :return: a list of indices
     """
-    tokens = vocabulary_embeddings_extractor.tokenize(string)
+    tokens = vocabulary_embeddings_extractor.tokenize(string.lower() if lc else string)
+    # print(tokens)
+    # global MAX_LEN
+    # MAX_LEN = max(len(tokens), MAX_LEN)
 
     # now convert tokens to indices; set to 2 for OOV
     word_indices_list = [word_to_indices_map_param.get(word, 2) for word in tokens]
@@ -25,9 +31,10 @@ def string_to_indices(string: str, word_to_indices_map_param: dict, nb_words: in
     return word_indices_list
 
 
-def load_single_instance_from_line(line: str, word_to_indices_map: dict, nb_words: int = None) -> tuple:
+def load_single_instance_from_line(line: str, word_to_indices_map: dict, nb_words: int = None, lc=False) -> tuple:
     """
     Load a single training/test instance from a single line int tab-separated format
+    :param lc: use lowercase on all tokens
     :param line: string line
     :param word_to_indices_map:  map (word index, embedding index)
     :param nb_words: all words with higher index are treated as OOV
@@ -38,13 +45,13 @@ def load_single_instance_from_line(line: str, word_to_indices_map: dict, nb_word
     assert len(split_line) == 8
 
     instance_id = split_line[0]
-    warrant0 = string_to_indices(split_line[1], word_to_indices_map, nb_words)
-    warrant1 = string_to_indices(split_line[2], word_to_indices_map, nb_words)
+    warrant0 = string_to_indices(split_line[1], word_to_indices_map, nb_words, lc)
+    warrant1 = string_to_indices(split_line[2], word_to_indices_map, nb_words, lc)
     correct_label_w0_or_w1 = int(split_line[3])
-    reason = string_to_indices(split_line[4], word_to_indices_map, nb_words)
-    claim = string_to_indices(split_line[5], word_to_indices_map, nb_words)
-    debate_title = string_to_indices(split_line[6], word_to_indices_map, nb_words)
-    debate_info = string_to_indices(split_line[7], word_to_indices_map, nb_words)
+    reason = string_to_indices(split_line[4], word_to_indices_map, nb_words, lc)
+    claim = string_to_indices(split_line[5], word_to_indices_map, nb_words, lc)
+    debate_title = string_to_indices(split_line[6], word_to_indices_map, nb_words, lc)
+    debate_info = string_to_indices(split_line[7], word_to_indices_map, nb_words, lc)
     # concatenate these two into one vector
     debate_meta_data = debate_title + debate_info
 
@@ -60,9 +67,10 @@ def load_single_instance_from_line(line: str, word_to_indices_map: dict, nb_word
     return instance_id, warrant0, warrant1, correct_label_w0_or_w1, reason, claim, debate_meta_data
 
 
-def load_single_file(file_name: str, word_to_indices_map: dict, nb_words: int = None) -> tuple:
+def load_single_file(file_name: str, word_to_indices_map: dict, nb_words: int = None, lc=False) -> tuple:
     """
     Loads a single train/test file and returns a tuple of lists
+    :param lc: use lowercase on all tokens
     :param file_name: full file name
     :param word_to_indices_map: vocabulary map in form {word: index} where index also correspond to frequencies
     :param nb_words: if a particular word index is higher than this value, the word is treated as OOV
@@ -95,7 +103,7 @@ def load_single_file(file_name: str, word_to_indices_map: dict, nb_words: int = 
     for line in lines:
         # convert to vectors of embedding indices where appropriate
         instance_id, warrant0, warrant1, correct_label_w0_or_w1, reason, claim, debate_meta_data = \
-            load_single_instance_from_line(line, word_to_indices_map, nb_words)
+            load_single_instance_from_line(line, word_to_indices_map, nb_words, lc)
 
         # add to the result
         instance_id_list.append(instance_id)
@@ -105,6 +113,9 @@ def load_single_file(file_name: str, word_to_indices_map: dict, nb_words: int = 
         reason_list.append(reason)
         claim_list.append(claim)
         debate_meta_data_list.append(debate_meta_data)
+
+    # global MAX_LEN
+    # print('MAX_LEN:', MAX_LEN)
 
     return (instance_id_list, warrant0_list, warrant1_list, correct_label_w0_or_w1_list, reason_list, claim_list,
             debate_meta_data_list)

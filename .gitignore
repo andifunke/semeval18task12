@@ -203,4 +203,6 @@ hpc/
 checkpoints/
 figures/
 embedding_caches/
+results/
+attention_lstm/
 
