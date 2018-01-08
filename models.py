@@ -1,20 +1,20 @@
 """
 Neural models - new approach with sandwich design
 """
-from keras import Sequential
-
 from main import dev_pred
 import keras
 import numpy as np
 from keras.engine import Input, Model, Layer
 from keras.layers import concatenate, Lambda, Dense, Dropout, Embedding, LSTM, Bidirectional, multiply, add, RNN, \
     SimpleRNN, Concatenate, Flatten, Convolution1D, ConvLSTM2D, TimeDistributed, Conv2D, MaxPooling2D, Conv1D, \
-    MaxPooling1D
+    MaxPooling1D, Multiply, Add, Average, Maximum, Dot
 from theano.scalar import float32
 import models_vintage
 
 
-SHORTCUTS = {'LSTM_02', 'LSTM_03', 'LSTM_04',
+SHORTCUTS = {'LSTM_02', 'LSTM_02b', 'LSTM_02c', 'LSTM_02d', 'LSTM_03', 'LSTM_04',
+             'LSTM_05', 'LSTM_05', 'LSTM_05add', 'LSTM_05conc', 'LSTM_05avg', 'LSTM_05max', 'LSTM_05dot',
+             'LSTM_06',
              'CNN_LSTM_02', 'CNN_LSTM_02b', 'CNN_LSTM_03', 'CNN_LSTM_04', 'CNN_LSTM_05',
              'ATT_LSTM_02',
              }
@@ -173,7 +173,7 @@ def get_model(classifier, word_index_to_embeddings_map, max_len, rich_context, *
     # attention_warrant0 = AttentionLSTM(lstm_size, attention_vector_for_w0)(bidi_lstm_layer_warrant0)
     # attention_warrant1 = AttentionLSTM(lstm_size, attention_vector_for_w1)(bidi_lstm_layer_warrant1)
 
-    # based on LSTM_01 - take care: only warrant 0 and 1 are used!
+    # based on LSTM_01 - only warrant 0 and 1 are used!
     if classifier == 'LSTM_02':
         il = get_input_layers(names, max_len)
         el = embed_inputs(il, embeddings, max_len)
@@ -186,6 +186,59 @@ def get_model(classifier, word_index_to_embeddings_map, max_len, rich_context, *
         dropout_layer = Dropout(dropout, name='dropout')(dropout_input)
         dense1 = Dense(int(lstm_size * factor), activation=activation1, name='dense_main')(dropout_layer)
         output_input = dense1
+
+    # based on LSTM_02 - only claim and reason are used!
+    elif classifier == 'LSTM_02b':
+        il = get_input_layers(names, max_len)
+        el = embed_inputs(il, embeddings, max_len)
+        bl = get_bidi_lstm_layers(el, names, lstm_size)
+        # only warrant layers used
+        attention_warrant0 = LSTM(lstm_size)(bl[2])
+        attention_warrant1 = LSTM(lstm_size)(bl[3])
+        # TODO: use 'add' instead of 'concatenate' to reconstruct possible bug in original implementation
+        dropout_input = concatenate([attention_warrant0, attention_warrant1])
+        dropout_layer = Dropout(dropout, name='dropout')(dropout_input)
+        dense1 = Dense(int(lstm_size * factor), activation=activation1, name='dense_main')(dropout_layer)
+        output_input = dense1
+
+    # combining 02 and 02b
+    elif classifier == 'LSTM_02c':
+        il = get_input_layers(names, max_len)
+        el = embed_inputs(il, embeddings, max_len)
+        bl = get_bidi_lstm_layers(el, names, lstm_size)
+        # only warrant layers used
+        warrant0 = LSTM(lstm_size)(bl[0])
+        warrant1 = LSTM(lstm_size)(bl[1])
+        reason = LSTM(lstm_size)(bl[2])
+        claim = LSTM(lstm_size)(bl[3])
+        # TODO: use 'add' instead of 'concatenate' to reconstruct possible bug in original implementation
+        warrants = concatenate([warrant0, warrant1])
+        reason_claim = concatenate([reason, claim])
+        dropout_layer_w = Dropout(dropout, name='dropout_w')(warrants)
+        dropout_layer_rc = Dropout(dropout, name='dropout_rc')(reason_claim)
+        dense_w = Dense(int(lstm_size * factor), activation=activation1, name='dense_w')(dropout_layer_w)
+        dense_rc = Dense(int(lstm_size * factor), activation=activation1, name='dense_rc')(dropout_layer_rc)
+        output_input = concatenate([dense_w, dense_rc])
+
+    # variant of 02c using 16 subcategories
+    elif classifier == 'LSTM_02d':
+        il = get_input_layers(names, max_len)
+        el = embed_inputs(il, embeddings, max_len)
+        bl = get_bidi_lstm_layers(el, names, lstm_size)
+        # only warrant layers used
+        warrant0 = LSTM(lstm_size)(bl[0])
+        warrant1 = LSTM(lstm_size)(bl[1])
+        reason = LSTM(lstm_size)(bl[2])
+        claim = LSTM(lstm_size)(bl[3])
+        # TODO: use 'add' instead of 'concatenate' to reconstruct possible bug in original implementation
+        warrants = concatenate([warrant0, warrant1])
+        reason_claim = concatenate([reason, claim])
+        dropout_layer_w = Dropout(dropout, name='dropout_w')(warrants)
+        dropout_layer_rc = Dropout(dropout, name='dropout_rc')(reason_claim)
+        dense_w = Dense(int(lstm_size * factor), activation=activation1, name='dense_w')(dropout_layer_w)
+        dense_rc = Dense(int(lstm_size * factor), activation=activation1, name='dense_rc')(dropout_layer_rc)
+        dense_main = Dense(16, activation=activation1, name='dense_main')(concatenate([dense_w, dense_rc]))
+        output_input = dense_main
 
     # uses the max-pool layer: experimental
     elif classifier == 'LSTM_03':
@@ -211,6 +264,36 @@ def get_model(classifier, word_index_to_embeddings_map, max_len, rich_context, *
         dropout_layer = Dropout(dropout, name='dropout')(dropout_input)
         dense1 = Dense(int(lstm_size * factor), activation=activation1, name='dense_main')(dropout_layer)
         output_input = dense1
+
+    # LSTM_05 - process reason and claim with each warrant independently
+    # without suffix: multiply - no good results
+    # add - ok, but nothing special
+    # conc(atenate) - promising
+    elif classifier[:7] == 'LSTM_05':
+        mergers = dict(mul=Multiply, add=Add, avg=Average, max=Maximum, dot=Dot)
+        Merger = mergers[classifier[7:]]
+        il = get_input_layers(names, max_len)
+        el = embed_inputs(il, embeddings, max_len)
+        bl = get_bidi_lstm_layers(el, names, lstm_size)
+        # multiplying warrant0 and warrant1 separately with reason and claim - similar to attention
+        warrant0 = LSTM(lstm_size)(Merger()([bl[0], bl[2], bl[3]]))
+        warrant1 = LSTM(lstm_size)(Merger()([bl[1], bl[2], bl[3]]))
+        dropout_layer = Dropout(dropout, name='dropout_w')(concatenate([warrant0, warrant1]))
+        dense = Dense(int(lstm_size * factor), activation=activation1, name='dense_w')(dropout_layer)
+        output_input = dense
+
+    # LSTM_06 - similar to LSTM_05, but concatenates claim and reson before merging with warrants and uses dot product
+    elif classifier == 'LSTM_06':
+        il = get_input_layers(names, max_len)
+        el = embed_inputs(il, embeddings, max_len)
+        bl = get_bidi_lstm_layers(el, names, lstm_size)
+        # multiplying warrant0 and warrant1 separately with reason and claim - similar to attention
+        reason_claim = Concatenate()([bl[2], bl[3]])
+        warrant0 = LSTM(lstm_size)(Dot(axes=(1, 1))([bl[0], reason_claim]))
+        warrant1 = LSTM(lstm_size)(Dot(axes=(1, 1))([bl[1], reason_claim]))
+        dropout_layer = Dropout(dropout, name='dropout_w')(concatenate([warrant0, warrant1]))
+        dense = Dense(int(lstm_size * factor), activation=activation1, name='dense_w')(dropout_layer)
+        output_input = dense
 
     # CNN_LSTM_02 - using multiple (parallel) CNN filters before the LSTM. only warrant 0 and 1 are used!
     elif classifier == 'CNN_LSTM_02':
@@ -277,7 +360,7 @@ def get_model(classifier, word_index_to_embeddings_map, max_len, rich_context, *
         output_input = dense1
 
     # based on ATT_LSTM_01 (https://github.com/philipperemy/keras-attention-mechanism/blob/master/attention_dense.py)
-    # pure randomness - unusable
+    # too random
     elif classifier == 'ATT_LSTM_02':
         il = get_input_layers(names, max_len)
         el = embed_inputs(il, embeddings, max_len)

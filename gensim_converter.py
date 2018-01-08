@@ -33,5 +33,5 @@ def gensim_wrapper_main():
 
 
 if __name__ == '__main__':
-    DATA_DIR = './embedding_custom/'
+    DATA_DIR = './svm/'
     gensim_wrapper_main()
