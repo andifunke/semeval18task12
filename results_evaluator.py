@@ -71,7 +71,7 @@ KEYS = [
 DEF_KEYS = {
     'epoch': False,
     'backend': False,
-    # 'classifier': None,
+    'classifier': True,
     # 'dimensionality': None,
     'padding': True,
     'lstm_size': True,

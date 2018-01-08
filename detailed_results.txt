@@ -1,0 +1,486 @@
+/home/andreas/anaconda3/envs/default/bin/python /home/andreas/workspace/semeval/project/results_evaluator.py
+start evaluating
+********************************************************************************************************
+AGGREGATIONS FOR KEYED GROUP: ['epoch']
+
+on data set:  full data set
+row of maximum for pred_acc per group:
+|   epoch | timestamp                  |   pred_acc |   val_acc | backend    | classifier   |   dimensionality |   padding |   lstm_size | activation1   | activation2   | optimizer   | loss                |   batch_size |   dropout |   vsplit | embedding                                    |   embedding2 |   rich |   runtime | argv                                                                                                  |
+|--------:|:---------------------------|-----------:|----------:|:-----------|:-------------|-----------------:|----------:|------------:|:--------------|:--------------|:------------|:--------------------|-------------:|----------:|---------:|:---------------------------------------------|-------------:|-------:|----------:|:------------------------------------------------------------------------------------------------------|
+|      15 | 2017-12-10_01-29-43-821365 |      0.712 |     0.661 | Theano     | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_dict2vec_prov_freq_lc  |          nan |      3 |  1124.660 | ['main.py', '--runs', '5', '--embedding', 'd2v_pf_lc', '--save_path', '/scratch_gs/funkea/semeval/']  |
+|       9 | 2017-12-10_01-28-44-137141 |      0.712 |     0.674 | Theano     | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec               |          nan |      3 |   728.510 | ['main.py', '--runs', '5', '--pre_seed', '1', '--save_path', '/scratch_gs/funkea/semeval/']           |
+|      13 | 2017-12-12_23-46-51-712310 |      0.706 |     0.661 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_dict2vec_prov_freq_lc  |          nan |      3 |   339.900 | ['--runs', '5', '--embedding', 'd2v_pf_lc', '--out_path', '/scratch_gs/funkea/semeval/out/']          |
+|      12 | 2017-12-12_23-46-51-712310 |      0.706 |     0.686 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_dict2vec_prov_freq_lc  |          nan |      3 |   317.674 | ['--runs', '5', '--embedding', 'd2v_pf_lc', '--out_path', '/scratch_gs/funkea/semeval/out/']          |
+|      11 | 2017-12-13_00-15-16-731454 |      0.706 |     0.644 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.400 | embeddings_cache_file_word2vec               |          nan |      3 |   205.993 | ['--runs', '5', '--vsplit', '0.4', '--out_path', '/scratch_gs/funkea/semeval/out/']                   |
+|      10 | 2018-01-06_23-51-34-376124 |      0.703 |     0.654 | tensorflow | LSTM_01      |              300 |        47 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.400 | embeddings_cache_file_word2vec               |          nan |      3 |   162.703 | ['--padding', '47', '--runs', '5', '--vsplit', '0.4']                                                 |
+|       8 | 2017-12-12_23-46-50-340527 |      0.699 |     0.669 | tensorflow | LSTM_01      |              300 |       150 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec               |          nan |      3 |   287.003 | ['--runs', '5', '--padding', '150', '--out_path', '/scratch_gs/funkea/semeval/out/']                  |
+|      16 | 2017-12-10_01-29-44-165403 |      0.693 |     0.686 | Theano     | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_dict2vec_prov_freq_lc2 |          nan |      3 |  1133.371 | ['main.py', '--runs', '5', '--embedding', 'd2v_pf_lc2', '--save_path', '/scratch_gs/funkea/semeval/'] |
+|      14 | 2017-12-10_01-29-45-060616 |      0.693 |     0.650 | Theano     | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.500 | embeddings_cache_file_word2vec               |          nan |      3 |   777.315 | ['main.py', '--runs', '5', '--vsplit', '0.5', '--save_path', '/scratch_gs/funkea/semeval/']           |
+|       6 | 2017-12-10_01-28-44-137141 |      0.693 |     0.690 | Theano     | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec               |          nan |      3 |   538.018 | ['main.py', '--runs', '5', '--pre_seed', '1', '--save_path', '/scratch_gs/funkea/semeval/']           |
+|       7 | 2017-12-10_01-29-44-233654 |      0.690 |     0.702 | Theano     | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_fastText_prov_freq_lc2 |          nan |      3 |   584.761 | ['main.py', '--runs', '5', '--embedding', 'ftx_pf_lc2', '--save_path', '/scratch_gs/funkea/semeval/'] |
+|      17 | 2018-01-08_02-44-59-364714 |      0.690 |     0.632 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec               |          nan |      3 |   391.613 | ['--classifier', 'LSTM_01']                                                                           |
+|       5 | 2017-12-10_01-29-43-116198 |      0.687 |     0.674 | Theano     | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec               |          nan |      3 |   458.816 | ['main.py', '--runs', '5', '--pre_seed', '8', '--save_path', '/scratch_gs/funkea/semeval/']           |
+|      19 | 2017-12-12_23-46-50-557214 |      0.684 |     0.698 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |          512 |     0.900 |    0.100 | embeddings_cache_file_word2vec               |          nan |      3 |   321.869 | ['--runs', '5', '--batch_size', '512', '--out_path', '/scratch_gs/funkea/semeval/out/']               |
+|      18 | 2017-12-12_22-43-11-604080 |      0.684 |     0.682 | tensorflow | LSTM_01      |              300 |       100 |           8 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec               |          nan |      3 |   332.485 | ['--runs', '5', '--lstm_size', '8', '--out_path', '/scratch_gs/funkea/semeval/out/']                  |
+|      20 | 2017-12-12_23-46-50-557214 |      0.680 |     0.674 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |          512 |     0.900 |    0.100 | embeddings_cache_file_word2vec               |          nan |      3 |   342.842 | ['--runs', '5', '--batch_size', '512', '--out_path', '/scratch_gs/funkea/semeval/out/']               |
+|       4 | 2017-12-13_00-10-48-149584 |      0.674 |     0.678 | tensorflow | LSTM_01      |              300 |       100 |          64 | elu           | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec               |          nan |      3 |   101.342 | ['--runs', '5', '--activation1', 'elu', '--out_path', '/scratch_gs/funkea/semeval/out/']              |
+|       3 | 2017-12-12_23-46-51-722614 |      0.661 |     0.661 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.600 |    0.100 | embeddings_cache_file_word2vec               |          nan |      3 |    95.335 | ['--runs', '5', '--dropout', '0.6', '--out_path', '/scratch_gs/funkea/semeval/out/']                  |
+|       2 | 2017-12-12_23-46-50-385308 |      0.658 |     0.624 | tensorflow | LSTM_01      |              300 |       100 |         384 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec               |          nan |      3 |   368.752 | ['--runs', '5', '--lstm_size', '384', '--out_path', '/scratch_gs/funkea/semeval/out/']                |
+|      21 | 2018-01-06_21-22-43-940136 |      0.633 |     0.665 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_dict2vec_prov_freq     |          nan |      3 |  1589.144 | ['--embedding', 'd2v_pf', '--epochs', '40']                                                           |
+|      22 | 2018-01-06_21-00-58-547960 |      0.623 |     0.612 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | custom_embedding_iter20_sg_300_lc            |          nan |      3 |   478.444 | ['--embedding', 'ce_sg_i20_300_lc', '--epochs', '40']                                                 |
+|      24 | 2018-01-06_02-50-01-090351 |      0.620 |     0.632 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | custom_embedding_cb_300                      |          nan |      3 |   530.723 | ['--embedding', 'ce_cb_300', '--epochs', '40']                                                        |
+|      25 | 2018-01-06_02-50-01-090351 |      0.620 |     0.612 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | custom_embedding_cb_300                      |          nan |      3 |   552.504 | ['--embedding', 'ce_cb_300', '--epochs', '40']                                                        |
+|      26 | 2018-01-06_02-50-01-090351 |      0.620 |     0.632 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | custom_embedding_cb_300                      |          nan |      3 |   578.561 | ['--embedding', 'ce_cb_300', '--epochs', '40']                                                        |
+|      27 | 2018-01-06_02-17-17-069976 |      0.617 |     0.682 | tensorflow | LSTM_01      |              100 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | custom_embedding_cb_100                      |          nan |      3 |   418.043 | ['--embedding', 'ce_cb_100', '--epochs', '40']                                                        |
+|      23 | 2018-01-06_02-17-17-069976 |      0.617 |     0.698 | tensorflow | LSTM_01      |              100 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | custom_embedding_cb_100                      |          nan |      3 |   359.203 | ['--embedding', 'ce_cb_100', '--epochs', '40']                                                        |
+|      28 | 2018-01-06_02-17-17-069976 |      0.601 |     0.690 | tensorflow | LSTM_01      |              100 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | custom_embedding_cb_100                      |          nan |      3 |   432.572 | ['--embedding', 'ce_cb_100', '--epochs', '40']                                                        |
+|       1 | 2017-12-12_23-46-50-340527 |      0.598 |     0.554 | tensorflow | LSTM_01      |              300 |       150 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec               |          nan |      3 |    62.416 | ['--runs', '5', '--padding', '150', '--out_path', '/scratch_gs/funkea/semeval/out/']                  |
+
+mean of all columns - sorted by pred_acc:
+|   epoch |   pred_acc |
+|--------:|-----------:|
+|       9 |      0.634 |
+|      11 |      0.633 |
+|      10 |      0.632 |
+|       8 |      0.631 |
+|      12 |      0.629 |
+|      13 |      0.627 |
+|      20 |      0.626 |
+|      14 |      0.624 |
+|      15 |      0.624 |
+|       7 |      0.624 |
+|      19 |      0.623 |
+|      16 |      0.621 |
+|      18 |      0.621 |
+|      17 |      0.620 |
+|       6 |      0.611 |
+|      24 |      0.607 |
+|      23 |      0.604 |
+|      28 |      0.601 |
+|       5 |      0.601 |
+|      22 |      0.600 |
+|      21 |      0.595 |
+|      26 |      0.585 |
+|       4 |      0.582 |
+|      25 |      0.564 |
+|      27 |      0.555 |
+|       3 |      0.550 |
+|       2 |      0.519 |
+|       1 |      0.509 |
+
+********************************************************************************************************
+********************************************************************************************************
+AGGREGATIONS FOR KEYED GROUP: ['backend']
+
+on data set:  full data set
+row of maximum for pred_acc per group:
+| backend    | timestamp                  |   pred_acc |   val_acc |   epoch | classifier   |   dimensionality |   padding |   lstm_size | activation1   | activation2   | optimizer   | loss                |   batch_size |   dropout |   vsplit | embedding                      |   embedding2 |   rich |   runtime | argv                                                                                        |
+|:-----------|:---------------------------|-----------:|----------:|--------:|:-------------|-----------------:|----------:|------------:|:--------------|:--------------|:------------|:--------------------|-------------:|----------:|---------:|:-------------------------------|-------------:|-------:|----------:|:--------------------------------------------------------------------------------------------|
+| Theano     | 2017-12-10_01-28-44-137141 |      0.712 |     0.674 |       9 | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   728.510 | ['main.py', '--runs', '5', '--pre_seed', '1', '--save_path', '/scratch_gs/funkea/semeval/'] |
+| tensorflow | 2017-12-12_23-46-51-768780 |      0.709 |     0.624 |       9 | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   212.978 | ['--runs', '5', '--optimizer', 'adam', '--out_path', '/scratch_gs/funkea/semeval/out/']     |
+
+mean of all columns - sorted by pred_acc:
+| backend    |   pred_acc |
+|:-----------|-----------:|
+| tensorflow |      0.600 |
+| Theano     |      0.597 |
+
+********************************************************************************************************
+********************************************************************************************************
+AGGREGATIONS FOR KEYED GROUP: ['classifier']
+
+on data set:  full data set
+filter: ['classifier']
+row of maximum for pred_acc per group:
+| classifier   | timestamp                  |   pred_acc |   val_acc |   epoch | backend    |   dimensionality |   padding |   lstm_size | activation1   | activation2   | optimizer   | loss                |   batch_size |   dropout |   vsplit | embedding                      |   embedding2 |   rich |   runtime | argv                             |
+|:-------------|:---------------------------|-----------:|----------:|--------:|:-----------|-----------------:|----------:|------------:|:--------------|:--------------|:------------|:--------------------|-------------:|----------:|---------:|:-------------------------------|-------------:|-------:|----------:|:---------------------------------|
+| ATT_LSTM_01  | 2018-01-07_19-55-32-347520 |      0.699 |     0.636 |       9 | tensorflow |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   212.210 | ['--classifier', 'ATT_LSTM_01']  |
+| LSTM_01      | 2018-01-08_02-44-59-364714 |      0.699 |     0.636 |       9 | tensorflow |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   215.795 | ['--classifier', 'LSTM_01']      |
+| LSTM_03      | 2018-01-07_23-15-20-535131 |      0.680 |     0.694 |      11 | tensorflow |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   563.601 | ['--classifier', 'LSTM_03']      |
+| LSTM_04      | 2018-01-07_23-33-47-416897 |      0.677 |     0.665 |       5 | tensorflow |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   315.692 | ['--classifier', 'LSTM_04']      |
+| CNN_LSTM_01  | 2018-01-07_04-19-46-586228 |      0.674 |     0.674 |       8 | tensorflow |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   199.709 | ['--classifier', 'CNN_LSTM_01']  |
+| CNN_LSTM_02  | 2018-01-08_00-33-47-640279 |      0.652 |     0.661 |       7 | tensorflow |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   223.083 | ['--classifier', 'CNN_LSTM_02']  |
+| CNN_LSTM_02b | 2018-01-08_01-13-40-639112 |      0.642 |     0.698 |      13 | tensorflow |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   408.207 | ['--classifier', 'CNN_LSTM_02b'] |
+| CNN_LSTM_05  | 2018-01-08_02-15-38-999906 |      0.563 |     0.488 |      10 | tensorflow |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |    81.900 | ['--classifier', 'CNN_LSTM_05']  |
+
+mean of all columns - sorted by pred_acc:
+| classifier   |   pred_acc |
+|:-------------|-----------:|
+| ATT_LSTM_01  |      0.622 |
+| LSTM_03      |      0.618 |
+| LSTM_01      |      0.617 |
+| CNN_LSTM_01  |      0.590 |
+| LSTM_04      |      0.588 |
+| CNN_LSTM_02  |      0.585 |
+| CNN_LSTM_02b |      0.550 |
+| CNN_LSTM_05  |      0.503 |
+
+********************************************************************************************************
+********************************************************************************************************
+AGGREGATIONS FOR KEYED GROUP: ['padding']
+
+on data set:  full data set
+filter: ['padding']
+row of maximum for pred_acc per group:
+|   padding | timestamp                  |   pred_acc |   val_acc |   epoch | backend    | classifier   |   dimensionality |   lstm_size | activation1   | activation2   | optimizer   | loss                |   batch_size |   dropout |   vsplit | embedding                      |   embedding2 |   rich |   runtime | argv                                                                                                                                                                                                                                    |
+|----------:|:---------------------------|-----------:|----------:|--------:|:-----------|:-------------|-----------------:|------------:|:--------------|:--------------|:------------|:--------------------|-------------:|----------:|---------:|:-------------------------------|-------------:|-------:|----------:|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|        47 | 2018-01-06_23-51-34-376124 |      0.706 |     0.667 |      11 | tensorflow | LSTM_01      |              300 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.400 | embeddings_cache_file_word2vec |          nan |      3 |   178.635 | ['--padding', '47', '--runs', '5', '--vsplit', '0.4']                                                                                                                                                                                   |
+|       125 | 2017-12-12_23-46-50-302580 |      0.699 |     0.636 |       9 | tensorflow | LSTM_01      |              300 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   269.221 | ['--runs', '5', '--padding', '125', '--out_path', '/scratch_gs/funkea/semeval/out/']                                                                                                                                                    |
+|       150 | 2017-12-12_23-46-50-340527 |      0.699 |     0.669 |       8 | tensorflow | LSTM_01      |              300 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   287.003 | ['--runs', '5', '--padding', '150', '--out_path', '/scratch_gs/funkea/semeval/out/']                                                                                                                                                    |
+|       250 | 2017-12-12_23-46-50-356087 |      0.699 |     0.636 |       9 | tensorflow | LSTM_01      |              300 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   513.832 | ['--runs', '5', '--padding', '250', '--out_path', '/scratch_gs/funkea/semeval/out/']                                                                                                                                                    |
+|        25 | 2017-12-12_23-46-50-046997 |      0.690 |     0.669 |       8 | tensorflow | LSTM_01      |              300 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |    77.251 | ['--runs', '5', '--padding', '25', '--out_path', '/scratch_gs/funkea/semeval/out/']                                                                                                                                                     |
+|       175 | 2018-01-07_02-28-09-019236 |      0.684 |     0.711 |       8 | tensorflow | LSTM_01      |              300 |          64 | selu          | sigmoid       | adagrad     | mean_squared_error  |           32 |     0.600 |    0.050 | embeddings_cache_file_fastText |          nan |      3 |   556.502 | ['--runs', '5', '--epochs', '40', '--embedding', 'ftx', '--lstm', '64', '--loss', 'mean_squared_error', '--padding', '175', '--batch', '32', '--optimizer', 'adagrad', '--vsplit', '0.05', '--activation1', 'selu', '--dropout', '0.6'] |
+|       200 | 2017-12-12_23-46-50-064249 |      0.684 |     0.669 |       8 | tensorflow | LSTM_01      |              300 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   376.709 | ['--runs', '5', '--padding', '200', '--out_path', '/scratch_gs/funkea/semeval/out/']                                                                                                                                                    |
+|       100 | 2017-12-12_23-46-51-848544 |      0.680 |     0.669 |       6 | tensorflow | LSTM_01      |              300 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   157.314 | ['--runs', '5', '--padding', '100', '--out_path', '/scratch_gs/funkea/semeval/out/']                                                                                                                                                    |
+|        50 | 2017-12-12_23-46-52-183852 |      0.677 |     0.669 |       9 | tensorflow | LSTM_01      |              300 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   128.112 | ['--runs', '5', '--padding', '50', '--out_path', '/scratch_gs/funkea/semeval/out/']                                                                                                                                                     |
+|        75 | 2017-12-12_23-46-51-721773 |      0.677 |     0.665 |       8 | tensorflow | LSTM_01      |              300 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   158.618 | ['--runs', '5', '--padding', '75', '--out_path', '/scratch_gs/funkea/semeval/out/']                                                                                                                                                     |
+|        10 | 2017-12-12_23-46-50-433987 |      0.668 |     0.612 |      11 | tensorflow | LSTM_01      |              300 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |    78.676 | ['--runs', '5', '--padding', '10', '--out_path', '/scratch_gs/funkea/semeval/out/']                                                                                                                                                     |
+
+mean of all columns - sorted by pred_acc:
+|   padding |   pred_acc |
+|----------:|-----------:|
+|       175 |      0.616 |
+|        50 |      0.611 |
+|       150 |      0.611 |
+|       100 |      0.609 |
+|       200 |      0.609 |
+|        75 |      0.608 |
+|       250 |      0.608 |
+|        25 |      0.608 |
+|        47 |      0.606 |
+|       125 |      0.605 |
+|        10 |      0.594 |
+
+********************************************************************************************************
+********************************************************************************************************
+AGGREGATIONS FOR KEYED GROUP: ['lstm_size']
+
+on data set:  full data set
+filter: ['lstm_size']
+row of maximum for pred_acc per group:
+|   lstm_size | timestamp                  |   pred_acc |   val_acc |   epoch | backend    | classifier   |   dimensionality |   padding | activation1   | activation2   | optimizer   | loss                |   batch_size |   dropout |   vsplit | embedding                      |   embedding2 |   rich |   runtime | argv                                                                                   |
+|------------:|:---------------------------|-----------:|----------:|--------:|:-----------|:-------------|-----------------:|----------:|:--------------|:--------------|:------------|:--------------------|-------------:|----------:|---------:|:-------------------------------|-------------:|-------:|----------:|:---------------------------------------------------------------------------------------|
+|          64 | 2017-12-12_23-46-50-049267 |      0.699 |     0.636 |       9 | tensorflow | LSTM_01      |              300 |       100 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   240.147 | ['--runs', '5', '--lstm_size', '64', '--out_path', '/scratch_gs/funkea/semeval/out/']  |
+|          96 | 2017-12-12_23-46-49-502051 |      0.687 |     0.674 |       6 | tensorflow | LSTM_01      |              300 |       100 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   174.711 | ['--runs', '5', '--lstm_size', '96', '--out_path', '/scratch_gs/funkea/semeval/out/']  |
+|           8 | 2017-12-12_22-43-11-604080 |      0.684 |     0.682 |      15 | tensorflow | LSTM_01      |              300 |       100 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   273.514 | ['--runs', '5', '--lstm_size', '8', '--out_path', '/scratch_gs/funkea/semeval/out/']   |
+|          16 | 2017-12-12_22-43-11-622730 |      0.680 |     0.694 |      13 | tensorflow | LSTM_01      |              300 |       100 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   245.121 | ['--runs', '5', '--lstm_size', '16', '--out_path', '/scratch_gs/funkea/semeval/out/']  |
+|         128 | 2017-12-12_23-46-49-396803 |      0.680 |     0.674 |       7 | tensorflow | LSTM_01      |              300 |       100 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   255.108 | ['--runs', '5', '--lstm_size', '128', '--out_path', '/scratch_gs/funkea/semeval/out/'] |
+|          32 | 2017-12-12_23-46-50-283207 |      0.677 |     0.698 |       9 | tensorflow | LSTM_01      |              300 |       100 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   210.704 | ['--runs', '5', '--lstm_size', '32', '--out_path', '/scratch_gs/funkea/semeval/out/']  |
+|         256 | 2017-12-12_23-46-50-245741 |      0.674 |     0.674 |       6 | tensorflow | LSTM_01      |              300 |       100 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   578.703 | ['--runs', '5', '--lstm_size', '256', '--out_path', '/scratch_gs/funkea/semeval/out/'] |
+|         384 | 2017-12-12_23-46-50-385308 |      0.671 |     0.678 |      13 | tensorflow | LSTM_01      |              300 |       100 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |  2334.536 | ['--runs', '5', '--lstm_size', '384', '--out_path', '/scratch_gs/funkea/semeval/out/'] |
+|         188 | 2017-12-12_23-46-49-398214 |      0.668 |     0.657 |       8 | tensorflow | LSTM_01      |              300 |       100 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   386.323 | ['--runs', '5', '--lstm_size', '188', '--out_path', '/scratch_gs/funkea/semeval/out/'] |
+|         512 | 2017-12-12_23-46-49-396800 |      0.646 |     0.686 |      13 | tensorflow | LSTM_01      |              300 |       100 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |  3833.892 | ['--runs', '5', '--lstm_size', '512', '--out_path', '/scratch_gs/funkea/semeval/out/'] |
+
+mean of all columns - sorted by pred_acc:
+|   lstm_size |   pred_acc |
+|------------:|-----------:|
+|         384 |      0.613 |
+|          96 |      0.610 |
+|         256 |      0.609 |
+|          64 |      0.607 |
+|         188 |      0.607 |
+|         128 |      0.607 |
+|          16 |      0.600 |
+|         512 |      0.598 |
+|          32 |      0.597 |
+|           8 |      0.589 |
+
+********************************************************************************************************
+********************************************************************************************************
+AGGREGATIONS FOR KEYED GROUP: ['activation1']
+
+on data set:  full data set
+filter: ['activation1']
+row of maximum for pred_acc per group:
+| activation1   | timestamp                  |   pred_acc |   val_acc |   epoch | backend    | classifier   |   dimensionality |   padding |   lstm_size | activation2   | optimizer   | loss                |   batch_size |   dropout |   vsplit | embedding                      |   embedding2 |   rich |   runtime | argv                                                                                                 |
+|:--------------|:---------------------------|-----------:|----------:|--------:|:-----------|:-------------|-----------------:|----------:|------------:|:--------------|:------------|:--------------------|-------------:|----------:|---------:|:-------------------------------|-------------:|-------:|----------:|:-----------------------------------------------------------------------------------------------------|
+| relu          | 2017-12-13_00-09-22-356021 |      0.693 |     0.636 |      11 | tensorflow | LSTM_01      |              300 |       100 |          64 | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   262.826 | ['--runs', '5', '--activation1', 'relu', '--out_path', '/scratch_gs/funkea/semeval/out/']            |
+| softsign      | 2017-12-13_00-11-37-095304 |      0.693 |     0.674 |      11 | tensorflow | LSTM_01      |              300 |       100 |          64 | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   271.567 | ['--runs', '5', '--activation1', 'softsign', '--out_path', '/scratch_gs/funkea/semeval/out/']        |
+| selu          | 2017-12-13_00-11-13-228506 |      0.687 |     0.649 |       9 | tensorflow | LSTM_01      |              300 |       100 |          64 | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   226.610 | ['--runs', '5', '--activation1', 'selu', '--out_path', '/scratch_gs/funkea/semeval/out/']            |
+| softmax       | 2017-12-10_01-29-44-228276 |      0.687 |     0.636 |       6 | Theano     | LSTM_01      |              300 |       100 |          64 | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   538.548 | ['main.py', '--runs', '5', '--activation1', 'softmax', '--save_path', '/scratch_gs/funkea/semeval/'] |
+| sigmoid       | 2017-12-10_01-29-45-582131 |      0.684 |     0.707 |       7 | Theano     | LSTM_01      |              300 |       100 |          64 | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   599.126 | ['main.py', '--runs', '5', '--activation1', 'sigmoid', '--save_path', '/scratch_gs/funkea/semeval/'] |
+| tanh          | 2017-12-10_01-29-41-134691 |      0.684 |     0.682 |       7 | Theano     | LSTM_01      |              300 |       100 |          64 | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   610.732 | ['main.py', '--runs', '5', '--activation1', 'tanh', '--save_path', '/scratch_gs/funkea/semeval/']    |
+| softplus      | 2017-12-13_00-11-37-100553 |      0.677 |     0.669 |       5 | tensorflow | LSTM_01      |              300 |       100 |          64 | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   135.054 | ['--runs', '5', '--activation1', 'softplus', '--out_path', '/scratch_gs/funkea/semeval/out/']        |
+| elu           | 2017-12-13_00-10-48-149584 |      0.674 |     0.678 |       4 | tensorflow | LSTM_01      |              300 |       100 |          64 | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   101.342 | ['--runs', '5', '--activation1', 'elu', '--out_path', '/scratch_gs/funkea/semeval/out/']             |
+| linear        | 2017-12-13_00-13-14-138933 |      0.674 |     0.657 |       4 | tensorflow | LSTM_01      |              300 |       100 |          64 | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   103.787 | ['--runs', '5', '--activation1', 'linear', '--out_path', '/scratch_gs/funkea/semeval/out/']          |
+
+mean of all columns - sorted by pred_acc:
+| activation1   |   pred_acc |
+|:--------------|-----------:|
+| selu          |      0.621 |
+| linear        |      0.620 |
+| softsign      |      0.620 |
+| tanh          |      0.619 |
+| elu           |      0.618 |
+| softplus      |      0.615 |
+| sigmoid       |      0.611 |
+| relu          |      0.603 |
+| softmax       |      0.593 |
+
+********************************************************************************************************
+********************************************************************************************************
+AGGREGATIONS FOR KEYED GROUP: ['activation2']
+
+on data set:  full data set
+filter: ['activation2']
+row of maximum for pred_acc per group:
+| activation2   | timestamp                  |   pred_acc |   val_acc |   epoch | backend   | classifier   |   dimensionality |   padding |   lstm_size | activation1   | optimizer   | loss                |   batch_size |   dropout |   vsplit | embedding                      |   embedding2 |   rich |   runtime | argv                                                                                                 |
+|:--------------|:---------------------------|-----------:|----------:|--------:|:----------|:-------------|-----------------:|----------:|------------:|:--------------|:------------|:--------------------|-------------:|----------:|---------:|:-------------------------------|-------------:|-------:|----------:|:-----------------------------------------------------------------------------------------------------|
+| softmax       | 2017-12-10_01-29-45-812777 |      0.494 |     0.500 |       1 | Theano    | LSTM_01      |              300 |       100 |          64 | relu          | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   402.393 | ['main.py', '--runs', '5', '--activation2', 'softmax', '--save_path', '/scratch_gs/funkea/semeval/'] |
+
+mean of all columns - sorted by pred_acc:
+| activation2   |   pred_acc |
+|:--------------|-----------:|
+| softmax       |      0.494 |
+
+********************************************************************************************************
+********************************************************************************************************
+AGGREGATIONS FOR KEYED GROUP: ['optimizer']
+
+on data set:  full data set
+filter: ['optimizer']
+row of maximum for pred_acc per group:
+| optimizer   | timestamp                  |   pred_acc |   val_acc |   epoch | backend    | classifier   |   dimensionality |   padding |   lstm_size | activation1   | activation2   | loss                |   batch_size |   dropout |   vsplit | embedding                      |   embedding2 |   rich |   runtime | argv                                                                                               |
+|:------------|:---------------------------|-----------:|----------:|--------:|:-----------|:-------------|-----------------:|----------:|------------:|:--------------|:--------------|:--------------------|-------------:|----------:|---------:|:-------------------------------|-------------:|-------:|----------:|:---------------------------------------------------------------------------------------------------|
+| adam        | 2017-12-12_23-46-51-768780 |      0.709 |     0.624 |       9 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   212.978 | ['--runs', '5', '--optimizer', 'adam', '--out_path', '/scratch_gs/funkea/semeval/out/']            |
+| rmsprop     | 2017-12-10_01-29-45-041196 |      0.699 |     0.678 |      12 | Theano     | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   932.005 | ['main.py', '--runs', '5', '--optimizer', 'rmsprop', '--save_path', '/scratch_gs/funkea/semeval/'] |
+| adagrad     | 2017-12-12_23-46-52-432775 |      0.687 |     0.616 |       9 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   219.373 | ['--runs', '5', '--optimizer', 'adagrad', '--out_path', '/scratch_gs/funkea/semeval/out/']         |
+| nadam       | 2017-12-12_23-46-50-434123 |      0.684 |     0.657 |      19 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   466.226 | ['--runs', '5', '--optimizer', 'nadam', '--out_path', '/scratch_gs/funkea/semeval/out/']           |
+| adamax      | 2017-12-12_23-46-50-046937 |      0.680 |     0.682 |       8 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   196.317 | ['--runs', '5', '--optimizer', 'adamax', '--out_path', '/scratch_gs/funkea/semeval/out/']          |
+| adadelta    | 2017-12-12_23-46-51-994446 |      0.658 |     0.649 |      17 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   418.711 | ['--runs', '5', '--optimizer', 'adadelta', '--out_path', '/scratch_gs/funkea/semeval/out/']        |
+| sgd         | 2017-12-12_23-46-49-802708 |      0.573 |     0.508 |       2 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |    66.616 | ['--runs', '5', '--optimizer', 'sgd', '--out_path', '/scratch_gs/funkea/semeval/out/']             |
+
+mean of all columns - sorted by pred_acc:
+| optimizer   |   pred_acc |
+|:------------|-----------:|
+| adagrad     |      0.617 |
+| adamax      |      0.610 |
+| rmsprop     |      0.610 |
+| adam        |      0.604 |
+| nadam       |      0.600 |
+| adadelta    |      0.570 |
+| sgd         |      0.497 |
+
+********************************************************************************************************
+********************************************************************************************************
+AGGREGATIONS FOR KEYED GROUP: ['loss']
+
+on data set:  full data set
+filter: ['loss']
+row of maximum for pred_acc per group:
+| loss                           | timestamp                  |   pred_acc |   val_acc |   epoch | backend    | classifier   |   dimensionality |   padding |   lstm_size | activation1   | activation2   | optimizer   |   batch_size |   dropout |   vsplit | embedding                      |   embedding2 |   rich |   runtime | argv                                                                                                                                                                                                                                    |
+|:-------------------------------|:---------------------------|-----------:|----------:|--------:|:-----------|:-------------|-----------------:|----------:|------------:|:--------------|:--------------|:------------|-------------:|----------:|---------:|:-------------------------------|-------------:|-------:|----------:|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| mean_squared_logarithmic_error | 2017-12-13_00-08-52-789707 |      0.693 |     0.653 |      11 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   254.941 | ['--runs', '5', '--loss', 'mean_squared_logarithmic_error', '--out_path', '/scratch_gs/funkea/semeval/out/']                                                                                                                            |
+| logcosh                        | 2017-12-13_00-01-51-104817 |      0.687 |     0.690 |       9 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   235.410 | ['--runs', '5', '--loss', 'logcosh', '--out_path', '/scratch_gs/funkea/semeval/out/']                                                                                                                                                   |
+| binary_crossentropy            | 2017-12-13_00-04-55-096027 |      0.684 |     0.694 |       9 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   209.517 | ['--runs', '5', '--loss', 'binary_crossentropy', '--out_path', '/scratch_gs/funkea/semeval/out/']                                                                                                                                       |
+| mean_squared_error             | 2018-01-07_02-28-09-019236 |      0.684 |     0.711 |       8 | tensorflow | LSTM_01      |              300 |       175 |          64 | selu          | sigmoid       | adagrad     |           32 |     0.600 |    0.050 | embeddings_cache_file_fastText |          nan |      3 |   556.502 | ['--runs', '5', '--epochs', '40', '--embedding', 'ftx', '--lstm', '64', '--loss', 'mean_squared_error', '--padding', '175', '--batch', '32', '--optimizer', 'adagrad', '--vsplit', '0.05', '--activation1', 'selu', '--dropout', '0.6'] |
+| categorical_hinge              | 2017-12-12_23-57-54-195668 |      0.674 |     0.636 |      20 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   475.483 | ['--runs', '5', '--loss', 'categorical_hinge', '--out_path', '/scratch_gs/funkea/semeval/out/']                                                                                                                                         |
+| mean_absolute_error            | 2017-12-13_00-07-42-083315 |      0.665 |     0.690 |      14 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   316.912 | ['--runs', '5', '--loss', 'mean_absolute_error', '--out_path', '/scratch_gs/funkea/semeval/out/']                                                                                                                                       |
+| mean_absolute_percentage_error | 2017-12-10_01-29-44-434302 |      0.506 |     0.500 |       1 | Theano     | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   267.619 | ['main.py', '--runs', '5', '--loss', 'mean_absolute_percentage_error', '--save_path', '/scratch_gs/funkea/semeval/']                                                                                                                    |
+| hinge                          | 2017-12-12_23-55-44-212737 |      0.494 |     0.500 |       1 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |    34.382 | ['--runs', '5', '--loss', 'hinge', '--out_path', '/scratch_gs/funkea/semeval/out/']                                                                                                                                                     |
+| kullback_leibler_divergence    | 2017-12-13_00-03-03-837029 |      0.494 |     0.500 |       1 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |    31.647 | ['--runs', '5', '--loss', 'kullback_leibler_divergence', '--out_path', '/scratch_gs/funkea/semeval/out/']                                                                                                                               |
+| squared_hinge                  | 2017-12-12_23-47-08-686991 |      0.494 |     0.500 |       1 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |    33.989 | ['--runs', '5', '--loss', 'squared_hinge', '--out_path', '/scratch_gs/funkea/semeval/out/']                                                                                                                                             |
+
+mean of all columns - sorted by pred_acc:
+| loss                           |   pred_acc |
+|:-------------------------------|-----------:|
+| mean_squared_error             |      0.610 |
+| logcosh                        |      0.605 |
+| mean_squared_logarithmic_error |      0.603 |
+| binary_crossentropy            |      0.603 |
+| categorical_hinge              |      0.588 |
+| mean_absolute_error            |      0.588 |
+| mean_absolute_percentage_error |      0.506 |
+| hinge                          |      0.494 |
+| kullback_leibler_divergence    |      0.494 |
+| squared_hinge                  |      0.494 |
+
+********************************************************************************************************
+********************************************************************************************************
+AGGREGATIONS FOR KEYED GROUP: ['batch_size']
+
+on data set:  full data set
+filter: ['batch_size']
+row of maximum for pred_acc per group:
+|   batch_size | timestamp                  |   pred_acc |   val_acc |   epoch | backend    | classifier   |   dimensionality |   padding |   lstm_size | activation1   | activation2   | optimizer   | loss                |   dropout |   vsplit | embedding                      |   embedding2 |   rich |   runtime | argv                                                                                    |
+|-------------:|:---------------------------|-----------:|----------:|--------:|:-----------|:-------------|-----------------:|----------:|------------:|:--------------|:--------------|:------------|:--------------------|----------:|---------:|:-------------------------------|-------------:|-------:|----------:|:----------------------------------------------------------------------------------------|
+|           64 | 2017-12-12_23-46-51-697222 |      0.690 |     0.669 |       8 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   150.653 | ['--runs', '5', '--batch_size', '64', '--out_path', '/scratch_gs/funkea/semeval/out/']  |
+|          256 | 2017-12-12_23-46-50-069562 |      0.687 |     0.665 |       9 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   150.378 | ['--runs', '5', '--batch_size', '256', '--out_path', '/scratch_gs/funkea/semeval/out/'] |
+|          512 | 2017-12-12_23-46-50-557214 |      0.684 |     0.698 |      19 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   321.869 | ['--runs', '5', '--batch_size', '512', '--out_path', '/scratch_gs/funkea/semeval/out/'] |
+|            4 | 2017-12-12_23-46-51-936131 |      0.677 |     0.702 |       7 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   779.342 | ['--runs', '5', '--batch_size', '4', '--out_path', '/scratch_gs/funkea/semeval/out/']   |
+|           32 | 2017-12-12_23-46-49-961385 |      0.677 |     0.653 |      11 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   265.288 | ['--runs', '5', '--batch_size', '32', '--out_path', '/scratch_gs/funkea/semeval/out/']  |
+|          128 | 2017-12-12_23-46-50-579785 |      0.674 |     0.669 |      19 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   305.358 | ['--runs', '5', '--batch_size', '128', '--out_path', '/scratch_gs/funkea/semeval/out/'] |
+|            8 | 2017-12-12_23-46-51-697115 |      0.668 |     0.665 |       5 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   325.449 | ['--runs', '5', '--batch_size', '8', '--out_path', '/scratch_gs/funkea/semeval/out/']   |
+|           16 | 2017-12-12_23-46-50-047462 |      0.665 |     0.678 |       6 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   238.039 | ['--runs', '5', '--batch_size', '16', '--out_path', '/scratch_gs/funkea/semeval/out/']  |
+|            1 | 2017-12-12_23-46-49-916560 |      0.658 |     0.653 |      10 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |  4074.601 | ['--runs', '5', '--batch_size', '1', '--out_path', '/scratch_gs/funkea/semeval/out/']   |
+|            2 | 2017-12-12_23-46-51-723833 |      0.655 |     0.661 |       9 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |  1946.953 | ['--runs', '5', '--batch_size', '2', '--out_path', '/scratch_gs/funkea/semeval/out/']   |
+
+mean of all columns - sorted by pred_acc:
+|   batch_size |   pred_acc |
+|-------------:|-----------:|
+|           32 |      0.612 |
+|           16 |      0.607 |
+|            8 |      0.605 |
+|           64 |      0.597 |
+|          128 |      0.594 |
+|            4 |      0.594 |
+|            2 |      0.593 |
+|          256 |      0.593 |
+|          512 |      0.593 |
+|            1 |      0.581 |
+
+********************************************************************************************************
+********************************************************************************************************
+AGGREGATIONS FOR KEYED GROUP: ['dropout']
+
+on data set:  full data set
+filter: ['dropout']
+row of maximum for pred_acc per group:
+|   dropout | timestamp                  |   pred_acc |   val_acc |   epoch | backend    | classifier   |   dimensionality |   padding |   lstm_size | activation1   | activation2   | optimizer   | loss                |   batch_size |   vsplit | embedding                      |   embedding2 |   rich |   runtime | argv                                                                                 |
+|----------:|:---------------------------|-----------:|----------:|--------:|:-----------|:-------------|-----------------:|----------:|------------:|:--------------|:--------------|:------------|:--------------------|-------------:|---------:|:-------------------------------|-------------:|-------:|----------:|:-------------------------------------------------------------------------------------|
+|     0.800 | 2017-12-12_23-46-49-398558 |      0.699 |     0.645 |      10 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   265.025 | ['--runs', '5', '--dropout', '0.8', '--out_path', '/scratch_gs/funkea/semeval/out/'] |
+|     0.900 | 2017-12-12_23-46-49-559782 |      0.699 |     0.636 |       9 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   244.265 | ['--runs', '5', '--dropout', '0.9', '--out_path', '/scratch_gs/funkea/semeval/out/'] |
+|     0.600 | 2017-12-12_23-46-51-722614 |      0.687 |     0.640 |       8 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   215.641 | ['--runs', '5', '--dropout', '0.6', '--out_path', '/scratch_gs/funkea/semeval/out/'] |
+|     0.700 | 2017-12-12_23-46-51-712251 |      0.684 |     0.661 |       5 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   145.746 | ['--runs', '5', '--dropout', '0.7', '--out_path', '/scratch_gs/funkea/semeval/out/'] |
+|     0.300 | 2017-12-12_23-46-52-329596 |      0.677 |     0.719 |      11 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   294.202 | ['--runs', '5', '--dropout', '0.3', '--out_path', '/scratch_gs/funkea/semeval/out/'] |
+|     0.500 | 2017-12-12_23-46-49-685707 |      0.674 |     0.678 |       8 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   224.946 | ['--runs', '5', '--dropout', '0.5', '--out_path', '/scratch_gs/funkea/semeval/out/'] |
+|     0.400 | 2017-12-12_23-46-50-158894 |      0.668 |     0.694 |      10 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   277.503 | ['--runs', '5', '--dropout', '0.4', '--out_path', '/scratch_gs/funkea/semeval/out/'] |
+|     1.000 | 2017-12-12_23-46-49-758639 |      0.661 |     0.653 |       4 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   117.992 | ['--runs', '5', '--dropout', '1.0', '--out_path', '/scratch_gs/funkea/semeval/out/'] |
+|     0.200 | 2017-12-12_23-46-51-713268 |      0.655 |     0.649 |       8 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |   195.065 | ['--runs', '5', '--dropout', '0.2', '--out_path', '/scratch_gs/funkea/semeval/out/'] |
+|     0.100 | 2017-12-12_23-46-50-436223 |      0.642 |     0.678 |       4 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |    0.100 | embeddings_cache_file_word2vec |          nan |      3 |    97.526 | ['--runs', '5', '--dropout', '0.1', '--out_path', '/scratch_gs/funkea/semeval/out/'] |
+
+mean of all columns - sorted by pred_acc:
+|   dropout |   pred_acc |
+|----------:|-----------:|
+|     0.600 |      0.617 |
+|     0.900 |      0.613 |
+|     0.300 |      0.610 |
+|     0.700 |      0.609 |
+|     0.800 |      0.607 |
+|     0.400 |      0.603 |
+|     0.500 |      0.603 |
+|     0.200 |      0.602 |
+|     1.000 |      0.595 |
+|     0.100 |      0.594 |
+
+********************************************************************************************************
+********************************************************************************************************
+AGGREGATIONS FOR KEYED GROUP: ['vsplit']
+
+on data set:  full data set
+filter: ['vsplit']
+row of maximum for pred_acc per group:
+|   vsplit | timestamp                  |   pred_acc |   val_acc |   epoch | backend    | classifier   |   dimensionality |   padding |   lstm_size | activation1   | activation2   | optimizer   | loss                |   batch_size |   dropout | embedding                      |   embedding2 |   rich |   runtime | argv                                                                                         |
+|---------:|:---------------------------|-----------:|----------:|--------:|:-----------|:-------------|-----------------:|----------:|------------:|:--------------|:--------------|:------------|:--------------------|-------------:|----------:|:-------------------------------|-------------:|-------:|----------:|:---------------------------------------------------------------------------------------------|
+|    0.400 | 2017-12-13_00-15-16-731454 |      0.706 |     0.644 |      11 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 | embeddings_cache_file_word2vec |          nan |      3 |   205.993 | ['--runs', '5', '--vsplit', '0.4', '--out_path', '/scratch_gs/funkea/semeval/out/']          |
+|    0.100 | 2017-12-13_00-14-13-318840 |      0.699 |     0.686 |       9 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 | embeddings_cache_file_word2vec |          nan |      3 |   234.154 | ['--runs', '5', '--vsplit', '0.1', '--out_path', '/scratch_gs/funkea/semeval/out/']          |
+|    0.200 | 2017-12-10_01-29-45-316670 |      0.699 |     0.688 |      13 | Theano     | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 | embeddings_cache_file_word2vec |          nan |      3 |   889.157 | ['main.py', '--runs', '5', '--vsplit', '0.2', '--save_path', '/scratch_gs/funkea/semeval/']  |
+|    0.050 | 2017-12-13_00-14-11-161422 |      0.696 |     0.653 |      11 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 | embeddings_cache_file_word2vec |          nan |      3 |   271.360 | ['--runs', '5', '--vsplit', '0.05', '--out_path', '/scratch_gs/funkea/semeval/out/']         |
+|    0.350 | 2017-12-13_00-15-05-828097 |      0.693 |     0.638 |      12 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 | embeddings_cache_file_word2vec |          nan |      3 |   234.255 | ['--runs', '5', '--vsplit', '0.35', '--out_path', '/scratch_gs/funkea/semeval/out/']         |
+|    0.450 | 2017-12-10_01-29-45-097188 |      0.693 |     0.637 |      12 | Theano     | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 | embeddings_cache_file_word2vec |          nan |      3 |   715.984 | ['main.py', '--runs', '5', '--vsplit', '0.45', '--save_path', '/scratch_gs/funkea/semeval/'] |
+|    0.500 | 2017-12-10_01-29-45-060616 |      0.693 |     0.650 |      14 | Theano     | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 | embeddings_cache_file_word2vec |          nan |      3 |   777.315 | ['main.py', '--runs', '5', '--vsplit', '0.5', '--save_path', '/scratch_gs/funkea/semeval/']  |
+|    0.150 | 2017-12-13_00-14-22-395401 |      0.687 |     0.661 |       8 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 | embeddings_cache_file_word2vec |          nan |      3 |   191.650 | ['--runs', '5', '--vsplit', '0.15', '--out_path', '/scratch_gs/funkea/semeval/out/']         |
+|    0.300 | 2017-12-13_00-14-56-673093 |      0.680 |     0.654 |      12 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 | embeddings_cache_file_word2vec |          nan |      3 |   246.890 | ['--runs', '5', '--vsplit', '0.3', '--out_path', '/scratch_gs/funkea/semeval/out/']          |
+|    0.250 | 2017-12-13_00-14-56-657473 |      0.677 |     0.666 |      13 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 | embeddings_cache_file_word2vec |          nan |      3 |   275.706 | ['--runs', '5', '--vsplit', '0.25', '--out_path', '/scratch_gs/funkea/semeval/out/']         |
+
+mean of all columns - sorted by pred_acc:
+|   vsplit |   pred_acc |
+|---------:|-----------:|
+|    0.050 |      0.614 |
+|    0.150 |      0.606 |
+|    0.100 |      0.605 |
+|    0.200 |      0.605 |
+|    0.400 |      0.602 |
+|    0.350 |      0.600 |
+|    0.250 |      0.600 |
+|    0.300 |      0.600 |
+|    0.450 |      0.599 |
+|    0.500 |      0.595 |
+
+********************************************************************************************************
+********************************************************************************************************
+AGGREGATIONS FOR KEYED GROUP: ['embedding']
+
+on data set:  full data set
+filter: ['embedding']
+row of maximum for pred_acc per group:
+| embedding                                    | timestamp                  |   pred_acc |   val_acc |   epoch | backend    | classifier   |   dimensionality |   padding |   lstm_size | activation1   | activation2   | optimizer   | loss                |   batch_size |   dropout |   vsplit |   embedding2 |   rich |   runtime | argv                                                                                                                                                                                                                                    |
+|:---------------------------------------------|:---------------------------|-----------:|----------:|--------:|:-----------|:-------------|-----------------:|----------:|------------:|:--------------|:--------------|:------------|:--------------------|-------------:|----------:|---------:|-------------:|-------:|----------:|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| embeddings_cache_file_dict2vec_prov_freq_lc  | 2017-12-10_01-29-43-821365 |      0.712 |     0.661 |      15 | Theano     | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 |          nan |      3 |  1124.660 | ['main.py', '--runs', '5', '--embedding', 'd2v_pf_lc', '--save_path', '/scratch_gs/funkea/semeval/']                                                                                                                                    |
+| embeddings_cache_file_fastText_prov_freq_lc2 | 2017-12-10_01-29-44-233654 |      0.696 |     0.698 |      12 | Theano     | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 |          nan |      3 |   889.289 | ['main.py', '--runs', '5', '--embedding', 'ftx_pf_lc2', '--save_path', '/scratch_gs/funkea/semeval/']                                                                                                                                   |
+| embeddings_cache_file_dict2vec_prov_freq_lc2 | 2017-12-10_01-29-44-165403 |      0.693 |     0.686 |      16 | Theano     | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 |          nan |      3 |  1133.371 | ['main.py', '--runs', '5', '--embedding', 'd2v_pf_lc2', '--save_path', '/scratch_gs/funkea/semeval/']                                                                                                                                   |
+| embeddings_cache_file_dict2vec               | 2017-12-10_01-29-44-296269 |      0.690 |     0.665 |      15 | Theano     | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 |          nan |      3 |  1150.868 | ['main.py', '--runs', '5', '--embedding', 'd2v', '--save_path', '/scratch_gs/funkea/semeval/']                                                                                                                                          |
+| embeddings_cache_file_fastText_prov_freq_lc  | 2017-12-12_23-46-52-329625 |      0.687 |     0.682 |       9 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 |          nan |      3 |   244.192 | ['--runs', '5', '--embedding', 'ftx_pf_lc', '--out_path', '/scratch_gs/funkea/semeval/out/']                                                                                                                                            |
+| embeddings_cache_file_fastText               | 2018-01-07_02-28-09-019236 |      0.684 |     0.711 |       8 | tensorflow | LSTM_01      |              300 |       175 |          64 | selu          | sigmoid       | adagrad     | mean_squared_error  |           32 |     0.600 |    0.050 |          nan |      3 |   556.502 | ['--runs', '5', '--epochs', '40', '--embedding', 'ftx', '--lstm', '64', '--loss', 'mean_squared_error', '--padding', '175', '--batch', '32', '--optimizer', 'adagrad', '--vsplit', '0.05', '--activation1', 'selu', '--dropout', '0.6'] |
+| embeddings_cache_file_fastText_prov_freq     | 2017-12-12_23-46-50-158907 |      0.680 |     0.678 |      12 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 |          nan |      3 |   324.332 | ['--runs', '5', '--embedding', 'ftx_pf', '--out_path', '/scratch_gs/funkea/semeval/out/']                                                                                                                                               |
+| embeddings_cache_file_dict2vec_prov_freq     | 2017-12-12_23-46-49-398746 |      0.677 |     0.616 |      16 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 |          nan |      3 |   401.104 | ['--runs', '5', '--embedding', 'd2v_pf', '--out_path', '/scratch_gs/funkea/semeval/out/']                                                                                                                                               |
+| custom_embedding_iter20_sg_300_lc            | 2018-01-06_21-00-58-547960 |      0.671 |     0.702 |       9 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 |          nan |      3 |   211.445 | ['--embedding', 'ce_sg_i20_300_lc', '--epochs', '40']                                                                                                                                                                                   |
+| embeddings_cache_file_word2vec               | 2018-01-06_14-31-41-982078 |      0.668 |     0.686 |      11 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 |          nan |      3 |   321.810 | ['--embedding', 'w2v', '--epochs', '40']                                                                                                                                                                                                |
+| custom_embedding_sg_300                      | 2018-01-06_03-16-07-689259 |      0.668 |     0.669 |      14 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 |          nan |      3 |  1056.499 | ['--embedding', 'ce_sg_300', '--epochs', '40']                                                                                                                                                                                          |
+| custom_embedding_iter20_sg_300               | 2018-01-06_03-30-08-255685 |      0.668 |     0.678 |       9 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 |          nan |      3 |   589.432 | ['--embedding', 'ce_sg_i20_300', '--epochs', '40']                                                                                                                                                                                      |
+| custom_embedding_hs_iter25_sg_300            | 2018-01-06_03-34-28-882420 |      0.661 |     0.678 |       9 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 |          nan |      3 |   518.940 | ['--embedding', 'ce_sg_hs_i25_300', '--epochs', '40']                                                                                                                                                                                   |
+| custom_embedding_ftx_hs_iter20_sg_300        | 2018-01-06_21-24-08-225621 |      0.658 |     0.645 |      16 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 |          nan |      3 |  1249.968 | ['--embedding', 'ce_ftx_sg_hs_i20_300', '--epochs', '40']                                                                                                                                                                               |
+| custom_embedding_hs_sg_300                   | 2018-01-06_03-29-49-817773 |      0.655 |     0.628 |      13 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 |          nan |      3 |   882.699 | ['--embedding', 'ce_sg_hs_300', '--epochs', '40']                                                                                                                                                                                       |
+| custom_embedding_ftx_hs_iter20_sg_300_lc     | 2018-01-06_21-24-23-269128 |      0.655 |     0.669 |      15 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 |          nan |      3 |  1184.180 | ['--embedding', 'ce_ftx_sg_hs_i20_300_lc', '--epochs', '40']                                                                                                                                                                            |
+| custom_embedding_cb_300                      | 2018-01-06_02-50-01-090351 |      0.636 |     0.702 |      18 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 |          nan |      3 |   404.448 | ['--embedding', 'ce_cb_300', '--epochs', '40']                                                                                                                                                                                          |
+| custom_embedding_cb_100                      | 2018-01-06_02-17-17-069976 |      0.617 |     0.698 |      23 | tensorflow | LSTM_01      |              100 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 |          nan |      3 |   359.203 | ['--embedding', 'ce_cb_100', '--epochs', '40']                                                                                                                                                                                          |
+
+mean of all columns - sorted by pred_acc:
+| embedding                                    |   pred_acc |
+|:---------------------------------------------|-----------:|
+| embeddings_cache_file_word2vec               |      0.613 |
+| custom_embedding_hs_sg_300                   |      0.612 |
+| embeddings_cache_file_fastText               |      0.608 |
+| custom_embedding_iter20_sg_300_lc            |      0.607 |
+| custom_embedding_ftx_hs_iter20_sg_300        |      0.606 |
+| custom_embedding_ftx_hs_iter20_sg_300_lc     |      0.606 |
+| custom_embedding_sg_300                      |      0.605 |
+| custom_embedding_hs_iter25_sg_300            |      0.605 |
+| embeddings_cache_file_fastText_prov_freq_lc2 |      0.602 |
+| embeddings_cache_file_dict2vec               |      0.601 |
+| embeddings_cache_file_dict2vec_prov_freq_lc  |      0.600 |
+| embeddings_cache_file_dict2vec_prov_freq     |      0.598 |
+| embeddings_cache_file_fastText_prov_freq     |      0.598 |
+| embeddings_cache_file_fastText_prov_freq_lc  |      0.596 |
+| embeddings_cache_file_dict2vec_prov_freq_lc2 |      0.593 |
+| custom_embedding_iter20_sg_300               |      0.593 |
+| custom_embedding_cb_300                      |      0.539 |
+| custom_embedding_cb_100                      |      0.523 |
+
+********************************************************************************************************
+********************************************************************************************************
+AGGREGATIONS FOR KEYED GROUP: ['embedding2']
+
+on data set:  full data set
+filter: ['embedding2']
+row of maximum for pred_acc per group:
+| embedding2   | timestamp   | pred_acc   | val_acc   | epoch   | backend   | classifier   | dimensionality   | padding   | lstm_size   | activation1   | activation2   | optimizer   | loss   | batch_size   | dropout   | vsplit   | embedding   | rich   | runtime   | argv   |
+||
+
+mean of all columns - sorted by pred_acc:
+| embedding2   | pred_acc   |
+||
+
+********************************************************************************************************
+********************************************************************************************************
+AGGREGATIONS FOR KEYED GROUP: ['rich']
+
+on data set:  full data set
+filter: ['rich']
+row of maximum for pred_acc per group:
+|   rich | timestamp                  |   pred_acc |   val_acc |   epoch | backend    | classifier   |   dimensionality |   padding |   lstm_size | activation1   | activation2   | optimizer   | loss                |   batch_size |   dropout |   vsplit | embedding                      |   embedding2 |   runtime | argv                                                                            |
+|-------:|:---------------------------|-----------:|----------:|--------:|:-----------|:-------------|-----------------:|----------:|------------:|:--------------|:--------------|:------------|:--------------------|-------------:|----------:|---------:|:-------------------------------|-------------:|----------:|:--------------------------------------------------------------------------------|
+|      2 | 2017-12-13_00-15-56-258576 |      0.690 |     0.640 |       9 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |   222.768 | ['--runs', '5', '--rich', '2', '--out_path', '/scratch_gs/funkea/semeval/out/'] |
+|      1 | 2017-12-13_00-15-56-021262 |      0.687 |     0.686 |       9 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |   226.975 | ['--runs', '5', '--rich', '1', '--out_path', '/scratch_gs/funkea/semeval/out/'] |
+|      0 | 2017-12-13_00-15-44-492413 |      0.680 |     0.678 |       8 | tensorflow | LSTM_01      |              300 |       100 |          64 | relu          | sigmoid       | adam        | binary_crossentropy |           32 |     0.900 |    0.100 | embeddings_cache_file_word2vec |          nan |   199.727 | ['--runs', '5', '--rich', '0', '--out_path', '/scratch_gs/funkea/semeval/out/'] |
+
+mean of all columns - sorted by pred_acc:
+|   rich |   pred_acc |
+|-------:|-----------:|
+|      1 |      0.604 |
+|      2 |      0.604 |
+|      0 |      0.602 |
+
+********************************************************************************************************
+
+Process finished with exit code 0

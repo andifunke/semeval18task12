@@ -1,10 +1,8 @@
 import datetime
-# from time import time
 import timeit
 import json
 import sys
 import six.moves.cPickle as cPickle
-# import pickle
 from collections import OrderedDict
 from pprint import pprint
 import numpy as np
@@ -12,7 +10,6 @@ import data_loader
 import vocabulary_embeddings_extractor
 from argument_parser import get_options
 from classes import Data
-
 
 CURRENT_PRED_ACC = 0.0
 
@@ -67,11 +64,11 @@ def detail_model(m):
 def predict(run_idx, model, data, o, write_answer=False, epoch=0, pred_acc=0):
     # model predictions
     predicted_probabilities_dev = model.predict(
-        {'sequence_layer_warrant0_input': data.dev_warrant0_list,
-         'sequence_layer_warrant1_input': data.dev_warrant1_list,
-         'sequence_layer_reason_input': data.dev_reason_list,
-         'sequence_layer_claim_input': data.dev_claim_list,
-         'sequence_layer_debate_input': data.dev_debate_meta_data_list,
+        {'sequence_layer_input_warrant0': data.dev_warrant0_list,
+         'sequence_layer_input_warrant1': data.dev_warrant1_list,
+         'sequence_layer_input_reason': data.dev_reason_list,
+         'sequence_layer_input_claim': data.dev_claim_list,
+         'sequence_layer_input_debate': data.dev_debate_meta_data_list,
          },
         batch_size=32,  # options['batch_size'],
         verbose=0)
@@ -128,7 +125,7 @@ def __main__():
     from keras.preprocessing import sequence
     from keras.models import Sequential, Model
     from keras import callbacks, __version__ as kv, backend as K
-    from models import get_lstm_intra_warrant, get_attention_lstm_intra_warrant, get_cnn_lstm
+    from models import get_model
     print('Keras version:', kv)
     backend = K.backend()
     if backend == 'theano':
@@ -166,7 +163,7 @@ def __main__():
                 self.best_epoch['val_acc'] = results['val_acc']
                 self.best_epoch['config'] = self.model.get_config()
                 self.best_epoch['weights'] = self.model.get_weights()
-            print('run {:02d} epoch {:02d} has finished with, loss={:.3f}, val_acc={:.3f}, pred_acc={:.3f}, '
+            print('run {:02d} epoch {:02d} has finished with, loss={:.3f}, val_acc={:.3f}, pred_acc={:.3f} | '
                   'best epoch: {:02d}, val_acc={:.3f}, pred_acc={:.3f}'
                   .format(self.idx, epoch + 1, logs['loss'], results['val_acc'], results['pred_acc'],
                           # logs['dev_pred'],
@@ -307,17 +304,8 @@ def __main__():
             print('use 2 embeddings in parallel')
             arguments['embeddings2'] = word_index_to_embeddings_map2
 
-        if o['classifier'] == 'LSTM_01':
-            get_model = get_lstm_intra_warrant
-        elif o['classifier'] == 'Att_LSTM_01':
-            get_model = get_attention_lstm_intra_warrant
-        elif o['classifier'] == 'CNN_LSTM_01':
-            get_model = get_cnn_lstm
-        else:
-            o['classifier'] = 'LSTM_01'
-            get_model = get_lstm_intra_warrant
-
         model = get_model(
+            o['classifier'],
             word_index_to_embeddings_map,
             o['padding'],
             rich_context=o['rich'],
@@ -349,7 +337,7 @@ def __main__():
         cb_epoch_predictions = PredictionReport(run_idx, model)
 
         cbs = [cb_epoch_predictions,
-               cb_epoch_csvlogger,
+               # cb_epoch_csvlogger,
                # cb_epoch_learningratereducer,
                cb_epoch_stopping,
                ]
@@ -357,11 +345,11 @@ def __main__():
             cbs.append(cb_epoch_checkpoint)
 
         model.fit(
-            {'sequence_layer_warrant0_input': d.train_warrant0_list,
-             'sequence_layer_warrant1_input': d.train_warrant1_list,
-             'sequence_layer_reason_input': d.train_reason_list,
-             'sequence_layer_claim_input': d.train_claim_list,
-             'sequence_layer_debate_input': d.train_debate_meta_data_list,
+            {'sequence_layer_input_warrant0': d.train_warrant0_list,
+             'sequence_layer_input_warrant1': d.train_warrant1_list,
+             'sequence_layer_input_reason': d.train_reason_list,
+             'sequence_layer_input_claim': d.train_claim_list,
+             'sequence_layer_input_debate': d.train_debate_meta_data_list,
              },
             d.train_correct_label_w0_or_w1_list,
             epochs=o['epochs'],
@@ -371,7 +359,7 @@ def __main__():
             callbacks=cbs,
         )
 
-        print('finished in', timeit.default_timer() - start)
+        print('finished in {:.3f} minutes'.format((timeit.default_timer() - start) / 60))
 
         # save the best model for this run
         try:

@@ -1,9 +1,11 @@
+""" parsing arguments and setting default values """
 import os
 import argparse
 
 
-# # argument parsing and setting default values
 def get_options():
+    from models import get_shortcuts
+
     emb_files = dict(
         w2v="embeddings_cache_file_word2vec.pkl.bz2",
         d2v="embeddings_cache_file_dict2vec.pkl.bz2",
@@ -62,7 +64,8 @@ def get_options():
                         choices=[0, 1],
                         help='project verbosity should be set to 0 for deployment on cluster')
     parser.add_argument('--classifier', default='LSTM_01', type=str,
-                        choices=['LSTM_01', 'Att_LSTM_01', 'CNN_LSTM_01'])
+                        choices=get_shortcuts()
+                        )
     parser.add_argument('--lstm_size', default=64, type=int,
                         help='size of the lstm hidden layer')
     parser.add_argument('--dense_factor', default=1.0, type=float,
@@ -123,7 +126,7 @@ def get_options():
     parser.add_argument('--save_models', default=False, type=bool,
                         help='save model with each improving epoch')
     parser.add_argument('--true_lc', default=False, type=bool,
-                        help='really use lowercase tokens')
+                        help='use lowercase when embedding was trained on lowercase tokens')
 
     options = vars(parser.parse_args())
     if options['padding'] < 1:
@@ -139,7 +142,6 @@ def get_options():
     # combined embeddings (2x no_of_channels or 2x dimensionality)
     # reduced number of channels
     # spelling / pre-processing
-    # backend
     # set trainable=False on embedding (Input?) layers - may not make sense
     # stateful RNNs - probably doesn't make sense either
 
