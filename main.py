@@ -72,6 +72,7 @@ def predict(run_idx, model, data, o, write_answer=False, epoch=0, pred_acc=0):
          },
         batch_size=32,  # options['batch_size'],
         verbose=0)
+    # print(predicted_probabilities_dev)
     predicted_labels_dev = get_predicted_labels(predicted_probabilities_dev)
 
     # print(predicted_labels_dev)
@@ -101,7 +102,7 @@ def predict(run_idx, model, data, o, write_answer=False, epoch=0, pred_acc=0):
     if write_answer:
         answer = '#id\tcorrectLabelW0orW1\n' + answer
         with open('{}answer_{}_rn{:02d}_ep{:02d}_ac{:.3f}.txt'
-                  .format(o['out_path'], o['dt'], run_idx, epoch, pred_acc), 'w') as fw:
+                          .format(o['out_path'], o['dt'], run_idx, epoch, pred_acc), 'w') as fw:
             fw.write(answer)
 
     if False:
@@ -112,7 +113,7 @@ def predict(run_idx, model, data, o, write_answer=False, epoch=0, pred_acc=0):
     global CURRENT_PRED_ACC
     CURRENT_PRED_ACC = acc_dev
 
-    return acc_dev
+    return acc_dev, predicted_labels_dev
 
 
 def __main__():
@@ -156,7 +157,7 @@ def __main__():
                 print('\npredict:', end='')
             results['epoch'] = epoch + 1
             results['runtime'] = timeit.default_timer() - start
-            results['pred_acc'] = logs['dev_pred'] = predict(self.idx, self.model, data=d, o=o)
+            results['pred_acc'], _ = logs['dev_pred'], _ = predict(self.idx, self.model, data=d, o=o)
             if results['pred_acc'] > self.best_epoch['pred_acc']:
                 self.best_epoch['epoch'] = epoch + 1
                 self.best_epoch['pred_acc'] = results['pred_acc']
@@ -372,15 +373,16 @@ def __main__():
             best_model.set_weights(cb_epoch_predictions.best_epoch['weights'])
             # print(type(best_model))
             # predict best model to write answer file with predicted labels
-            predict(run_idx, best_model, d, o,
-                    write_answer=True,
-                    epoch=cb_epoch_predictions.best_epoch['epoch'],
-                    pred_acc=cb_epoch_predictions.best_epoch['pred_acc'])
-            best_model.save('{}model_{}_rn{:02d}_ep{:02d}_ac{:.3f}.hdf5'
-                            .format(o['out_path'], dt,
-                                    run_idx,
-                                    cb_epoch_predictions.best_epoch['epoch'],
-                                    cb_epoch_predictions.best_epoch['pred_acc']))
+            _, best_predictions = predict(run_idx, best_model, d, o,
+                                          write_answer=True,
+                                          epoch=cb_epoch_predictions.best_epoch['epoch'],
+                                          pred_acc=cb_epoch_predictions.best_epoch['pred_acc'])
+            fname = '{}model_{}_rn{:02d}_ep{:02d}_ac{:.3f}'.format(o['out_path'], dt,
+                                                                   run_idx,
+                                                                   cb_epoch_predictions.best_epoch['epoch'],
+                                                                   cb_epoch_predictions.best_epoch['pred_acc'])
+            best_model.save(fname + '.h5fs')
+            np.save(fname + '.predictions', best_predictions)
         except KeyError:
             sys.stderr.write('KeyError: couldn\'t save model for timestamp={}, '
                              'run={:02d}, epoch={:02d}, accuracy={:.3f}\n'

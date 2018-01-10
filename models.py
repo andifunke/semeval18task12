@@ -1,6 +1,9 @@
 """
 Neural models - new approach with sandwich design
 """
+from keras import Sequential
+
+from attention_lstm import attention_3d_block
 from main import dev_pred
 import keras
 import numpy as np
@@ -12,12 +15,19 @@ from theano.scalar import float32
 import models_vintage
 
 
-SHORTCUTS = {'LSTM_02', 'LSTM_02b', 'LSTM_02c', 'LSTM_02d', 'LSTM_03', 'LSTM_04',
-             'LSTM_05', 'LSTM_05', 'LSTM_05add', 'LSTM_05conc', 'LSTM_05avg', 'LSTM_05max', 'LSTM_05dot',
-             'LSTM_06',
-             'CNN_LSTM_02', 'CNN_LSTM_02b', 'CNN_LSTM_03', 'CNN_LSTM_04', 'CNN_LSTM_05',
-             'ATT_LSTM_02',
-             }
+SHORTCUTS = {
+    'LSTM_00',
+    'LSTM_02', 'LSTM_02a', 'LSTM_02b', 'LSTM_02c', 'LSTM_02d',
+    'LSTM_03',
+    'LSTM_04',
+    'LSTM_05', 'LSTM_05', 'LSTM_05add', 'LSTM_05conc', 'LSTM_05avg', 'LSTM_05max', 'LSTM_05dot',
+    'LSTM_06',
+    'CNN_LSTM_02', 'CNN_LSTM_02b', 'CNN_LSTM_03', 'CNN_LSTM_04', 'CNN_LSTM_05',
+    'ATT_LSTM_02',
+    'ATT_LSTM_03', 'ATT_LSTM_03a', 'ATT_LSTM_03a2',
+    'ATT_LSTM_03b', 'ATT_LSTM_03b3', 'ATT_LSTM_03c', 'ATT_LSTM_03d', 'ATT_LSTM_03e',
+    'ATT_LSTM_04',
+}
 VINTAGE = dict(
     LSTM_01=models_vintage.get_lstm_intra_warrant,
     ATT_LSTM_01=models_vintage.get_attention_lstm_intra_warrant,
@@ -69,21 +79,25 @@ def get_input_layers(names, max_len):
 def embed_inputs(input_layers, embeddings, max_len, masking=True):
     # now define embedded layers of the input
     # embedding layers (el)
+    weights = None if embeddings is None else [embeddings]
     el = list()
     for input_layer in input_layers:
-        el.append(Embedding(embeddings.shape[0], embeddings.shape[1], input_length=max_len, weights=[embeddings],
+        el.append(Embedding(embeddings.shape[0], embeddings.shape[1], input_length=max_len, weights=weights,
                             mask_zero=masking)(input_layer))
     return el
 
 
-def get_bidi_lstm_layers(embedded_layers, names, lstm_size, activation=None):
+def get_bidi_lstm_layers(embedded_layers, names, lstm_size, activation=None, dropout=0.0):
     # bidi layers (bl)
     args = dict()
     if activation is not None:
         args['activation'] = activation
+
     bl = list()
     for embedded_layer, name in zip(embedded_layers, names):
-        bl.append(Bidirectional(LSTM(lstm_size, return_sequences=True, **args), name='BiDiLSTM_{}'.format(name))(embedded_layer))
+        bl.append(Bidirectional(LSTM(lstm_size, return_sequences=True,
+                                     dropout=dropout, recurrent_dropout=dropout,
+                                     **args), name='BiDiLSTM_{}'.format(name))(embedded_layer))
     return bl
 
 
@@ -173,8 +187,16 @@ def get_model(classifier, word_index_to_embeddings_map, max_len, rich_context, *
     # attention_warrant0 = AttentionLSTM(lstm_size, attention_vector_for_w0)(bidi_lstm_layer_warrant0)
     # attention_warrant1 = AttentionLSTM(lstm_size, attention_vector_for_w1)(bidi_lstm_layer_warrant1)
 
+    # LSTM_00 - most basic
+    if classifier == 'LSTM_00':
+        il = get_input_layers(names, max_len)
+        el = embed_inputs(il, embeddings, max_len)
+        bl = get_bidi_lstm_layers(el, names, lstm_size)
+        # only warrant layers used
+        output_input = LSTM(lstm_size)(Concatenate()(bl[:2]))
+
     # based on LSTM_01 - only warrant 0 and 1 are used!
-    if classifier == 'LSTM_02':
+    elif classifier == 'LSTM_02':
         il = get_input_layers(names, max_len)
         el = embed_inputs(il, embeddings, max_len)
         bl = get_bidi_lstm_layers(el, names, lstm_size)
@@ -184,6 +206,19 @@ def get_model(classifier, word_index_to_embeddings_map, max_len, rich_context, *
         # TODO: use 'add' instead of 'concatenate' to reconstruct possible bug in original implementation
         dropout_input = concatenate([attention_warrant0, attention_warrant1])
         dropout_layer = Dropout(dropout, name='dropout')(dropout_input)
+        dense1 = Dense(int(lstm_size * factor), activation=activation1, name='dense_main')(dropout_layer)
+        output_input = dense1
+
+    # based on LSTM_02 - but more dropout
+    elif classifier == 'LSTM_02a':
+        il = get_input_layers(names, max_len)
+        el = embed_inputs(il, embeddings, max_len)
+        bl = get_bidi_lstm_layers(el, names, lstm_size, dropout=0.2)
+        # only warrant layers used
+        attention_warrant0 = LSTM(lstm_size, dropout=0.2)(bl[0])
+        attention_warrant1 = LSTM(lstm_size, dropout=0.2)(bl[1])
+        conc = concatenate([attention_warrant0, attention_warrant1])
+        dropout_layer = Dropout(0.2, name='dropout')(conc)
         dense1 = Dense(int(lstm_size * factor), activation=activation1, name='dense_main')(dropout_layer)
         output_input = dense1
 
@@ -295,6 +330,8 @@ def get_model(classifier, word_index_to_embeddings_map, max_len, rich_context, *
         dense = Dense(int(lstm_size * factor), activation=activation1, name='dense_w')(dropout_layer)
         output_input = dense
 
+    # CNN
+
     # CNN_LSTM_02 - using multiple (parallel) CNN filters before the LSTM. only warrant 0 and 1 are used!
     elif classifier == 'CNN_LSTM_02':
         il = get_input_layers(names, max_len)
@@ -359,6 +396,8 @@ def get_model(classifier, word_index_to_embeddings_map, max_len, rich_context, *
         dense1 = Dense(int(lstm_size * factor), activation=activation1, name='dense_main')(dropout_layer)
         output_input = dense1
 
+    # ATTENTION
+
     # based on ATT_LSTM_01 (https://github.com/philipperemy/keras-attention-mechanism/blob/master/attention_dense.py)
     # too random
     elif classifier == 'ATT_LSTM_02':
@@ -378,8 +417,85 @@ def get_model(classifier, word_index_to_embeddings_map, max_len, rich_context, *
         dense1 = Dense(int(lstm_size * factor * 0.5), activation=activation1)(attention_mul)
         output_input = dense1
 
-    # TODO:
     # Attention LSTM from https://github.com/philipperemy/keras-attention-mechanism
+    # APPLY_ATTENTION_BEFORE_LSTM
+    # working pretty good!
+    elif classifier == 'ATT_LSTM_03':
+        il = get_input_layers(names, max_len)
+        el = embed_inputs(il, embeddings, max_len, masking=False)
+        conc = Concatenate()(el[:2])
+        attention_mul = attention_3d_block(conc, max_len)
+        lstm = LSTM(lstm_size, return_sequences=False)(attention_mul)
+        output_input = lstm
+
+    # augmented with dropout and additional dense layer
+    elif classifier == 'ATT_LSTM_03a2':
+        il = get_input_layers(names, max_len)
+        el = embed_inputs(il, embeddings, max_len, masking=False)
+        conc = Concatenate()(el[:2])
+        attention_mul = attention_3d_block(conc, max_len)
+        lstm = LSTM(lstm_size, return_sequences=False)(attention_mul)
+        dropout_layer = Dropout(dropout, name='dropout')(lstm)
+        # dense1 = Dense(int(lstm_size * factor), activation=activation1, name='dense_main')(lstm)
+        output_input = dropout_layer
+
+    # !
+    elif classifier == 'ATT_LSTM_03b':
+        il = get_input_layers(names, max_len)
+        el = embed_inputs(il, embeddings, max_len, masking=False)
+        conc = Concatenate()(el[:3])
+        attention_mul = attention_3d_block(conc, max_len)
+        lstm = LSTM(lstm_size, return_sequences=False)(attention_mul)
+        output_input = lstm
+
+    # with dropout and dense
+    elif classifier == 'ATT_LSTM_03b3':
+        print('this one')
+        il = get_input_layers(names, max_len)
+        el = embed_inputs(il, embeddings, max_len, masking=False)
+        conc = Concatenate()(el[:3])
+        attention_mul = attention_3d_block(conc, max_len)
+        lstm = LSTM(lstm_size, return_sequences=False)(attention_mul)
+        dropout_layer = Dropout(0.5, name='dropout')(lstm)
+        # dense1 = Dense(int(lstm_size * factor), activation=activation1, name='dense_main')(lstm)
+        output_input = dropout_layer
+
+    elif classifier == 'ATT_LSTM_03c':
+        il = get_input_layers(names, max_len)
+        el = embed_inputs(il, embeddings, max_len, masking=False)
+        conc = Concatenate()(el[:2] + [el[3]])
+        attention_mul = attention_3d_block(conc, max_len)
+        lstm = LSTM(lstm_size, return_sequences=False)(attention_mul)
+        output_input = lstm
+
+    elif classifier == 'ATT_LSTM_03d':
+        il = get_input_layers(names, max_len)
+        el = embed_inputs(il, embeddings, max_len, masking=False)
+        conc = Concatenate()(el[:4])
+        attention_mul = attention_3d_block(conc, max_len)
+        lstm = LSTM(lstm_size, return_sequences=False)(attention_mul)
+        output_input = lstm
+
+    elif classifier == 'ATT_LSTM_03e':
+        il = get_input_layers(names, max_len)
+        el = embed_inputs(il, embeddings, max_len, masking=False)
+        conc = Concatenate()(el[:2])
+        attention_mul = attention_3d_block(conc, max_len)
+        conc2 = Concatenate()([attention_mul] + el[2:4])
+        lstm = LSTM(lstm_size, return_sequences=False)(conc2)
+        output_input = lstm
+
+    # Attention LSTM from https://github.com/philipperemy/keras-attention-mechanism
+    # APPLY_ATTENTION_AFTER_LSTM
+    elif classifier == 'ATT_LSTM_04':
+        il = get_input_layers(names, max_len)
+        el = embed_inputs(il, embeddings, max_len, masking=False)
+        conc = Concatenate()([el[0], el[1]])
+        lstm = LSTM(lstm_size, return_sequences=True)(conc)
+        attention_mul = attention_3d_block(lstm, max_len)
+        output_input = Flatten()(attention_mul)
+
+    # TODO:
     # https://machinelearningmastery.com/cnn-long-short-term-memory-networks/
 
     else:

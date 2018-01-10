@@ -3,15 +3,13 @@ in parts inspired by http://scikit-learn.org/stable/auto_examples/text/document_
 """
 import argparse
 import json
-from itertools import chain
 from os import path
-import numpy as np
 import six.moves.cPickle as cPickle
 from sklearn import svm, preprocessing
 from data_analyzer import *
+from svm_test import test_main, get_xy
 
 
-# argument parsing and setting default values
 def get_options():
     parser = argparse.ArgumentParser(description='nlp exercise 2')
 
@@ -63,85 +61,51 @@ def get_options():
     return vars(parser.parse_args())
 
 
-OPTIONS = get_options()
+def train_main(predict=False, proba=False):
+    options = get_options()
 
-
-def get_xy(dataset):
-    """ embedding_size, embedding_model and lowercase are only applicable, if pretrained is False.
-    In this case the custom trained embeddings are used. Values must correspond to existing w2v model files. """
-
-    lowercase = True if OPTIONS['wv_file'][-3:] == '_lc' else False
-    fname = path.join(OPTIONS['data_dir'], OPTIONS['wv_file'] + '.vec')
-
-    # gensim cannot be used on hpc
-    if 'OPTIONS' in globals() and OPTIONS['gensim']:
-        import gensim.models.word2vec as wv
-        model = wv.Word2Vec.load(fname)
-        word_vectors = model.wv
-    else:
-        word_vectors = pd.read_pickle(fname + '.pickle')
-    print('loading embeddings from', fname)
-
-    print('loading train data')
-    X_df = get_data(FILES[dataset], pad=True)[['warrant0', 'warrant1', 'reason', 'claim']]
-    tprint(X_df, 10)
-    y = get_labels(FILES[dataset]).as_matrix().flatten()
-
-    X = []
-    for row in X_df.itertuples():
-        w0 = [word_vectors[token.lower() if lowercase else token] for token in row[1]]
-        w1 = [word_vectors[token.lower() if lowercase else token] for token in row[2]]
-        r = [word_vectors[token.lower() if lowercase else token] for token in row[3]]
-        c = [word_vectors[token.lower() if lowercase else token] for token in row[4]]
-        X.append(list(chain.from_iterable(w0))
-                 + list(chain.from_iterable(w1))
-                 + list(chain.from_iterable(r))
-                 + list(chain.from_iterable(c))
-                 )
-
-    X = np.asarray(X, dtype=float, order='C')
-    y = np.asarray(y, dtype=bool, order='C')
-    assert len(X) == len(y)
-    return X, y
-
-
-def train_main():
     t0 = time()
 
-    X, y = get_xy('train_swap')
+    X, y = get_xy('train_swap', options)
 
-    if OPTIONS['scale']:
+    if options['scale']:
         scaler = preprocessing.MinMaxScaler()
         scaler.fit(X)
         X = scaler.transform(X)
-        scale_fname = path.join(OPTIONS['data_dir'], OPTIONS['wv_file'] + '_scale.pickle')
+        scale_fname = path.join(options['data_dir'], options['wv_file'] + '_scale.pickle')
         print('saving scaler to', scale_fname)
         with open(scale_fname, 'wb') as f:
             cPickle.dump(scaler, f)
+    else:
+        scaler = None
 
-    print(OPTIONS)
+    print(options)
     print('start training')
-    clf = svm.SVC(C=OPTIONS['C'], cache_size=OPTIONS['cache_size'], class_weight=None, kernel=OPTIONS['kernel'],
-                  decision_function_shape='ovr', gamma='auto', max_iter=OPTIONS['max_iter'], random_state=None,
-                  shrinking=OPTIONS['shrinking'], tol=0.001, verbose=OPTIONS['verbose'])
+    clf = svm.SVC(C=options['C'], cache_size=options['cache_size'], class_weight=None, kernel=options['kernel'],
+                  decision_function_shape='ovr', gamma='auto', max_iter=options['max_iter'], random_state=None,
+                  shrinking=options['shrinking'], tol=0.001, verbose=options['verbose'], probability=proba)
     print('\n' + str(clf))
 
     print('fitting...')
     clf.fit(X, y)
 
-    clf_fname = path.join(OPTIONS['data_dir'], OPTIONS['wv_file'] + '_clf.pickle')
-    print('\nsaving clf to', clf_fname)
-    with open(clf_fname, 'wb') as f:
-        cPickle.dump(clf, f)
+    options['time_train'] = time() - t0
 
-    OPTIONS['time_train'] = time() - t0
-    options_fname = path.join(OPTIONS['data_dir'], OPTIONS['wv_file'] + '_options.json')
-    print('saving options to', options_fname)
-    with open(options_fname, 'w') as f:
-        json.dump(OPTIONS, f)
+    if predict:
+        test_main(clf, options, scaler)
+    else:
+        clf_fname = path.join(options['data_dir'], options['wv_file'] + '_clf.pickle')
+        print('\nsaving clf to', clf_fname)
+        with open(clf_fname, 'wb') as f:
+            cPickle.dump(clf, f)
 
-    print("done in {:f}s".format(OPTIONS['time_train']))
+        options_fname = path.join(options['data_dir'], options['wv_file'] + '_options.json')
+        print('saving options to', options_fname)
+        with open(options_fname, 'w') as f:
+            json.dump(options, f)
+
+        print("done in {:f}s".format(options['time_train']))
 
 
 if __name__ == '__main__':
-    train_main()
+    train_main(predict=True, proba=True)

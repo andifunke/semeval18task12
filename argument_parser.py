@@ -74,7 +74,7 @@ def get_options():
                         help='dropout must be float(x) with 0 < x <= 1. unchecked')
     parser.add_argument('--epochs', default=20, type=int,
                         help='maximum number of epochs. training may terminate eralier.')
-    parser.add_argument('--patience', default=8, type=int,
+    parser.add_argument('--patience', default=5, type=int,
                         help='for early stopping.')
     parser.add_argument('--padding', default=100, type=int,
                         help='length of padded vectors. choose <= 0 for maximum padding length (no truncation).')
