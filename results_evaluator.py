@@ -241,11 +241,7 @@ def aggregate_group(dfs, df_descriptions, keys, to_latex=False):
     print('********************************************************************************************************')
 
 
-def reports_evaluator_main(directory=None):
-    """
-    a given directory overwrites the defaults. The function will look for all test-result files in this directory.
-    """
-    print('start evaluating')
+def load_results(directory=None):
     dat_dir = DAT_DIR if directory is None else directory
     files = [f for f in listdir(dat_dir) if re.match(r'^report_.*\.csv$', f)]
 
@@ -256,8 +252,15 @@ def reports_evaluator_main(directory=None):
                              converters={'classifier': (lambda arg: 'LSTM_01' if arg == 'AttentionLSTM' else arg)})
         results.append(result)
 
-    df = pd.concat(results, ignore_index=True)
-    df = df[KEYS]
+    return pd.concat(results, ignore_index=True)
+
+
+def reports_evaluator_main(directory=None):
+    """
+    a given directory overwrites the defaults. The function will look for all test-result files in this directory.
+    """
+    print('start evaluating')
+    df = load_results(directory)[KEYS]
     # tprint(df.sort_values('pred_acc', ascending=False), -100)
 
     # filter for best epoch
