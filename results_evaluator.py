@@ -61,7 +61,7 @@ KEYS = [
     'runtime',
     # 'epochs',
     # 'pre_seed',
-    # 'run',
+    'run',
     # 'run seed',
     # 'runs',
     # 'vocabulary',
@@ -259,6 +259,15 @@ def reports_evaluator_main(directory=None):
     df = pd.concat(results, ignore_index=True)
     df = df[KEYS]
     # tprint(df.sort_values('pred_acc', ascending=False), -100)
+
+    # filter for best epoch
+    keys = ['timestamp', 'run']
+    group = df.groupby(keys)
+    # get the row with the maximum value of 'f1_micro' per group
+    df = df.loc[group['pred_acc'].idxmax()]
+    # reset the index
+    df.set_index(keys, inplace=True)
+    tprint(df.sort_values('pred_acc', ascending=False))
 
     # print grouped tables
     if True:

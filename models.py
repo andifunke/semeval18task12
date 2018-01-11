@@ -10,7 +10,7 @@ import numpy as np
 from keras.engine import Input, Model, Layer
 from keras.layers import concatenate, Lambda, Dense, Dropout, Embedding, LSTM, Bidirectional, multiply, add, RNN, \
     SimpleRNN, Concatenate, Flatten, Convolution1D, ConvLSTM2D, TimeDistributed, Conv2D, MaxPooling2D, Conv1D, \
-    MaxPooling1D, Multiply, Add, Average, Maximum, Dot
+    MaxPooling1D, Multiply, Add, Average, Maximum, Dot, PReLU, Reshape
 from theano.scalar import float32
 import models_vintage
 
@@ -22,11 +22,14 @@ SHORTCUTS = {
     'LSTM_04',
     'LSTM_05', 'LSTM_05', 'LSTM_05add', 'LSTM_05conc', 'LSTM_05avg', 'LSTM_05max', 'LSTM_05dot',
     'LSTM_06',
-    'CNN_LSTM_02', 'CNN_LSTM_02b', 'CNN_LSTM_03', 'CNN_LSTM_04', 'CNN_LSTM_05',
+    'LSTM_CNN_07add', 'LSTM_CNN_07mul', 'LSTM_CNN_07con', 'LSTM_CNN_07avg', 'LSTM_CNN_07max',
+    'LSTM_08',
     'ATT_LSTM_02',
     'ATT_LSTM_03', 'ATT_LSTM_03a', 'ATT_LSTM_03a2',
     'ATT_LSTM_03b', 'ATT_LSTM_03b3', 'ATT_LSTM_03c', 'ATT_LSTM_03d', 'ATT_LSTM_03e',
     'ATT_LSTM_04',
+    'CNN_01', 'CNN_02', 'CNN_03',
+    'CNN_LSTM_02', 'CNN_LSTM_02b', 'CNN_LSTM_03', 'CNN_LSTM_04', 'CNN_LSTM_05',
 }
 VINTAGE = dict(
     LSTM_01=models_vintage.get_lstm_intra_warrant,
@@ -111,13 +114,13 @@ def get_cnn_lstm_layers(embedded_layers, names, filters, kernel_size=3, dropout=
     return cll
 
 
-def get_cnn_layer(embedded_layers, names, filters, activation=None):
+def get_complex_cnn_layers(embedded_layers, names, filters, activation=None):
     # nach: https://codekansas.github.io/blog/2016/language.html
     args = dict()
     if activation is not None:
         args['activation'] = activation
-    cnns = [Convolution1D(padding="same", kernel_size=filt, filters=filters, name='conv1d_size{:d}'.format(filt), **args)
-            for filt in [2, 3, 5, 7]]
+    cnns = [Conv1D(padding="same", kernel_size=filt, filters=filters,
+                   name='conv1d_size{:d}'.format(filt), **args) for filt in [2, 3, 5, 7]]
     # cnn layers (cl)
     cl = list()
     for embedded_layer, name in zip(embedded_layers, names):
@@ -157,6 +160,7 @@ def get_model(classifier, word_index_to_embeddings_map, max_len, rich_context, *
         embeddings2 = embedding_to_ndarray(word_index_to_embeddings_map2)
         rich_embedding = True
 
+    vocabulary = embeddings.shape[0]
     dimensionality = embeddings.shape[1]
     lstm_size = kwargs.get('lstm_size')
     dropout = kwargs.get('dropout')
@@ -305,7 +309,7 @@ def get_model(classifier, word_index_to_embeddings_map, max_len, rich_context, *
     # add - ok, but nothing special
     # conc(atenate) - promising
     elif classifier[:7] == 'LSTM_05':
-        mergers = dict(mul=Multiply, add=Add, avg=Average, max=Maximum, dot=Dot)
+        mergers = dict(mul=Multiply, add=Add, avg=Average, max=Maximum, conc=Concatenate)
         Merger = mergers[classifier[7:]]
         il = get_input_layers(names, max_len)
         el = embed_inputs(il, embeddings, max_len)
@@ -323,20 +327,49 @@ def get_model(classifier, word_index_to_embeddings_map, max_len, rich_context, *
         el = embed_inputs(il, embeddings, max_len)
         bl = get_bidi_lstm_layers(el, names, lstm_size)
         # multiplying warrant0 and warrant1 separately with reason and claim - similar to attention
-        reason_claim = Concatenate()([bl[2], bl[3]])
+        reason_claim = Concatenate()([bl[2], bl[3]])  # TODO: try different axis
         warrant0 = LSTM(lstm_size)(Dot(axes=(1, 1))([bl[0], reason_claim]))
         warrant1 = LSTM(lstm_size)(Dot(axes=(1, 1))([bl[1], reason_claim]))
         dropout_layer = Dropout(dropout, name='dropout_w')(concatenate([warrant0, warrant1]))
         dense = Dense(int(lstm_size * factor), activation=activation1, name='dense_w')(dropout_layer)
         output_input = dense
 
+    # like LSTM_05 - but using cnn instead of lstm
+    elif classifier[:11] == 'LSTM_CNN_07':
+        mergers = dict(mul=Multiply, add=Add, avg=Average, max=Maximum, con=Concatenate)
+        Merger = mergers.get(classifier[11:], Add)
+        il = get_input_layers(names, max_len)
+        el = embed_inputs(il, embeddings, max_len, masking=False)
+        bl = get_bidi_lstm_layers(el, names, lstm_size)
+        warrant0 = Conv1D(lstm_size, (5,), activation='relu')(Merger()([bl[0], bl[2], bl[3]]))
+        warrant1 = Conv1D(lstm_size, (5,), activation='relu')(Merger()([bl[1], bl[2], bl[3]]))
+        maxpol0 = MaxPooling1D()(warrant0)
+        maxpol1 = MaxPooling1D()(warrant1)
+        dropout_layer = Dropout(dropout, name='dropout_w')(Concatenate()([maxpol0, maxpol1]))
+        dense = Dense(int(lstm_size * factor), activation=activation1, name='dense_w')(Flatten()(dropout_layer))
+        output_input = dense
+
+    # like LSTM_05conc, but concatenate on different axis
+    # (which makes more sense in theory but doesn't work in real life)
+    elif classifier == 'LSTM_08':
+        il = get_input_layers(names, max_len)
+        el = embed_inputs(il, embeddings, max_len)
+        bl = get_bidi_lstm_layers(el, names, lstm_size)
+        warrant0 = LSTM(lstm_size)(Concatenate(axis=1)([bl[0], bl[2], bl[3]]))
+        warrant1 = LSTM(lstm_size)(Concatenate(axis=1)([bl[1], bl[2], bl[3]]))
+        dropout_layer = Dropout(dropout, name='dropout_w')(concatenate([warrant0, warrant1]))
+        dense = Dense(int(lstm_size * factor), activation=activation1, name='dense_w')(dropout_layer)
+        output_input = dense
+
+
+    # ##############################################################################
     # CNN
 
     # CNN_LSTM_02 - using multiple (parallel) CNN filters before the LSTM. only warrant 0 and 1 are used!
     elif classifier == 'CNN_LSTM_02':
         il = get_input_layers(names, max_len)
         el = embed_inputs(il, embeddings, max_len, masking=False)
-        cl = get_cnn_layer(el, names, filters)
+        cl = get_complex_cnn_layers(el, names, filters)
         bl = get_bidi_lstm_layers(cl, names, lstm_size)
         # only warrant layers used
         attention_warrant0 = LSTM(lstm_size)(bl[0])
@@ -351,7 +384,7 @@ def get_model(classifier, word_index_to_embeddings_map, max_len, rich_context, *
     elif classifier == 'CNN_LSTM_02b':
         il = get_input_layers(names, max_len)
         el = embed_inputs(il, embeddings, max_len, masking=False)
-        cl = get_cnn_layer(el, names, filters, activation=activation1)
+        cl = get_complex_cnn_layers(el, names, filters, activation=activation1)
         bl = get_bidi_lstm_layers(cl, names, lstm_size, activation=activation1)
         # only warrant layers used
         attention_warrant0 = LSTM(lstm_size, activation=activation1)(bl[0])
@@ -396,6 +429,40 @@ def get_model(classifier, word_index_to_embeddings_map, max_len, rich_context, *
         dense1 = Dense(int(lstm_size * factor), activation=activation1, name='dense_main')(dropout_layer)
         output_input = dense1
 
+    # using ConvLSTM2D layer, like CNN_LSTM_03, but more simple without additional layers - also not working
+    elif classifier == 'CNN_01':
+        il = get_input_layers(names, max_len)
+        el = embed_inputs(il, embeddings, max_len, masking=False)
+        cnn = get_complex_cnn_layers(el, names, filters)
+        conc = concatenate(cnn[:2])
+        output_input = Bidirectional(LSTM(lstm_size, dropout=0.2))(conc)
+
+    # using ConvLSTM2D layer, like CNN_LSTM_03, but more simple without additional layers - also not working
+    elif classifier == 'CNN_02':
+        il = get_input_layers(names, max_len)
+        el = embed_inputs(il, embeddings, max_len, masking=False)
+        conc = Concatenate()(el[:2])
+        cnn = Conv1D(max_len, (5,), activation='relu')(conc)
+        output_input = Bidirectional(LSTM(lstm_size, dropout=0.2))(cnn)
+
+    # using ConvLSTM2D layer, like CNN_LSTM_03, but more simple without additional layers - also not working
+    elif classifier == 'CNN_03':
+        il = get_input_layers(names, max_len)
+        print(il[0].shape)
+        el = embed_inputs(il, embeddings, max_len, masking=False)
+        print(el[0].shape)
+        layers = el[:2]
+        conc = Concatenate(axis=1)(layers)
+        print(conc.shape)
+        dim4 = Reshape((vocabulary, max_len, dimensionality, len(layers)))(conc)
+        print(dim4.shape)
+        cnn = Conv2D(max_len, (5, 5), activation=PReLU())(dim4)
+        print(cnn.shape)
+        output_input = Bidirectional(LSTM(lstm_size, dropout=0.2))(cnn)
+        print(output_input.shape)
+
+
+    # ##################################################################################
     # ATTENTION
 
     # based on ATT_LSTM_01 (https://github.com/philipperemy/keras-attention-mechanism/blob/master/attention_dense.py)

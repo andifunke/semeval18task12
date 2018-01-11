@@ -104,7 +104,7 @@ def get_options():
                         help='specify loss function')
 
     activations = ['relu', 'softmax', 'elu', 'selu', 'softplus', 'softsign', 'tanh', 'sigmoid',
-                   'sigmoid', 'linear', 'leakyrelu', 'prelu', 'elu', 'thresholdedrelu']
+                   'sigmoid', 'linear', 'leakyrelu', 'PReLU', 'elu', 'thresholdedrelu']
     parser.add_argument('--activation1', default='relu', type=str,
                         choices=activations,
                         help='specify activation function for inner layers')
