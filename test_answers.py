@@ -61,10 +61,10 @@ if __name__ == '__main__':
         # load pre-extracted word-to-index maps and pre-filtered Glove embeddings
         word_to_indices_map, word_index_to_embeddings_map = \
             vocabulary_embeddings_extractor.load_cached_vocabulary_and_embeddings(embeddings_cache_path + '.pkl.bz2')
-    # pprint(word_to_indices_map)
-    np.set_printoptions(precision=None, threshold=None, edgeitems=None, linewidth=1600, suppress=None, nanstr=None,
+    pprint(word_to_indices_map)
+    np.set_printoptions(precision=6, threshold=50, edgeitems=None, linewidth=6000, suppress=True, nanstr=None,
                      infstr=None, formatter=None)
-    pprint(word_index_to_embeddings_map, width=2000)
+    pprint(word_index_to_embeddings_map, width=7000)
     quit()
 
     fpath_model = model_dir + model_file
