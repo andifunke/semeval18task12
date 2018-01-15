@@ -6,6 +6,8 @@ import six.moves.cPickle as cPickle
 from collections import OrderedDict
 from pprint import pprint
 import numpy as np
+from keras.models import load_model
+
 import data_loader
 import vocabulary_embeddings_extractor
 from argument_parser import get_options
@@ -61,7 +63,7 @@ def detail_model(m):
     print('config:', m.get_config())
 
 
-def predict(run_idx, model, data, o, write_answer=False, epoch=0, pred_acc=0):
+def predict(run_idx, model, data, o, write_answer=False, print_answer=False, epoch=0, pred_acc=0):
     # model predictions
     predicted_probabilities_dev = model.predict(
         {'sequence_layer_input_warrant0': data.dev_warrant0_list,
@@ -98,12 +100,14 @@ def predict(run_idx, model, data, o, write_answer=False, epoch=0, pred_acc=0):
     acc_dev = len(good_ids) / (len(good_ids) + len(wrong_ids))
     # print("acc_dev = %.3f\t" % acc_dev)
 
+    answer = '#id\tcorrectLabelW0orW1\n' + answer
     # write answer file
     if write_answer:
-        answer = '#id\tcorrectLabelW0orW1\n' + answer
         with open('{}answer_{}_rn{:02d}_ep{:02d}_ac{:.3f}.txt'
                           .format(o['out_path'], o['dt'], run_idx, epoch, pred_acc), 'w') as fw:
             fw.write(answer)
+    if print_answer:
+        print(answer)
 
     if False:
         print("\nInstances correct")
@@ -218,25 +222,24 @@ def __main__():
             vocabulary_embeddings_extractor.load_cached_vocabulary_and_embeddings(embeddings_cache_file2)
 
     d = Data()
+    print('loading train data')
     # loads data and replaces words with indices from embedding cache
+    # train
     (d.train_instance_id_list, d.train_warrant0_list, d.train_warrant1_list, d.train_correct_label_w0_or_w1_list,
      d.train_reason_list, d.train_claim_list, d.train_debate_meta_data_list) = \
-        data_loader.load_single_file(o['code_path'] + 'data/train-w-swap-full_challenge.tsv', word_to_indices_map,
-                                     lc=lc)
-    # print('loaded', train_reason_list)
-
+        data_loader.load_single_file(o['code_path'] + 'data/train-w-swap-full_challenge.tsv', word_to_indices_map, lc=lc)
+    print('loading dev data')
+    # dev
     (d.dev_instance_id_list, d.dev_warrant0_list, d.dev_warrant1_list, d.dev_correct_label_w0_or_w1_list,
      d.dev_reason_list, d.dev_claim_list, d.dev_debate_meta_data_list) = \
         data_loader.load_single_file(o['code_path'] + 'data/dev-full_challenge.tsv', word_to_indices_map, lc=lc)
 
     # pad all sequences
-    (d.train_warrant0_list, d.train_warrant1_list, d.train_reason_list, d.train_claim_list,
-     d.train_debate_meta_data_list) = [
+    # train
+    (d.train_warrant0_list, d.train_warrant1_list, d.train_reason_list, d.train_claim_list, d.train_debate_meta_data_list) = [
         sequence.pad_sequences(x, maxlen=o['padding']) for x in
-        (d.train_warrant0_list, d.train_warrant1_list, d.train_reason_list, d.train_claim_list,
-         d.train_debate_meta_data_list)]
-    # print('padded', train_reason_list)
-
+        (d.train_warrant0_list, d.train_warrant1_list, d.train_reason_list, d.train_claim_list, d.train_debate_meta_data_list)]
+    # dev
     (d.dev_warrant0_list, d.dev_warrant1_list, d.dev_reason_list, d.dev_claim_list, d.dev_debate_meta_data_list) = [
         sequence.pad_sequences(x, maxlen=o['padding']) for x in
         (d.dev_warrant0_list, d.dev_warrant1_list, d.dev_reason_list, d.dev_claim_list, d.dev_debate_meta_data_list)]
@@ -374,17 +377,30 @@ def __main__():
             best_model.set_weights(cb_epoch_predictions.best_epoch['weights'])
             # print(type(best_model))
             # predict best model to write answer file with predicted labels
-            _, best_predictions, best_probabilities = predict(run_idx, best_model, d, o,
-                                                              write_answer=True,
-                                                              epoch=cb_epoch_predictions.best_epoch['epoch'],
-                                                              pred_acc=cb_epoch_predictions.best_epoch['pred_acc'])
+            acc, best_predictions, best_probabilities = predict(run_idx, best_model, d, o,
+                                                                write_answer=True,
+                                                                print_answer=True,
+                                                                epoch=cb_epoch_predictions.best_epoch['epoch'],
+                                                                pred_acc=cb_epoch_predictions.best_epoch['pred_acc'])
+            print('acc:', acc)
             fname = '{}model_{}_rn{:02d}_ep{:02d}_ac{:.3f}'.format(o['out_path'], dt,
                                                                    run_idx,
                                                                    cb_epoch_predictions.best_epoch['epoch'],
                                                                    cb_epoch_predictions.best_epoch['pred_acc'])
-            best_model.save(fname + '.h5fs')
+            best_model.save(fname + '.hdf5')
             # np.save(fname + '.predictions', best_predictions)
             np.save(fname + '.probabilities', best_probabilities)
+
+            print('LOADED MODEL')
+            loaded_model = load_model(fname + '.hdf5')
+            acc, best_predictions, best_probabilities = predict(run_idx, loaded_model, d, o,
+                                                                write_answer=False,
+                                                                print_answer=True,
+                                                                epoch=cb_epoch_predictions.best_epoch['epoch'],
+                                                                pred_acc=cb_epoch_predictions.best_epoch['pred_acc'])
+            print('acc:', acc)
+
+
         except KeyError:
             sys.stderr.write('KeyError: couldn\'t save model for timestamp={}, '
                              'run={:02d}, epoch={:02d}, accuracy={:.3f}\n'

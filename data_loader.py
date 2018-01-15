@@ -17,7 +17,6 @@ def string_to_indices(string: str, word_to_indices_map_param: dict, nb_words: in
     :return: a list of indices
     """
     tokens = vocabulary_embeddings_extractor.tokenize(string.lower() if lc else string)
-    # print(tokens)
     # global MAX_LEN
     # MAX_LEN = max(len(tokens), MAX_LEN)
 
@@ -27,6 +26,10 @@ def string_to_indices(string: str, word_to_indices_map_param: dict, nb_words: in
     # limit words to max nb_words (set them to OOV = 2):
     if nb_words:
         word_indices_list = [2 if word_index >= nb_words else word_index for word_index in word_indices_list]
+
+    # print(string)
+    print(tokens)
+    print(word_indices_list)
 
     return word_indices_list
 
