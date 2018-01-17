@@ -1,36 +1,76 @@
 # save the best model for this run
-import numpy as np
 from pprint import pprint
-
 from keras.preprocessing import sequence
 from sklearn.metrics import accuracy_score
-
-import data_loader
 from classes import Data
-from data_loader import load_single_file
 from keras.models import load_model
-from data_analyzer import get_data
-import vocabulary_embeddings_extractor
 from main import get_predicted_labels
 from results_evaluator import load_results, tprint
-import six.moves.cPickle as cPickle
 from keras import __version__ as kv
+from argument_parser import FILES
+import numpy as np
+import data_loader
+import vocabulary_embeddings_extractor
+import six.moves.cPickle as cPickle
 
-if __name__ == '__main__':
+OLD_MODEL = False
 
-    FILES = dict(
-        dev='./data/dev-full_challenge.tsv',
-        # dev='./data/dev/dev-full.txt',
-        test='./data/test/test-only-data.txt',
-        train='./data/train/train-full.txt',
-        train_swap='./data/train-w-swap-full_challenge.tsv',
-        # train_swap='./data/train/train-w-swap-full.txt',
-    )
+
+def predict(model, ids, warrant0, warrant1, label, reason, claim, debate):
+    if OLD_MODEL:
+        predicted_probabilities_dev = model.predict(
+            {
+                'sequence_layer_warrant0_input': warrant0,
+                'sequence_layer_warrant1_input': warrant1,
+                'sequence_layer_reason_input': reason,
+                'sequence_layer_claim_input': claim,
+                'sequence_layer_debate_input': debate,
+            },
+        )
+    else:
+        predicted_probabilities_dev = model.predict(
+            {
+                'sequence_layer_input_warrant0': warrant0,
+                'sequence_layer_input_warrant1': warrant1,
+                'sequence_layer_input_reason': reason,
+                'sequence_layer_input_claim': claim,
+                'sequence_layer_input_debate': debate,
+            },
+        )
+
+    # print(predicted_probabilities_dev)
+    # print(predicted_probabilities_test)
+
+    if label is not None:
+        y_true = label
+        y_pred = get_predicted_labels(predicted_probabilities_dev)
+
+        assert isinstance(y_true, list)
+        assert isinstance(y_true[0], int)
+        assert len(y_true) == len(y_pred)
+
+        # calculate scorer accuracy
+        good_ids = set()
+        wrong_ids = set()
+        for g, p, instance_id in zip(y_true, y_pred, ids):
+            if g == p:
+                good_ids.add(instance_id)
+            else:
+                wrong_ids.add(instance_id)
+        acc = len(good_ids) / (len(good_ids) + len(wrong_ids))
+        acc_score = accuracy_score(y_true=y_true, y_pred=y_pred)
+
+        print('y_true:', y_true)
+        print('y_pred:', y_pred)
+        print("acc = %.3f" % acc)
+        print("acc_score = %.3f" % acc_score)
+
+
+def test_main():
     model_dir = 'out/'
 
     # model_file = 'model_2017-12-10_01-29-43-821365_rn01_ep15_ac0.712.hdf5'
     model_file = 'model_2018-01-11_02-30-22-312837_rn03_ep07_ac0.655.h5fs'
-    old_model = False
 
     model_ts = model_file[6:32]
     model_rn = int(model_file[35:37])
@@ -50,6 +90,11 @@ if __name__ == '__main__':
     embeddings_cache_path = './embedding_caches/' + embeddings_cache_file
     lc = True if ('_lc' in embeddings_cache_file[-4:]) else False
 
+    # seeding is needed for deterministic OOV vector
+    seed = int(model_info['pre_seed'])
+    # print(seed, type(seed))
+    np.random.seed(seed)
+
     if embeddings_cache_file[:2] == 'ce':
         # word_vectors = json.load(open(embeddings_cache_file + '.json', 'r', encoding='utf8'))
         # word_vectors = {k: np.array(v) for k, v in word_vectors.items()}
@@ -61,11 +106,14 @@ if __name__ == '__main__':
         # load pre-extracted word-to-index maps and pre-filtered Glove embeddings
         word_to_indices_map, word_index_to_embeddings_map = \
             vocabulary_embeddings_extractor.load_cached_vocabulary_and_embeddings(embeddings_cache_path + '.pkl.bz2')
-    pprint(word_to_indices_map)
+
     np.set_printoptions(precision=6, threshold=50, edgeitems=None, linewidth=6000, suppress=True, nanstr=None,
-                     infstr=None, formatter=None)
-    pprint(word_index_to_embeddings_map, width=7000)
-    quit()
+                        infstr=None, formatter=None)
+
+    if False:
+        pprint(word_to_indices_map)
+        pprint(word_index_to_embeddings_map, width=7000)
+        quit()
 
     fpath_model = model_dir + model_file
     model = load_model(fpath_model, compile=False)
@@ -76,47 +124,30 @@ if __name__ == '__main__':
     # loads data and replaces words with indices from embedding cache
     # train
     print('loading train data')
-    (d.train_instance_id_list, d.train_warrant0_list, d.train_warrant1_list, d.train_correct_label_w0_or_w1_list,
-     d.train_reason_list, d.train_claim_list, d.train_debate_meta_data_list) = \
+    (d.train_ids, d.train_warrant0, d.train_warrant1, d.train_label, d.train_reason, d.train_claim, d.train_debate) = \
         data_loader.load_single_file(FILES['train_swap'], word_to_indices_map, lc=lc)
     # dev
     print('loading dev data')
-    (d.dev_instance_id_list, d.dev_warrant0_list, d.dev_warrant1_list, d.dev_correct_label_w0_or_w1_list,
-     d.dev_reason_list, d.dev_claim_list, d.dev_debate_meta_data_list) = \
+    (d.dev_ids, d.dev_warrant0, d.dev_warrant1, d.dev_label, d.dev_reason, d.dev_claim, d.dev_debate) = \
         data_loader.load_single_file(FILES['dev'], word_to_indices_map, lc=lc)
+    # test
+    print('loading test data')
+    (d.test_ids, d.test_warrant0, d.test_warrant1, d.test_label, d.test_reason, d.test_claim, d.test_debate) = \
+        data_loader.load_single_file(FILES['test'], word_to_indices_map, lc=lc, no_labels=True)
 
     # pad all sequences
     # train
-    (d.train_warrant0_list, d.train_warrant1_list, d.train_reason_list, d.train_claim_list, d.train_debate_meta_data_list) = [
+    (d.train_warrant0, d.train_warrant1, d.train_reason, d.train_claim, d.train_debat) = [
         sequence.pad_sequences(x, maxlen=model_info['padding'].item()) for x in
-        (d.train_warrant0_list, d.train_warrant1_list, d.train_reason_list, d.train_claim_list, d.train_debate_meta_data_list)]
+        (d.train_warrant0, d.train_warrant1, d.train_reason, d.train_claim, d.train_debate)]
     # dev
-    (d.dev_warrant0_list, d.dev_warrant1_list, d.dev_reason_list, d.dev_claim_list, d.dev_debate_meta_data_list) = [
+    (d.dev_warrant0, d.dev_warrant1, d.dev_reason, d.dev_claim, d.dev_debate) = [
         sequence.pad_sequences(x, maxlen=model_info['padding'].item()) for x in
-        (d.dev_warrant0_list, d.dev_warrant1_list, d.dev_reason_list, d.dev_claim_list, d.dev_debate_meta_data_list)]
-
-    if old_model:
-        predicted_probabilities_dev = model.predict(
-            {'sequence_layer_warrant0_input': d.dev_warrant0_list,
-             'sequence_layer_warrant1_input': d.dev_warrant1_list,
-             'sequence_layer_reason_input': d.dev_reason_list,
-             'sequence_layer_claim_input': d.dev_claim_list,
-             'sequence_layer_debate_input': d.dev_debate_meta_data_list,
-             },
-        )
-    else:
-        predicted_probabilities_dev = model.predict(
-            {'sequence_layer_input_warrant0': d.dev_warrant0_list,
-             'sequence_layer_input_warrant1': d.dev_warrant1_list,
-             'sequence_layer_input_reason': d.dev_reason_list,
-             'sequence_layer_input_claim': d.dev_claim_list,
-             'sequence_layer_input_debate': d.dev_debate_meta_data_list,
-             },
-        )
-    # print(predicted_probabilities_dev)
-    ids_dev = d.dev_instance_id_list
-    gold_labels_dev = d.dev_correct_label_w0_or_w1_list
-    predicted_labels_dev = get_predicted_labels(predicted_probabilities_dev)
+        (d.dev_warrant0, d.dev_warrant1, d.dev_reason, d.dev_claim, d.dev_debate)]
+    # test
+    (d.test_warrant0, d.test_warrant1, d.test_reason, d.test_claim, d.test_debate) = [
+        sequence.pad_sequences(x, maxlen=model_info['padding'].item()) for x in
+        (d.test_warrant0, d.test_warrant1, d.test_reason, d.test_claim, d.test_debate)]
 
     print('Keras version:', kv)
     tprint(results, 10)
@@ -126,23 +157,14 @@ if __name__ == '__main__':
         print('lowercase')
     print(model_file)
     print(fpath_model)
-    print('gold:', gold_labels_dev)
-    print('predicted:', predicted_labels_dev)
+    # print(d)
 
-    assert isinstance(gold_labels_dev, list)
-    assert isinstance(gold_labels_dev[0], int)
-    assert len(gold_labels_dev) == len(predicted_labels_dev)
+    print("predict DEV:")
+    predict(model, d.dev_ids, d.dev_warrant0, d.dev_warrant1, d.dev_label, d.dev_reason, d.dev_claim, d.dev_debate)
+    print("------------")
+    print("predict TEST:")
+    predict(model, d.test_ids, d.test_warrant0, d.test_warrant1, None, d.test_reason, d.test_claim, d.test_debate)
 
-    # calculate scorer accuracy
-    good_ids = set()
-    wrong_ids = set()
-    for g, p, instance_id in zip(gold_labels_dev, predicted_labels_dev, ids_dev):
-        if g == p:
-            good_ids.add(instance_id)
-        else:
-            wrong_ids.add(instance_id)
-    acc_dev = len(good_ids) / (len(good_ids) + len(wrong_ids))
-    print("acc_dev = %.3f" % acc_dev)
 
-    pred_acc = accuracy_score(y_true=gold_labels_dev, y_pred=predicted_labels_dev)
-    print("accuracy_score = %.3f" % pred_acc)
+if __name__ == '__main__':
+    test_main()

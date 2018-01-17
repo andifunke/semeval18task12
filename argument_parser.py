@@ -3,6 +3,16 @@ import os
 import argparse
 
 
+FILES = dict(
+    dev='data/dev-full_challenge.tsv',
+    # dev='data/dev/dev-full.txt',
+    test='data/test/test-only-data.txt',
+    train='data/train/train-full.txt',
+    train_swap='data/train-w-swap-full_challenge.tsv',
+    # train_swap='data/train/train-w-swap-full.txt',
+)
+
+
 def get_options():
     from models import get_shortcuts
 

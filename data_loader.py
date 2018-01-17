@@ -1,6 +1,7 @@
 import gzip
 import os.path
 # from typing import Dict, Tuple, List
+import math
 
 import vocabulary_embeddings_extractor
 
@@ -34,9 +35,11 @@ def string_to_indices(string: str, word_to_indices_map_param: dict, nb_words: in
     return word_indices_list
 
 
-def load_single_instance_from_line(line: str, word_to_indices_map: dict, nb_words: int = None, lc=False) -> tuple:
+def load_single_instance_from_line(line: str, word_to_indices_map: dict, nb_words: int = None, lc=False,
+                                   no_labels=False) -> tuple:
     """
     Load a single training/test instance from a single line int tab-separated format
+    :param no_labels: set True if data does not provide labels
     :param lc: use lowercase on all tokens
     :param line: string line
     :param word_to_indices_map:  map (word index, embedding index)
@@ -45,16 +48,25 @@ def load_single_instance_from_line(line: str, word_to_indices_map: dict, nb_word
     """
     split_line = line.split('\t')
     # "#id warrant0 warrant1 correctLabelW0orW1 reason claim debateTitle debateInfo
-    assert len(split_line) == 8
+    print(line)
+    print(split_line)
 
-    instance_id = split_line[0]
-    warrant0 = string_to_indices(split_line[1], word_to_indices_map, nb_words, lc)
-    warrant1 = string_to_indices(split_line[2], word_to_indices_map, nb_words, lc)
-    correct_label_w0_or_w1 = int(split_line[3])
-    reason = string_to_indices(split_line[4], word_to_indices_map, nb_words, lc)
-    claim = string_to_indices(split_line[5], word_to_indices_map, nb_words, lc)
-    debate_title = string_to_indices(split_line[6], word_to_indices_map, nb_words, lc)
-    debate_info = string_to_indices(split_line[7], word_to_indices_map, nb_words, lc)
+    if no_labels:
+        assert len(split_line) == 7
+        i0, i1, i2, i3, i4, i5, i6, i7 = (0, 1, 2, -1, 3, 4, 5, 6)
+        correct_label_w0_or_w1 = float('NaN')
+    else:
+        assert len(split_line) == 8
+        i0, i1, i2, i3, i4, i5, i6, i7 = (0, 1, 2, 3, 4, 5, 6, 7)
+        correct_label_w0_or_w1 = int(split_line[i3])
+
+    instance_id = split_line[i0]
+    warrant0 = string_to_indices(split_line[i1], word_to_indices_map, nb_words, lc)
+    warrant1 = string_to_indices(split_line[i2], word_to_indices_map, nb_words, lc)
+    reason = string_to_indices(split_line[i4], word_to_indices_map, nb_words, lc)
+    claim = string_to_indices(split_line[i5], word_to_indices_map, nb_words, lc)
+    debate_title = string_to_indices(split_line[i6], word_to_indices_map, nb_words, lc)
+    debate_info = string_to_indices(split_line[i7], word_to_indices_map, nb_words, lc)
     # concatenate these two into one vector
     debate_meta_data = debate_title + debate_info
 
@@ -62,7 +74,10 @@ def load_single_instance_from_line(line: str, word_to_indices_map: dict, nb_word
     assert len(instance_id) > 0
     assert len(warrant0) > 0
     assert len(warrant1) > 0
-    assert correct_label_w0_or_w1 == 0 or correct_label_w0_or_w1 == 1
+    if no_labels:
+        assert math.isnan(correct_label_w0_or_w1)
+    else:
+        assert correct_label_w0_or_w1 == 0 or correct_label_w0_or_w1 == 1
     assert len(reason) > 0
     assert len(claim) > 0
     assert len(debate_meta_data) > 0
@@ -70,9 +85,11 @@ def load_single_instance_from_line(line: str, word_to_indices_map: dict, nb_word
     return instance_id, warrant0, warrant1, correct_label_w0_or_w1, reason, claim, debate_meta_data
 
 
-def load_single_file(file_name: str, word_to_indices_map: dict, nb_words: int = None, lc=False) -> tuple:
+def load_single_file(file_name: str, word_to_indices_map: dict, nb_words: int = None, lc=False,
+                     no_labels=False) -> tuple:
     """
     Loads a single train/test file and returns a tuple of lists
+    :param no_labels: set True if data does not provide labels
     :param lc: use lowercase on all tokens
     :param file_name: full file name
     :param word_to_indices_map: vocabulary map in form {word: index} where index also correspond to frequencies
@@ -106,7 +123,7 @@ def load_single_file(file_name: str, word_to_indices_map: dict, nb_words: int = 
     for line in lines:
         # convert to vectors of embedding indices where appropriate
         instance_id, warrant0, warrant1, correct_label_w0_or_w1, reason, claim, debate_meta_data = \
-            load_single_instance_from_line(line, word_to_indices_map, nb_words, lc)
+            load_single_instance_from_line(line, word_to_indices_map, nb_words, lc, no_labels)
 
         # add to the result
         instance_id_list.append(instance_id)

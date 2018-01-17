@@ -7,10 +7,9 @@ from collections import OrderedDict
 from pprint import pprint
 import numpy as np
 from keras.models import load_model
-
 import data_loader
 import vocabulary_embeddings_extractor
-from argument_parser import get_options
+from argument_parser import get_options, FILES
 from classes import Data
 
 CURRENT_PRED_ACC = 0.0
@@ -64,32 +63,33 @@ def detail_model(m):
 
 
 def predict(run_idx, model, data, o, write_answer=False, print_answer=False, epoch=0, pred_acc=0):
-    # model predictions
-    predicted_probabilities_dev = model.predict(
-        {'sequence_layer_input_warrant0': data.dev_warrant0_list,
-         'sequence_layer_input_warrant1': data.dev_warrant1_list,
-         'sequence_layer_input_reason': data.dev_reason_list,
-         'sequence_layer_input_claim': data.dev_claim_list,
-         'sequence_layer_input_debate': data.dev_debate_meta_data_list,
-         },
+    # TODO: generalize for dev and test
+    predicted_probabilities = model.predict(
+        {
+            'sequence_layer_input_warrant0': data.dev_warrant0,
+            'sequence_layer_input_warrant1': data.dev_warrant1,
+            'sequence_layer_input_reason': data.dev_reason,
+            'sequence_layer_input_claim': data.dev_claim,
+            'sequence_layer_input_debate': data.dev_debate,
+        },
         batch_size=32,  # options['batch_size'],
         verbose=0)
-    # print(predicted_probabilities_dev)
-    predicted_labels_dev = get_predicted_labels(predicted_probabilities_dev)
 
-    # print(predicted_labels_dev)
-    assert isinstance(data.dev_correct_label_w0_or_w1_list, list)
-    assert isinstance(data.dev_correct_label_w0_or_w1_list[0], int)
-    assert len(data.dev_correct_label_w0_or_w1_list) == len(predicted_labels_dev)
+    y_true = data.dev_label
+    y_pred = get_predicted_labels(predicted_probabilities)
+    # print(predicted_probabilities)
+    # print('y_true:', y_true)
+    # print('y_pred:', y_pred)
 
-    # update report
-    gold_labels_dev = data.dev_correct_label_w0_or_w1_list
-    predicted_labels_dev = predicted_labels_dev
-    ids_dev = data.dev_instance_id_list
+    assert isinstance(data.dev_label, list)
+    assert isinstance(data.dev_label[0], int)
+    assert len(data.dev_label) == len(y_pred)
+
+    ids = data.dev_ids
     good_ids = set()
     wrong_ids = set()
     answer = ''
-    for g, p, instance_id in zip(gold_labels_dev, predicted_labels_dev, ids_dev):
+    for g, p, instance_id in zip(y_true, y_pred, ids):
         if g == p:
             good_ids.add(instance_id)
         else:
@@ -97,14 +97,14 @@ def predict(run_idx, model, data, o, write_answer=False, print_answer=False, epo
         answer += instance_id + '\t' + str(p) + '\n'
 
     # calculate scorer accuracy
-    acc_dev = len(good_ids) / (len(good_ids) + len(wrong_ids))
-    # print("acc_dev = %.3f\t" % acc_dev)
+    acc = len(good_ids) / (len(good_ids) + len(wrong_ids))
+    # print("acc = %.3f\t" % acc)
 
     answer = '#id\tcorrectLabelW0orW1\n' + answer
     # write answer file
     if write_answer:
         with open('{}answer_{}_rn{:02d}_ep{:02d}_ac{:.3f}.txt'
-                          .format(o['out_path'], o['dt'], run_idx, epoch, pred_acc), 'w') as fw:
+                  .format(o['out_path'], o['dt'], run_idx, epoch, pred_acc), 'w') as fw:
             fw.write(answer)
     if print_answer:
         print(answer)
@@ -115,9 +115,9 @@ def predict(run_idx, model, data, o, write_answer=False, print_answer=False, epo
         print("Wrong_ids\t", wrong_ids)
 
     global CURRENT_PRED_ACC
-    CURRENT_PRED_ACC = acc_dev
+    CURRENT_PRED_ACC = acc
 
-    return acc_dev, predicted_labels_dev, predicted_probabilities_dev
+    return acc, y_pred, predicted_probabilities
 
 
 def __main__():
@@ -128,7 +128,7 @@ def __main__():
 
     np.random.seed(o['pre_seed'])  # for reproducibility
     from keras.preprocessing import sequence
-    from keras.models import Sequential, Model
+    from keras.models import Model
     from keras import callbacks, __version__ as kv, backend as K
     from models import get_model
     print('Keras version:', kv)
@@ -209,10 +209,12 @@ def __main__():
         word_to_indices_map, word_index_to_embeddings_map = \
             vocabulary_embeddings_extractor.load_cached_vocabulary_and_embeddings(embeddings_cache_file)
 
-    # print('word_to_indices_map')
-    # pprint(sorted(word_to_indices_map.items())[:10], width=1600, compact=True)
-    # print('word_index_to_embeddings_map')
-    # pprint(sorted(word_index_to_embeddings_map.items())[:10], width=1600, compact=True)
+    if False:
+        pprint(word_to_indices_map)
+        np.set_printoptions(precision=6, threshold=50, edgeitems=None, linewidth=6000, suppress=True, nanstr=None,
+                            infstr=None, formatter=None)
+        pprint(word_index_to_embeddings_map, width=7000)
+        quit()
 
     # 2nd embedding ?
     word_index_to_embeddings_map2 = None
@@ -222,30 +224,35 @@ def __main__():
             vocabulary_embeddings_extractor.load_cached_vocabulary_and_embeddings(embeddings_cache_file2)
 
     d = Data()
-    print('loading train data')
     # loads data and replaces words with indices from embedding cache
     # train
-    (d.train_instance_id_list, d.train_warrant0_list, d.train_warrant1_list, d.train_correct_label_w0_or_w1_list,
-     d.train_reason_list, d.train_claim_list, d.train_debate_meta_data_list) = \
-        data_loader.load_single_file(o['code_path'] + 'data/train-w-swap-full_challenge.tsv', word_to_indices_map, lc=lc)
-    print('loading dev data')
+    print('loading train data')
+    (d.train_ids, d.train_warrant0, d.train_warrant1, d.train_label, d.train_reason, d.train_claim, d.train_debate) = \
+        data_loader.load_single_file(o['code_path'] + FILES['train_swap'], word_to_indices_map, lc=lc)
     # dev
-    (d.dev_instance_id_list, d.dev_warrant0_list, d.dev_warrant1_list, d.dev_correct_label_w0_or_w1_list,
-     d.dev_reason_list, d.dev_claim_list, d.dev_debate_meta_data_list) = \
-        data_loader.load_single_file(o['code_path'] + 'data/dev-full_challenge.tsv', word_to_indices_map, lc=lc)
+    print('loading dev data')
+    (d.dev_ids, d.dev_warrant0, d.dev_warrant1, d.dev_label, d.dev_reason, d.dev_claim, d.dev_debate) = \
+        data_loader.load_single_file(o['code_path'] + FILES['dev'], word_to_indices_map, lc=lc)
+    # test
+    print('loading test data')
+    (d.test_ids, d.test_warrant0, d.test_warrant1, d.test_label, d.test_reason, d.test_claim, d.test_debate) = \
+        data_loader.load_single_file(o['code_path'] + FILES['test'], word_to_indices_map, lc=lc, no_labels=True)
 
     # pad all sequences
     # train
-    (d.train_warrant0_list, d.train_warrant1_list, d.train_reason_list, d.train_claim_list, d.train_debate_meta_data_list) = [
+    (d.train_warrant0, d.train_warrant1, d.train_reason, d.train_claim, d.train_debate) = [
         sequence.pad_sequences(x, maxlen=o['padding']) for x in
-        (d.train_warrant0_list, d.train_warrant1_list, d.train_reason_list, d.train_claim_list, d.train_debate_meta_data_list)]
+        (d.train_warrant0, d.train_warrant1, d.train_reason, d.train_claim, d.train_debate)]
     # dev
-    (d.dev_warrant0_list, d.dev_warrant1_list, d.dev_reason_list, d.dev_claim_list, d.dev_debate_meta_data_list) = [
+    (d.dev_warrant0, d.dev_warrant1, d.dev_reason, d.dev_claim, d.dev_debate) = [
         sequence.pad_sequences(x, maxlen=o['padding']) for x in
-        (d.dev_warrant0_list, d.dev_warrant1_list, d.dev_reason_list, d.dev_claim_list, d.dev_debate_meta_data_list)]
+        (d.dev_warrant0, d.dev_warrant1, d.dev_reason, d.dev_claim, d.dev_debate)]
+    # test
+    (d.test_warrant0, d.test_warrant1, d.test_reason, d.test_claim, d.test_debate) = [
+        sequence.pad_sequences(x, maxlen=o['padding']) for x in
+        (d.test_warrant0, d.test_warrant1, d.test_reason, d.test_claim, d.test_debate)]
 
-    assert d.train_reason_list.shape == d.train_warrant0_list.shape == \
-           d.train_warrant1_list.shape == d.train_claim_list.shape == d.train_debate_meta_data_list.shape
+    assert d.train_reason.shape == d.train_warrant0.shape == d.train_warrant1.shape == d.train_claim.shape == d.train_debate.shape
 
     # build model and train
     # all_runs_report = []  # list of dict
@@ -350,13 +357,14 @@ def __main__():
             cbs.append(cb_epoch_checkpoint)
 
         model.fit(
-            {'sequence_layer_input_warrant0': d.train_warrant0_list,
-             'sequence_layer_input_warrant1': d.train_warrant1_list,
-             'sequence_layer_input_reason': d.train_reason_list,
-             'sequence_layer_input_claim': d.train_claim_list,
-             'sequence_layer_input_debate': d.train_debate_meta_data_list,
+            {
+                'sequence_layer_input_warrant0': d.train_warrant0,
+                'sequence_layer_input_warrant1': d.train_warrant1,
+                'sequence_layer_input_reason': d.train_reason,
+                'sequence_layer_input_claim': d.train_claim,
+                'sequence_layer_input_debate': d.train_debate,
              },
-            d.train_correct_label_w0_or_w1_list,
+            d.train_label,
             epochs=o['epochs'],
             batch_size=o['batch_size'],
             verbose=0,  # o['verbose'],
@@ -399,8 +407,6 @@ def __main__():
                                                                 epoch=cb_epoch_predictions.best_epoch['epoch'],
                                                                 pred_acc=cb_epoch_predictions.best_epoch['pred_acc'])
             print('acc:', acc)
-
-
         except KeyError:
             sys.stderr.write('KeyError: couldn\'t save model for timestamp={}, '
                              'run={:02d}, epoch={:02d}, accuracy={:.3f}\n'

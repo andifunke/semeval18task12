@@ -207,4 +207,4 @@ results/
 attention_lstm/
 data/
 svm/
-
+test*.txt

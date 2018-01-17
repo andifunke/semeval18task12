@@ -311,8 +311,13 @@ def dictionary_and_embeddings_to_indices(word_frequencies, embeddings):
     vector_padding = [0.0] * embedding_dimension
 
     # for start of sequence and OOV we add random vectors
+    # random.seed()
+    # print(np.random.get_state())
     vector_start_of_sequence = 2 * 0.1 * np.random.rand(embedding_dimension) - 0.1
     vector_oov = 2 * 0.1 * np.random.rand(embedding_dimension) - 0.1
+    # print(vector_start_of_sequence)
+    # print(vector_oov)
+    # quit()
 
     # and add them to the embeddings map (as the first three values)
     word_index_to_embeddings_map[0] = vector_padding
