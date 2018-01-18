@@ -26,6 +26,8 @@ def predict(model, ids, warrant0, warrant1, label, reason, claim, debate):
                 'sequence_layer_claim_input': claim,
                 'sequence_layer_debate_input': debate,
             },
+            batch_size=32,  # options['batch_size'],
+            verbose=0
         )
     else:
         predicted_probabilities_dev = model.predict(
@@ -36,8 +38,9 @@ def predict(model, ids, warrant0, warrant1, label, reason, claim, debate):
                 'sequence_layer_input_claim': claim,
                 'sequence_layer_input_debate': debate,
             },
+            batch_size=32,  # options['batch_size'],
+            verbose=0
         )
-
     # print(predicted_probabilities_dev)
     # print(predicted_probabilities_test)
 
@@ -70,14 +73,17 @@ def test_main():
     model_dir = 'out/'
 
     # model_file = 'model_2017-12-10_01-29-43-821365_rn01_ep15_ac0.712.hdf5'
-    model_file = 'model_2018-01-11_02-30-22-312837_rn03_ep07_ac0.655.h5fs'
+    # model_file = 'model_2018-01-11_02-30-22-312837_rn03_ep07_ac0.655.h5fs'
+    # model_file = 'model_2018-01-17_19-36-14-526964_rn03_ep09_ac0.690.hdf5'
+    # model_file = 'model_2018-01-17_19-36-14-526964_rn02_ep11_ac0.668.hdf5'
+    model_file = 'model_2018-01-17_19-36-14-526964_rn01_ep07_ac0.652.hdf5'
 
     model_ts = model_file[6:32]
     model_rn = int(model_file[35:37])
     model_ep = int(model_file[40:42])
 
     # load infos about model
-    results = load_results('./results/')
+    results = load_results('./out/')
 
     model_info = results[(results.timestamp == model_ts)
                          & (results.run == model_rn)

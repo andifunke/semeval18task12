@@ -308,7 +308,7 @@ def dictionary_and_embeddings_to_indices(word_frequencies, embeddings):
     embedding_dimension = len(list(embeddings.values())[0])
 
     # for padding we will use a zero-vector
-    vector_padding = [0.0] * embedding_dimension
+    vector_padding = np.asarray([0.0] * embedding_dimension)
 
     # for start of sequence and OOV we add random vectors
     # random.seed()
@@ -371,7 +371,7 @@ def load_cached_vocabulary_and_embeddings(serialized_file='vocabulary.embeddings
     assert isinstance(word_to_indices_map, dict)
     assert isinstance(word_index_to_embeddings_map, dict)
     assert isinstance(list(word_index_to_embeddings_map.keys())[0], int)
-    assert isinstance(list(word_index_to_embeddings_map.values())[0], list)
+    # assert isinstance(list(word_index_to_embeddings_map.values())[0], list)
     assert isinstance(list(word_to_indices_map.keys())[0], str)
     assert isinstance(list(word_to_indices_map.values())[0], int)
 
@@ -383,5 +383,3 @@ if __name__ == "__main__":
                                   "/tmp/embeddings_cache_file_word2vec.pkl.bz2",
                                   embeddings_file_name='/home/habi/research/data/GoogleNews-vectors-negative300.txt.gz',
                                   embeddings_file_type='word2vec')
-
-

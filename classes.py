@@ -1,4 +1,7 @@
+import numpy as np
+
 class Data:
+    """ this has become a bit redundant, but anyway... """
     def __init__(self):
         self.train_ids = None
         self.train_warrant0 = None
@@ -24,8 +27,8 @@ class Data:
         self.test_claim = None
         self.test_debate = None
 
-    def __str__(self) -> str:
-        return str(dict(
+    def as_dict(self):
+        return dict(
             train_id=self.train_ids,
             train_warrant0=self.train_warrant0,
             train_warrant1=self.train_warrant1,
@@ -49,4 +52,10 @@ class Data:
             test_reason=self.test_reason,
             test_claim=self.test_claim,
             test_debate=self.test_debate,
-        ))
+        )
+
+    def __str__(self) -> str:
+        return str(self.as_dict())
+
+    def to_json(self):
+        return {k: v.tolist() if type(v).__module__ == np.__name__ else v for k, v in self.as_dict().items()}

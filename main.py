@@ -41,17 +41,10 @@ def get_predicted_labels(predicted_probabilities):
     return predicted_labels
 
 
-def print_maps(word_to_indices_map, word_index_to_embeddings_map):
-    print('word_to_indices_map:')
-    pprint(word_to_indices_map)
-    print('word_index_to_embeddings_map:')
-    pprint(word_index_to_embeddings_map)
-
-
-def detail_model(m):
+def detail_model(m, mname, save_weights=False):
     mjson = m.to_json()
-    with open('model.json', 'w') as fw:
-        fw.write(json.dump(mjson))
+    with open(mname + '.json', 'w') as fp:
+        json.dump(mjson, fp)
     m.summary()
     for layer in m.layers:
         print(layer)
@@ -61,8 +54,51 @@ def detail_model(m):
     print(m.outputs)
     print('config:', m.get_config())
 
+    if save_weights:
+        weights_list = m.get_weights()
+        # print(weights_list)
+        wname = mname + '_weights.txt'
+        print("saving weights to", wname)
+        with open(wname, 'w') as fp:
+            fp.write(str(weights_list))
 
-def predict(run_idx, model, data, o, write_answer=False, print_answer=False, epoch=0, pred_acc=0):
+
+def predict_test(run_idx, model, data, o, write_answer=False, print_answer=False, epoch=0, pred_acc=0):
+    # TODO: generalize for dev and test
+    predicted_probabilities = model.predict(
+        {
+            'sequence_layer_input_warrant0': data.test_warrant0,
+            'sequence_layer_input_warrant1': data.test_warrant1,
+            'sequence_layer_input_reason': data.test_reason,
+            'sequence_layer_input_claim': data.test_claim,
+            'sequence_layer_input_debate': data.test_debate,
+        },
+        batch_size=32,  # options['batch_size'],
+        verbose=0
+    )
+
+    y_pred = get_predicted_labels(predicted_probabilities)
+    # print(predicted_probabilities)
+    # print('y_pred:', y_pred)
+
+    ids = data.test_ids
+    answer = ''
+    for p, instance_id in zip(y_pred, ids):
+        answer += instance_id + '\t' + str(p) + '\n'
+
+    answer = '#id\tcorrectLabelW0orW1\n' + answer
+    # write answer file
+    if write_answer:
+        with open('{}answer_tst_{}_rn{:02d}_ep{:02d}_ac{:.3f}.txt'
+                  .format(o['out_path'], o['dt'], run_idx, epoch, pred_acc), 'w') as fw:
+            fw.write(answer)
+    if print_answer:
+        print(answer)
+
+    return y_pred, predicted_probabilities
+
+
+def predict_dev(run_idx, model, data, o, write_answer=False, print_answer=False, epoch=0, pred_acc=0):
     # TODO: generalize for dev and test
     predicted_probabilities = model.predict(
         {
@@ -73,7 +109,8 @@ def predict(run_idx, model, data, o, write_answer=False, print_answer=False, epo
             'sequence_layer_input_debate': data.dev_debate,
         },
         batch_size=32,  # options['batch_size'],
-        verbose=0)
+        verbose=0
+    )
 
     y_true = data.dev_label
     y_pred = get_predicted_labels(predicted_probabilities)
@@ -81,9 +118,9 @@ def predict(run_idx, model, data, o, write_answer=False, print_answer=False, epo
     # print('y_true:', y_true)
     # print('y_pred:', y_pred)
 
-    assert isinstance(data.dev_label, list)
-    assert isinstance(data.dev_label[0], int)
-    assert len(data.dev_label) == len(y_pred)
+    assert isinstance(y_true, list)
+    assert isinstance(y_true[0], int)
+    assert len(y_true) == len(y_pred)
 
     ids = data.dev_ids
     good_ids = set()
@@ -103,7 +140,7 @@ def predict(run_idx, model, data, o, write_answer=False, print_answer=False, epo
     answer = '#id\tcorrectLabelW0orW1\n' + answer
     # write answer file
     if write_answer:
-        with open('{}answer_{}_rn{:02d}_ep{:02d}_ac{:.3f}.txt'
+        with open('{}answer_dev_{}_rn{:02d}_ep{:02d}_ac{:.3f}.txt'
                   .format(o['out_path'], o['dt'], run_idx, epoch, pred_acc), 'w') as fw:
             fw.write(answer)
     if print_answer:
@@ -161,7 +198,7 @@ def __main__():
                 print('\npredict:', end='')
             results['epoch'] = epoch + 1
             results['runtime'] = timeit.default_timer() - start
-            results['pred_acc'], _, __ = predict(self.idx, self.model, data=d, o=o)
+            results['pred_acc'], _, __ = predict_dev(self.idx, self.model, data=d, o=o)
             logs['dev_pred'] = results['pred_acc']
             if results['pred_acc'] > self.best_epoch['pred_acc']:
                 self.best_epoch['epoch'] = epoch + 1
@@ -198,7 +235,8 @@ def __main__():
     if o['embedding'][:2] == 'ce':
         # word_vectors = json.load(open(embeddings_cache_file + '.json', 'r', encoding='utf8'))
         # word_vectors = {k: np.array(v) for k, v in word_vectors.items()}
-        word_vectors = cPickle.load(open(embeddings_cache_file + '.pickle', 'rb'))
+        with open(embeddings_cache_file + '.pickle', 'rb') as fp:
+            word_vectors = cPickle.load(fp)
         # print('loading embeddings from', embeddings_cache_file)
         wv_list = sorted(word_vectors.items())
         # pprint(wv_list[:10], width=1600, compact=True)
@@ -209,12 +247,20 @@ def __main__():
         word_to_indices_map, word_index_to_embeddings_map = \
             vocabulary_embeddings_extractor.load_cached_vocabulary_and_embeddings(embeddings_cache_file)
 
+    wtiname = '{}word_to_indices_map_{}.json'.format(o['out_path'], dt)
+    print("saving word_to_indices_map to", wtiname)
+    with open(wtiname, 'w') as fp:
+        json.dump(word_to_indices_map, fp, indent=1, sort_keys=True)
+    witename = '{}word_index_to_embeddings_map_{}.json'.format(o['out_path'], dt)
     if False:
         pprint(word_to_indices_map)
         np.set_printoptions(precision=6, threshold=50, edgeitems=None, linewidth=6000, suppress=True, nanstr=None,
                             infstr=None, formatter=None)
         pprint(word_index_to_embeddings_map, width=7000)
-        quit()
+    print("saving word_index_to_embeddings_map to", witename)
+    with open(witename, 'w') as fp:
+        wite_serializable = {k: v.tolist() for k, v in word_index_to_embeddings_map.items()}
+        json.dump(wite_serializable, fp, indent=1, sort_keys=True)
 
     # 2nd embedding ?
     word_index_to_embeddings_map2 = None
@@ -288,6 +334,12 @@ def __main__():
          ]
     )
 
+    # pprint(d.to_json(), width=2000)
+    dname = '{}data_{}_prerun.json'.format(o['out_path'], dt)
+    print("saving data to", dname)
+    with open(dname, 'w') as fp:
+        json.dump(d.to_json(), fp, indent=1, sort_keys=True)
+
     for run_idx in range(o['run'], o['run'] + o['runs']):
         start = timeit.default_timer()
         # t0 = time()
@@ -326,7 +378,8 @@ def __main__():
 
         # define training callbacks
         cb_epoch_csvlogger = callbacks.CSVLogger(
-            filename=o['out_path'] + 'log_' + dt + '.csv')
+            filename=o['out_path'] + 'log_' + dt + '.csv'
+        )
         cb_epoch_checkpoint = callbacks.ModelCheckpoint(
             filepath=o['out_path'] + 'model_' + dt + '_{epoch:02d}.hdf5',
             monitor='dev_pred',
@@ -372,6 +425,14 @@ def __main__():
             callbacks=cbs,
         )
 
+        mname = '{}detail_model_{}_rn{:02d}'.format(o['out_path'], dt, run_idx)
+        detail_model(model, mname, save_weights=True)
+        # pprint(d.to_json(), width=2000)
+        dname = '{}data_{}_rn{:02d}.json'.format(o['out_path'], dt, run_idx)
+        print("saving data to", dname)
+        with open(dname, 'w') as fp:
+            json.dump(d.to_json(), fp, indent=1, sort_keys=True)
+
         print('finished in {:.3f} minutes'.format((timeit.default_timer() - start) / 60))
 
         # save the best model for this run
@@ -385,28 +446,57 @@ def __main__():
             best_model.set_weights(cb_epoch_predictions.best_epoch['weights'])
             # print(type(best_model))
             # predict best model to write answer file with predicted labels
-            acc, best_predictions, best_probabilities = predict(run_idx, best_model, d, o,
-                                                                write_answer=True,
-                                                                print_answer=True,
-                                                                epoch=cb_epoch_predictions.best_epoch['epoch'],
-                                                                pred_acc=cb_epoch_predictions.best_epoch['pred_acc'])
-            print('acc:', acc)
+            acc_dev, best_predictions_dev, best_probabilities_dev = \
+                predict_dev(run_idx, best_model, d, o,
+                            write_answer=True,
+                            print_answer=False,
+                            epoch=cb_epoch_predictions.best_epoch['epoch'],
+                            pred_acc=cb_epoch_predictions.best_epoch['pred_acc'])
+            print('acc_dev:', acc_dev)
             fname = '{}model_{}_rn{:02d}_ep{:02d}_ac{:.3f}'.format(o['out_path'], dt,
                                                                    run_idx,
                                                                    cb_epoch_predictions.best_epoch['epoch'],
                                                                    cb_epoch_predictions.best_epoch['pred_acc'])
             best_model.save(fname + '.hdf5')
             # np.save(fname + '.predictions', best_predictions)
-            np.save(fname + '.probabilities', best_probabilities)
+            np.save(fname + '_dev-probabilities', best_probabilities_dev)
+            best_predictions_test, best_probabilities_test = \
+                predict_test(run_idx, best_model, d, o,
+                             write_answer=True,
+                             print_answer=False,
+                             epoch=cb_epoch_predictions.best_epoch['epoch'],
+                             pred_acc=cb_epoch_predictions.best_epoch['pred_acc'])
+            np.save(fname + '_tst-probabilities', best_probabilities_test)
 
-            print('LOADED MODEL')
-            loaded_model = load_model(fname + '.hdf5')
-            acc, best_predictions, best_probabilities = predict(run_idx, loaded_model, d, o,
-                                                                write_answer=False,
-                                                                print_answer=True,
-                                                                epoch=cb_epoch_predictions.best_epoch['epoch'],
-                                                                pred_acc=cb_epoch_predictions.best_epoch['pred_acc'])
-            print('acc:', acc)
+            # confirm loaded model
+            confirm = True
+            if confirm:
+                print('LOADED MODEL')
+                loaded_model = load_model(fname + '.hdf5')
+                acc_dev_confirm, best_predictions_dev, best_probabilities_dev = \
+                    predict_dev(run_idx, loaded_model, d, o,
+                                write_answer=False,
+                                print_answer=False,
+                                epoch=cb_epoch_predictions.best_epoch['epoch'],
+                                pred_acc=cb_epoch_predictions.best_epoch['pred_acc'])
+                print('acc_dev_confirm:', acc_dev_confirm)
+                best_predictions_test_confirm, best_probabilities_test_confirm = \
+                    predict_test(run_idx, best_model, d, o,
+                                 write_answer=False,
+                                 print_answer=False,
+                                 epoch=cb_epoch_predictions.best_epoch['epoch'],
+                                 pred_acc=cb_epoch_predictions.best_epoch['pred_acc'])
+                assert acc_dev == acc_dev_confirm
+                assert best_predictions_test == best_predictions_test_confirm
+
+                mname = '{}detail_model_{}_rn{:02d}_loaded'.format(o['out_path'], dt, run_idx)
+                detail_model(loaded_model, mname, save_weights=True)
+                # pprint(d.to_json(), width=2000)
+                dname = '{}data_{}_rn{:02d}_final.json'.format(o['out_path'], dt, run_idx)
+                # print("saving data to", dname)
+                with open(dname, 'w') as fp:
+                    json.dump(d.to_json(), fp, indent=1, sort_keys=True)
+
         except KeyError:
             sys.stderr.write('KeyError: couldn\'t save model for timestamp={}, '
                              'run={:02d}, epoch={:02d}, accuracy={:.3f}\n'
@@ -416,35 +506,11 @@ def __main__():
                                      cb_epoch_predictions.best_epoch['pred_acc']))
 
 
-# cheating metric - not working as expected
+# 'cheating' metric - not working as expected
 def dev_pred(y_true, y_pred):
     from keras import backend as K
     global CURRENT_PRED_ACC
-    # print(CURRENT_PRED_ACC)
-    # y = K.mean(y_pred)
-    # print(y)
     return K.cast(CURRENT_PRED_ACC, 'float32')
-
-
-def print_error_analysis_dev(ids: set) -> None:
-    """
-    Prints instances given in the ids parameter; reads data from dev.tsv
-    :param ids: ids
-    :return: none
-    """
-    f = open('data/dev.tsv', 'r')
-    lines = f.readlines()
-    # remove first line with comments
-    del lines[0]
-
-    for line in lines:
-        split_line = line.split('\t')
-        # "#id warrant0 warrant1 correctLabelW0orW1 reason claim debateTitle debateInfo
-        assert len(split_line) == 8
-
-        instance_id = split_line[0]
-        if instance_id in ids:
-            print(line.strip())
 
 
 if __name__ == "__main__":

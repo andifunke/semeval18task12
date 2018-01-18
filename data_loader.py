@@ -29,8 +29,8 @@ def string_to_indices(string: str, word_to_indices_map_param: dict, nb_words: in
         word_indices_list = [2 if word_index >= nb_words else word_index for word_index in word_indices_list]
 
     # print(string)
-    print(tokens)
-    print(word_indices_list)
+    #print(tokens)
+    #print(word_indices_list)
 
     return word_indices_list
 
@@ -48,8 +48,8 @@ def load_single_instance_from_line(line: str, word_to_indices_map: dict, nb_word
     """
     split_line = line.split('\t')
     # "#id warrant0 warrant1 correctLabelW0orW1 reason claim debateTitle debateInfo
-    print(line)
-    print(split_line)
+    #print(line)
+    #print(split_line)
 
     if no_labels:
         assert len(split_line) == 7
