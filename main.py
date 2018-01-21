@@ -45,14 +45,14 @@ def detail_model(m, mname, save_weights=False):
     mjson = m.to_json()
     with open(mname + '.json', 'w') as fp:
         json.dump(mjson, fp)
-    m.summary()
-    for layer in m.layers:
-        print(layer)
-        pprint(layer.get_config())
-    for inpt in m.inputs:
-        print(inpt, type(inpt))
-    print(m.outputs)
-    print('config:', m.get_config())
+    # m.summary()
+    # for layer in m.layers:
+    #     print(layer)
+    #     pprint(layer.get_config())
+    # for inpt in m.inputs:
+    #     print(inpt, type(inpt))
+    # print(m.outputs)
+    # print('config:', m.get_config())
 
     if save_weights:
         weights_list = m.get_weights()
