@@ -1,23 +1,42 @@
+import spacy
 import gzip
 import os.path
-# from typing import Dict, Tuple, List
 import math
 
 import vocabulary_embeddings_extractor
 
 MAX_LEN = 0
+SPACY = None
 
 
-def string_to_indices(string: str, word_to_indices_map_param: dict, nb_words: int = None, lc=False) -> list:
+def tokenize_with_spacy(string: str):
+    # print('tokenize with spacy')
+    global SPACY
+    doc = SPACY(string)
+    tokens = [str(token) for token in doc]
+    # print(tokens)
+    return tokens
+
+
+def string_to_indices(string: str, word_to_indices_map_param: dict, nb_words: int = None, lc=False, custom=False) \
+        -> list:
     """
     Tokenizes a string and converts to indices specified in word_to_indices_map; performs also OOV replacement
+    :param custom:
     :param string: string
     :param word_to_indices_map_param: map (word index, embedding index)
     :param nb_words: all words with higher index are treated as OOV
     :param lc: use lowercase on all tokens
     :return: a list of indices
     """
-    tokens = vocabulary_embeddings_extractor.tokenize(string.lower() if lc else string)
+    work_string = string.strip('\n')
+    if lc:
+        work_string = work_string.lower()
+
+    if custom:
+        tokens = tokenize_with_spacy(work_string)
+    else:
+        tokens = vocabulary_embeddings_extractor.tokenize(work_string)
     # global MAX_LEN
     # MAX_LEN = max(len(tokens), MAX_LEN)
 
@@ -28,17 +47,14 @@ def string_to_indices(string: str, word_to_indices_map_param: dict, nb_words: in
     if nb_words:
         word_indices_list = [2 if word_index >= nb_words else word_index for word_index in word_indices_list]
 
-    # print(string)
-    #print(tokens)
-    #print(word_indices_list)
-
     return word_indices_list
 
 
 def load_single_instance_from_line(line: str, word_to_indices_map: dict, nb_words: int = None, lc=False,
-                                   no_labels=False) -> tuple:
+                                   no_labels=False, custom=False) -> tuple:
     """
     Load a single training/test instance from a single line int tab-separated format
+    :param custom:
     :param no_labels: set True if data does not provide labels
     :param lc: use lowercase on all tokens
     :param line: string line
@@ -48,8 +64,6 @@ def load_single_instance_from_line(line: str, word_to_indices_map: dict, nb_word
     """
     split_line = line.split('\t')
     # "#id warrant0 warrant1 correctLabelW0orW1 reason claim debateTitle debateInfo
-    #print(line)
-    #print(split_line)
 
     if no_labels:
         assert len(split_line) == 7
@@ -61,12 +75,12 @@ def load_single_instance_from_line(line: str, word_to_indices_map: dict, nb_word
         correct_label_w0_or_w1 = int(split_line[i3])
 
     instance_id = split_line[i0]
-    warrant0 = string_to_indices(split_line[i1], word_to_indices_map, nb_words, lc)
-    warrant1 = string_to_indices(split_line[i2], word_to_indices_map, nb_words, lc)
-    reason = string_to_indices(split_line[i4], word_to_indices_map, nb_words, lc)
-    claim = string_to_indices(split_line[i5], word_to_indices_map, nb_words, lc)
-    debate_title = string_to_indices(split_line[i6], word_to_indices_map, nb_words, lc)
-    debate_info = string_to_indices(split_line[i7], word_to_indices_map, nb_words, lc)
+    warrant0 = string_to_indices(split_line[i1], word_to_indices_map, nb_words, lc=lc, custom=custom)
+    warrant1 = string_to_indices(split_line[i2], word_to_indices_map, nb_words, lc=lc, custom=custom)
+    reason = string_to_indices(split_line[i4], word_to_indices_map, nb_words, lc=lc, custom=custom)
+    claim = string_to_indices(split_line[i5], word_to_indices_map, nb_words, lc=lc, custom=custom)
+    debate_title = string_to_indices(split_line[i6], word_to_indices_map, nb_words, lc=lc, custom=custom)
+    debate_info = string_to_indices(split_line[i7], word_to_indices_map, nb_words, lc=lc, custom=custom)
     # concatenate these two into one vector
     debate_meta_data = debate_title + debate_info
 
@@ -86,9 +100,10 @@ def load_single_instance_from_line(line: str, word_to_indices_map: dict, nb_word
 
 
 def load_single_file(file_name: str, word_to_indices_map: dict, nb_words: int = None, lc=False,
-                     no_labels=False) -> tuple:
+                     no_labels=False, custom=False) -> tuple:
     """
     Loads a single train/test file and returns a tuple of lists
+    :param custom: if True, Spacy tokenizer will be used for custom embeddings
     :param no_labels: set True if data does not provide labels
     :param lc: use lowercase on all tokens
     :param file_name: full file name
@@ -103,6 +118,11 @@ def load_single_file(file_name: str, word_to_indices_map: dict, nb_words: int = 
         debate_meta_data_list = list of list of word indices
     """
     assert len(word_to_indices_map) > 0
+
+    global SPACY
+    if custom:
+        if SPACY is None:
+            SPACY = spacy.load('en')
 
     if file_name.endswith('gz'):
         f = gzip.open(file_name, 'rb')
@@ -123,7 +143,8 @@ def load_single_file(file_name: str, word_to_indices_map: dict, nb_words: int = 
     for line in lines:
         # convert to vectors of embedding indices where appropriate
         instance_id, warrant0, warrant1, correct_label_w0_or_w1, reason, claim, debate_meta_data = \
-            load_single_instance_from_line(line, word_to_indices_map, nb_words, lc, no_labels)
+            load_single_instance_from_line(line, word_to_indices_map, nb_words,
+                                           lc=lc, no_labels=no_labels, custom=custom)
 
         # add to the result
         instance_id_list.append(instance_id)

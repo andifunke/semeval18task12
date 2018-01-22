@@ -2,8 +2,7 @@ import bz2
 import os
 import unicodedata
 import json
-# from pprint import pprint
-
+from pprint import pprint
 import numpy as np
 import six.moves.cPickle as cPickle
 from nltk.tokenize.casual import TweetTokenizer
@@ -281,7 +280,7 @@ def load_word_frequencies_and_embeddings(saved_embeddings):
     return frequencies, word_embedding_map
 
 
-def dictionary_and_embeddings_to_indices(word_frequencies, embeddings):
+def dictionary_and_embeddings_to_indices(word_frequencies, embeddings, seed=-1):
     """
     Sort words by frequency (descending), adds offset (3 items), maps word indices to embeddings
     and generate random embeddings for padding, start of sequence, and OOV
@@ -293,6 +292,7 @@ def dictionary_and_embeddings_to_indices(word_frequencies, embeddings):
 
     # sort word frequencies from the most common ones
     sorted_word_frequencies_keys = sorted(word_frequencies, key=word_frequencies.get, reverse=True)
+    # stable
 
     word_to_indices_map = dict()
     word_index_to_embeddings_map = dict()
@@ -311,13 +311,11 @@ def dictionary_and_embeddings_to_indices(word_frequencies, embeddings):
     vector_padding = np.asarray([0.0] * embedding_dimension)
 
     # for start of sequence and OOV we add random vectors
-    # random.seed()
+    if seed > -1:
+        np.random.seed(seed)
     # print(np.random.get_state())
     vector_start_of_sequence = 2 * 0.1 * np.random.rand(embedding_dimension) - 0.1
     vector_oov = 2 * 0.1 * np.random.rand(embedding_dimension) - 0.1
-    # print(vector_start_of_sequence)
-    # print(vector_oov)
-    # quit()
 
     # and add them to the embeddings map (as the first three values)
     word_index_to_embeddings_map[0] = vector_padding
@@ -335,8 +333,10 @@ def dictionary_and_embeddings_to_indices(word_frequencies, embeddings):
 
         # if the word from vocabulary doesn't have any known embeddings, we treat it as OOV
         if embeddings.get(word) is not None:
+            # print('iv:', word)
             word_index_to_embeddings_map[new_index] = embeddings.get(word)
         else:
+            # print('oov:', word)
             word_index_to_embeddings_map[new_index] = vector_oov
 
     return word_to_indices_map, word_index_to_embeddings_map
@@ -355,8 +355,15 @@ def load_cached_vocabulary_and_embeddings(serialized_file='vocabulary.embeddings
     # print("Loading chached vocabulary and embeddings...")
     freq, embeddings_map = load_word_frequencies_and_embeddings(serialized_file)
     print('vocabulary size:', len(freq))
-    # print('embeddings_map:', embeddings_map.__class__.__name__)
     print("Loaded cached vocabulary and embeddings from " + serialized_file)
+
+    # print('freq')
+    # pprint(freq)
+    # df_words = pd.DataFrame(sorted(freq.items()))
+    # df_words.to_csv('words_from_w2v.csv', sep='\t', index_label=False, index=False)
+    # print('embeddings_map')
+    # pprint(embeddings_map)
+    # quit()
 
     word_to_indices_map, word_index_to_embeddings_map = \
         dictionary_and_embeddings_to_indices(freq, embeddings_map)
@@ -368,6 +375,45 @@ def load_cached_vocabulary_and_embeddings(serialized_file='vocabulary.embeddings
     # assert isinstance(list(word_index_to_embeddings_map.values())[0], list)
     assert isinstance(list(word_to_indices_map.keys())[0], str)
     assert isinstance(list(word_to_indices_map.values())[0], int)
+
+    return word_to_indices_map, word_index_to_embeddings_map
+
+
+def load_custom_vocabulary_and_embeddings(embeddings_file, emb_dir, lc=False):
+    if lc:
+        with open(emb_dir + 'custom_embeddings_freq_lc.json', 'r') as fp:
+            freq = json.load(fp)
+    else:
+        with open(emb_dir + 'custom_embeddings_freq.json', 'r') as fp:
+            freq = json.load(fp)
+    with open(embeddings_file + '.pickle', 'rb') as fp:
+        embeddings_map = cPickle.load(fp)
+    print('loading embeddings from', embeddings_file)
+    # wv_list = sorted(word_vectors.items())
+    # word_to_indices_map = {item[0]: index for index, item in enumerate(wv_list)}
+    # word_index_to_embeddings_map = {index: item[1] for index, item in enumerate(wv_list)}
+
+    # print('freq')
+    # pprint(freq)
+    # df_words = pd.DataFrame(sorted(freq.items()))
+    # df_words.to_csv('words_from_w2v.csv', sep='\t', index_label=False, index=False)
+    # print('embeddings_map')
+    # pprint(embeddings_map)
+    # quit()
+
+    word_to_indices_map, word_index_to_embeddings_map = \
+        dictionary_and_embeddings_to_indices(freq, embeddings_map)
+
+    # and check types
+    assert isinstance(word_to_indices_map, dict)
+    assert isinstance(word_index_to_embeddings_map, dict)
+    assert isinstance(list(word_index_to_embeddings_map.keys())[0], int)
+    # assert isinstance(list(word_index_to_embeddings_map.values())[0], list)
+    assert isinstance(list(word_to_indices_map.keys())[0], str)
+    assert isinstance(list(word_to_indices_map.values())[0], int)
+
+    # pprint(word_to_indices_map)
+    # pprint(word_index_to_embeddings_map)
 
     return word_to_indices_map, word_index_to_embeddings_map
 

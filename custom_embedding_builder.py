@@ -19,27 +19,6 @@ def tokenize(item, lc=False):
     return texts
 
 
-def sentences_from_corpus(corpus, lowercase=False):
-    """ returns a list of lists of strings.
-    The outer list contains all sentences while the inner lists contain all tokens as string. """
-    df = pd.DataFrame()
-
-    print('\n>>> getting sentences from {}{}'.format(corpus, ' - lowercase' if lowercase else ''))
-    sentences = []
-    sentence = []
-    last_sentence_id = 1
-    for row in df.itertuples():
-        sentence_id = row[2]
-        token = row[4]
-        if sentence_id > last_sentence_id:
-            sentences.append(sentence)
-            sentence = []
-            last_sentence_id = sentence_id
-        sentence.append(token.lower() if lowercase else token)
-    sentences.append(sentence)
-    return sentences
-
-
 def custom_embedding_builder_main():
     """ training a word2vec model from train, dev and test data.
         Different dimensionality can be used as well as different preprocessing (lowercase or not)

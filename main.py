@@ -156,22 +156,19 @@ def predict_dev(run_idx, model, data, o, write_answer=False, print_answer=False,
     return acc, y_pred, predicted_probabilities
 
 
-def get_embeddings(embedding: str, embeddings_cache_file):
+def get_embeddings(embedding: str, embeddings_file, emb_dir):
     lc = True if ('_lc' in embedding[-4:]) else False
-    if lc:
-        print('lowercase')
+
     if embedding[:2] == 'ce':
-        with open(embeddings_cache_file + '.pickle', 'rb') as fp:
-            word_vectors = cPickle.load(fp)
-        print('loading embeddings from', embeddings_cache_file)
-        wv_list = sorted(word_vectors.items())
-        word_to_indices_map = {item[0]: index for index, item in enumerate(wv_list)}
-        word_index_to_embeddings_map = {index: item[1] for index, item in enumerate(wv_list)}
+        custom = True
+        word_to_indices_map, word_index_to_embeddings_map = \
+            vocabulary_embeddings_extractor.load_custom_vocabulary_and_embeddings(embeddings_file, emb_dir, lc)
     else:
+        custom = False
         # load pre-extracted word-to-index maps and pre-filtered Glove embeddings
         word_to_indices_map, word_index_to_embeddings_map = \
-            vocabulary_embeddings_extractor.load_cached_vocabulary_and_embeddings(embeddings_cache_file)
-    return word_to_indices_map, word_index_to_embeddings_map, lc
+            vocabulary_embeddings_extractor.load_cached_vocabulary_and_embeddings(embeddings_file)
+    return word_to_indices_map, word_index_to_embeddings_map, lc, custom
 
 
 def __main__():
@@ -249,37 +246,44 @@ def __main__():
 
     # 1st embedding
     # loading data
+    np.set_printoptions(precision=6, threshold=50, edgeitems=3, linewidth=1000, suppress=True, nanstr=None,
+                           infstr=None, formatter=None)
     embeddings_cache_file = o['code_path'] + o['emb_dir'] + emb_files[o['embedding']]
-    word_to_indices_map, word_index_to_embeddings_map, lc = get_embeddings(o['embedding'], embeddings_cache_file)
-    print('word_to_indices_map')
-    pprint(word_to_indices_map)
-    print('word_index_to_embeddings_map')
-    pprint(word_index_to_embeddings_map)
+    word_to_indices_map, word_index_to_embeddings_map, lc, custom = get_embeddings(o['embedding'],
+                                                                                   embeddings_cache_file,
+                                                                                   o['emb_dir'])
+    # print('word_to_indices_map')
+    # pprint(word_to_indices_map)
+    # print('word_index_to_embeddings_map')
+    # pprint(word_index_to_embeddings_map)
 
     # 2nd embedding ?
     if o['embedding2'] != '':
         embeddings_cache_file2 = o['code_path'] + o['emb_dir'] + emb_files[o['embedding2']]
-        word_to_indices_map2, word_index_to_embeddings_map2, lc2 = get_embeddings(o['embedding2'], embeddings_cache_file2)
+        word_to_indices_map2, word_index_to_embeddings_map2, lc2, custom2 = get_embeddings(o['embedding2'],
+                                                                                           embeddings_cache_file2,
+                                                                                           o['emb_dir'])
         print('word_to_indices_map2')
         pprint(word_to_indices_map2)
         print('word_index_to_embeddings_map2')
         pprint(word_index_to_embeddings_map2)
-    quit()
+    # quit()
 
     d = Data()
     # loads data and replaces words with indices from embedding cache
     # train
     print('loading train data')
     (d.train_ids, d.train_warrant0, d.train_warrant1, d.train_label, d.train_reason, d.train_claim, d.train_debate) = \
-        data_loader.load_single_file(o['code_path'] + FILES['train_swap'], word_to_indices_map, lc=lc)
+        data_loader.load_single_file(o['code_path'] + FILES['train_swap'], word_to_indices_map, lc=lc, custom=custom)
     # dev
     print('loading dev data')
     (d.dev_ids, d.dev_warrant0, d.dev_warrant1, d.dev_label, d.dev_reason, d.dev_claim, d.dev_debate) = \
-        data_loader.load_single_file(o['code_path'] + FILES['dev'], word_to_indices_map, lc=lc)
+        data_loader.load_single_file(o['code_path'] + FILES['dev'], word_to_indices_map, lc=lc, custom=custom)
     # test
     print('loading test data')
     (d.test_ids, d.test_warrant0, d.test_warrant1, d.test_label, d.test_reason, d.test_claim, d.test_debate) = \
-        data_loader.load_single_file(o['code_path'] + FILES['test'], word_to_indices_map, lc=lc, no_labels=True)
+        data_loader.load_single_file(o['code_path'] + FILES['test'], word_to_indices_map,
+                                     lc=lc, custom=custom, no_labels=True)
 
     # pad all sequences
     # train
@@ -436,7 +440,7 @@ def __main__():
                             print_answer=False,
                             epoch=cb_epoch_predictions.best_epoch['epoch'],
                             pred_acc=cb_epoch_predictions.best_epoch['pred_acc'])
-            print('acc_dev:', acc_dev)
+            print('acc_dev: {:.3f}'.format(acc_dev))
             # save dev probabilities
             np.save(fname.format('probabilities-dev', ''), best_probabilities_dev)
             # predict test data with best model and write answer file
