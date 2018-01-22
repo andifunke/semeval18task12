@@ -356,16 +356,10 @@ def load_cached_vocabulary_and_embeddings(serialized_file='vocabulary.embeddings
     freq, embeddings_map = load_word_frequencies_and_embeddings(serialized_file)
     print('vocabulary size:', len(freq))
     # print('embeddings_map:', embeddings_map.__class__.__name__)
-    print("Cached vocabulary and embeddings successfully loaded from " + serialized_file)
-
-    # show first entry
-    # print(freq.items()[0])
-    # print('type of the:', type(embeddings_map['the']))
+    print("Loaded cached vocabulary and embeddings from " + serialized_file)
 
     word_to_indices_map, word_index_to_embeddings_map = \
         dictionary_and_embeddings_to_indices(freq, embeddings_map)
-    # print(word_to_indices_map)
-    # quit()
 
     # and check types
     assert isinstance(word_to_indices_map, dict)

@@ -6,7 +6,6 @@ import six.moves.cPickle as cPickle
 from collections import OrderedDict
 from pprint import pprint
 import numpy as np
-from keras.models import load_model
 import data_loader
 import vocabulary_embeddings_extractor
 from argument_parser import get_options, FILES
@@ -45,14 +44,14 @@ def detail_model(m, mname, save_weights=False):
     mjson = m.to_json()
     with open(mname + '.json', 'w') as fp:
         json.dump(mjson, fp)
-    # m.summary()
-    # for layer in m.layers:
-    #     print(layer)
-    #     pprint(layer.get_config())
-    # for inpt in m.inputs:
-    #     print(inpt, type(inpt))
-    # print(m.outputs)
-    # print('config:', m.get_config())
+    m.summary()
+    for layer in m.layers:
+        print(layer)
+        pprint(layer.get_config())
+    for inpt in m.inputs:
+        print(inpt, type(inpt))
+    print(m.outputs)
+    print('config:', m.get_config())
 
     if save_weights:
         weights_list = m.get_weights()
@@ -89,7 +88,7 @@ def predict_test(run_idx, model, data, o, write_answer=False, print_answer=False
     answer = '#id\tcorrectLabelW0orW1\n' + answer
     # write answer file
     if write_answer:
-        with open('{}answer_tst_{}_rn{:02d}_ep{:02d}_ac{:.3f}.txt'
+        with open('{}answer-tst_{}_rn{:02d}_ep{:02d}_ac{:.3f}.txt'
                   .format(o['out_path'], o['dt'], run_idx, epoch, pred_acc), 'w') as fw:
             fw.write(answer)
     if print_answer:
@@ -140,7 +139,7 @@ def predict_dev(run_idx, model, data, o, write_answer=False, print_answer=False,
     answer = '#id\tcorrectLabelW0orW1\n' + answer
     # write answer file
     if write_answer:
-        with open('{}answer_dev_{}_rn{:02d}_ep{:02d}_ac{:.3f}.txt'
+        with open('{}answer-dev_{}_rn{:02d}_ep{:02d}_ac{:.3f}.txt'
                   .format(o['out_path'], o['dt'], run_idx, epoch, pred_acc), 'w') as fw:
             fw.write(answer)
     if print_answer:
@@ -157,25 +156,48 @@ def predict_dev(run_idx, model, data, o, write_answer=False, print_answer=False,
     return acc, y_pred, predicted_probabilities
 
 
+def get_embeddings(embedding: str, embeddings_cache_file):
+    lc = True if ('_lc' in embedding[-4:]) else False
+    if lc:
+        print('lowercase')
+    if embedding[:2] == 'ce':
+        with open(embeddings_cache_file + '.pickle', 'rb') as fp:
+            word_vectors = cPickle.load(fp)
+        print('loading embeddings from', embeddings_cache_file)
+        wv_list = sorted(word_vectors.items())
+        word_to_indices_map = {item[0]: index for index, item in enumerate(wv_list)}
+        word_index_to_embeddings_map = {index: item[1] for index, item in enumerate(wv_list)}
+    else:
+        # load pre-extracted word-to-index maps and pre-filtered Glove embeddings
+        word_to_indices_map, word_index_to_embeddings_map = \
+            vocabulary_embeddings_extractor.load_cached_vocabulary_and_embeddings(embeddings_cache_file)
+    return word_to_indices_map, word_index_to_embeddings_map, lc
+
+
 def __main__():
     print('argv:', sys.argv[1:])
     start = timeit.default_timer()
     o, emb_files = get_options()
     dt = o['dt'] = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S-%f')
 
-    np.random.seed(o['pre_seed'])  # for reproducibility
-    from keras.preprocessing import sequence
-    from keras.models import Model
-    from keras import callbacks, __version__ as kv, backend as K
-    from models import get_model
+    np.random.seed(o['pre_seed'])  # for reproducibility0
+
+    from keras import __version__ as kv, backend as K
     print('Keras version:', kv)
     backend = K.backend()
     if backend == 'theano':
         from theano import __version__ as thv
         print('Theano version:', thv)
     elif backend == 'tensorflow':
+        import tensorflow as tf
+        tf.set_random_seed(o['pre_seed'])
         from tensorflow import __version__ as tfv
         print('TensorFlow version:', tfv)
+
+    from keras import callbacks
+    from keras.preprocessing import sequence
+    from keras.models import Model
+    from models import get_model
 
     # Creating a Callback subclass that stores each epoch prediction
     class PredictionReport(callbacks.Callback):
@@ -228,46 +250,21 @@ def __main__():
     # 1st embedding
     # loading data
     embeddings_cache_file = o['code_path'] + o['emb_dir'] + emb_files[o['embedding']]
-    lc = True if ('_lc' in o['embedding'][-4:]) and (o['true_lc']) else False
-    if lc:
-        print('lowercase')
-
-    if o['embedding'][:2] == 'ce':
-        # word_vectors = json.load(open(embeddings_cache_file + '.json', 'r', encoding='utf8'))
-        # word_vectors = {k: np.array(v) for k, v in word_vectors.items()}
-        with open(embeddings_cache_file + '.pickle', 'rb') as fp:
-            word_vectors = cPickle.load(fp)
-        # print('loading embeddings from', embeddings_cache_file)
-        wv_list = sorted(word_vectors.items())
-        # pprint(wv_list[:10], width=1600, compact=True)
-        word_to_indices_map = {item[0]: index for index, item in enumerate(wv_list)}
-        word_index_to_embeddings_map = {index: item[1] for index, item in enumerate(wv_list)}
-    else:
-        # load pre-extracted word-to-index maps and pre-filtered Glove embeddings
-        word_to_indices_map, word_index_to_embeddings_map = \
-            vocabulary_embeddings_extractor.load_cached_vocabulary_and_embeddings(embeddings_cache_file)
-
-    wtiname = '{}word_to_indices_map_{}.json'.format(o['out_path'], dt)
-    print("saving word_to_indices_map to", wtiname)
-    with open(wtiname, 'w') as fp:
-        json.dump(word_to_indices_map, fp, indent=1, sort_keys=True)
-    witename = '{}word_index_to_embeddings_map_{}.json'.format(o['out_path'], dt)
-    if False:
-        pprint(word_to_indices_map)
-        np.set_printoptions(precision=6, threshold=50, edgeitems=None, linewidth=6000, suppress=True, nanstr=None,
-                            infstr=None, formatter=None)
-        pprint(word_index_to_embeddings_map, width=7000)
-    print("saving word_index_to_embeddings_map to", witename)
-    with open(witename, 'w') as fp:
-        wite_serializable = {k: v.tolist() for k, v in word_index_to_embeddings_map.items()}
-        json.dump(wite_serializable, fp, indent=1, sort_keys=True)
+    word_to_indices_map, word_index_to_embeddings_map, lc = get_embeddings(o['embedding'], embeddings_cache_file)
+    print('word_to_indices_map')
+    pprint(word_to_indices_map)
+    print('word_index_to_embeddings_map')
+    pprint(word_index_to_embeddings_map)
 
     # 2nd embedding ?
-    word_index_to_embeddings_map2 = None
     if o['embedding2'] != '':
         embeddings_cache_file2 = o['code_path'] + o['emb_dir'] + emb_files[o['embedding2']]
-        word_to_indices_map2, word_index_to_embeddings_map2 = \
-            vocabulary_embeddings_extractor.load_cached_vocabulary_and_embeddings(embeddings_cache_file2)
+        word_to_indices_map2, word_index_to_embeddings_map2, lc2 = get_embeddings(o['embedding2'], embeddings_cache_file2)
+        print('word_to_indices_map2')
+        pprint(word_to_indices_map2)
+        print('word_index_to_embeddings_map2')
+        pprint(word_index_to_embeddings_map2)
+    quit()
 
     d = Data()
     # loads data and replaces words with indices from embedding cache
@@ -334,19 +331,17 @@ def __main__():
          ]
     )
 
-    # pprint(d.to_json(), width=2000)
-    dname = '{}data_{}_prerun.json'.format(o['out_path'], dt)
-    print("saving data to", dname)
-    with open(dname, 'w') as fp:
-        json.dump(d.to_json(), fp, indent=1, sort_keys=True)
-
+    # Fit model with different seeds
     for run_idx in range(o['run'], o['run'] + o['runs']):
         start = timeit.default_timer()
-        # t0 = time()
 
+        # for reproducibility
         results['run'] = run_idx
         run_seed = results['run seed'] = o['pre_seed'] + run_idx
-        np.random.seed(run_seed)  # for reproducibility
+        np.random.seed(run_seed)
+        if backend == 'tensorflow':
+            tf.set_random_seed(run_seed)
+
         global CURRENT_PRED_ACC
         CURRENT_PRED_ACC = 0.0
 
@@ -362,11 +357,6 @@ def __main__():
             activation2=o['activation2'],
             dense_factor=o['dense_factor']
         )
-
-        # double input layers with extra embedding
-        if word_index_to_embeddings_map2 is not None:
-            print('use 2 embeddings in parallel')
-            arguments['embeddings2'] = word_index_to_embeddings_map2
 
         model = get_model(
             o['classifier'],
@@ -425,27 +415,21 @@ def __main__():
             callbacks=cbs,
         )
 
-        mname = '{}detail_model_{}_rn{:02d}'.format(o['out_path'], dt, run_idx)
-        detail_model(model, mname, save_weights=True)
-        # pprint(d.to_json(), width=2000)
-        dname = '{}data_{}_rn{:02d}.json'.format(o['out_path'], dt, run_idx)
-        print("saving data to", dname)
-        with open(dname, 'w') as fp:
-            json.dump(d.to_json(), fp, indent=1, sort_keys=True)
-
         print('finished in {:.3f} minutes'.format((timeit.default_timer() - start) / 60))
 
-        # save the best model for this run
+        # save the best model and its predictions for this run
         try:
             if o['verbose'] == 2:
                 print('saving model')
+            # restore best model
             best_model = Model.from_config(cb_epoch_predictions.best_epoch['config'])
-            # print(type(best_model))
-            # is comilation necessary?
-            best_model.compile(loss=o['loss'], optimizer=o['optimizer'], metrics=['accuracy'])
             best_model.set_weights(cb_epoch_predictions.best_epoch['weights'])
-            # print(type(best_model))
-            # predict best model to write answer file with predicted labels
+            # save best model
+            fname = '%s{}_%s_rn%2d_ep%2d_ac%.3f{}' % (o['out_path'], dt, run_idx,
+                                                      cb_epoch_predictions.best_epoch['epoch'],
+                                                      cb_epoch_predictions.best_epoch['pred_acc'])
+            best_model.save(fname.format('model', '.hdf5'))
+            # predict dev data with best model and write answer file
             acc_dev, best_predictions_dev, best_probabilities_dev = \
                 predict_dev(run_idx, best_model, d, o,
                             write_answer=True,
@@ -453,49 +437,17 @@ def __main__():
                             epoch=cb_epoch_predictions.best_epoch['epoch'],
                             pred_acc=cb_epoch_predictions.best_epoch['pred_acc'])
             print('acc_dev:', acc_dev)
-            fname = '{}model_{}_rn{:02d}_ep{:02d}_ac{:.3f}'.format(o['out_path'], dt,
-                                                                   run_idx,
-                                                                   cb_epoch_predictions.best_epoch['epoch'],
-                                                                   cb_epoch_predictions.best_epoch['pred_acc'])
-            best_model.save(fname + '.hdf5')
-            # np.save(fname + '.predictions', best_predictions)
-            np.save(fname + '_dev-probabilities', best_probabilities_dev)
+            # save dev probabilities
+            np.save(fname.format('probabilities-dev', ''), best_probabilities_dev)
+            # predict test data with best model and write answer file
             best_predictions_test, best_probabilities_test = \
                 predict_test(run_idx, best_model, d, o,
                              write_answer=True,
                              print_answer=False,
                              epoch=cb_epoch_predictions.best_epoch['epoch'],
                              pred_acc=cb_epoch_predictions.best_epoch['pred_acc'])
-            np.save(fname + '_tst-probabilities', best_probabilities_test)
-
-            # confirm loaded model
-            confirm = True
-            if confirm:
-                print('LOADED MODEL')
-                loaded_model = load_model(fname + '.hdf5')
-                acc_dev_confirm, best_predictions_dev, best_probabilities_dev = \
-                    predict_dev(run_idx, loaded_model, d, o,
-                                write_answer=False,
-                                print_answer=False,
-                                epoch=cb_epoch_predictions.best_epoch['epoch'],
-                                pred_acc=cb_epoch_predictions.best_epoch['pred_acc'])
-                print('acc_dev_confirm:', acc_dev_confirm)
-                best_predictions_test_confirm, best_probabilities_test_confirm = \
-                    predict_test(run_idx, best_model, d, o,
-                                 write_answer=False,
-                                 print_answer=False,
-                                 epoch=cb_epoch_predictions.best_epoch['epoch'],
-                                 pred_acc=cb_epoch_predictions.best_epoch['pred_acc'])
-                assert acc_dev == acc_dev_confirm
-                assert best_predictions_test == best_predictions_test_confirm
-
-                mname = '{}detail_model_{}_rn{:02d}_loaded'.format(o['out_path'], dt, run_idx)
-                detail_model(loaded_model, mname, save_weights=True)
-                # pprint(d.to_json(), width=2000)
-                dname = '{}data_{}_rn{:02d}_final.json'.format(o['out_path'], dt, run_idx)
-                # print("saving data to", dname)
-                with open(dname, 'w') as fp:
-                    json.dump(d.to_json(), fp, indent=1, sort_keys=True)
+            # save test probabilities
+            np.save(fname.format('probabilities-tst', ''), best_probabilities_test)
 
         except KeyError:
             sys.stderr.write('KeyError: couldn\'t save model for timestamp={}, '

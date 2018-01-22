@@ -572,7 +572,7 @@ def get_model(classifier, word_index_to_embeddings_map, max_len, rich_context, *
     model = Model(inputs=il, outputs=output_layer)
     model.compile(loss=loss, optimizer=optimizer, metrics=['accuracy', dev_pred])
 
-    from keras.utils import plot_model
-    plot_model(model, show_shapes=True, to_file='./figures/{}.png'.format(classifier))
+    # from keras.utils import plot_model
+    # plot_model(model, show_shapes=True, to_file='./figures/{}.png'.format(classifier))
 
     return model
