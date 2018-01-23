@@ -138,7 +138,7 @@ def predict_dev(run_idx, model, data, o, write_answer=False, print_answer=False,
 
     answer = '#id\tcorrectLabelW0orW1\n' + answer
     # write answer file
-    if write_answer:
+    if write_answer and acc > o['threshold']:
         with open('{}answer-dev_{}_rn{:02d}_ep{:02d}_ac{:.3f}.txt'
                   .format(o['out_path'], o['dt'], run_idx, epoch, pred_acc), 'w') as fw:
             fw.write(answer)
@@ -432,7 +432,6 @@ def __main__():
             fname = '%s{}_%s_rn%2d_ep%2d_ac%.3f{}' % (o['out_path'], dt, run_idx,
                                                       cb_epoch_predictions.best_epoch['epoch'],
                                                       cb_epoch_predictions.best_epoch['pred_acc'])
-            best_model.save(fname.format('model', '.hdf5'))
             # predict dev data with best model and write answer file
             acc_dev, best_predictions_dev, best_probabilities_dev = \
                 predict_dev(run_idx, best_model, d, o,
@@ -441,17 +440,19 @@ def __main__():
                             epoch=cb_epoch_predictions.best_epoch['epoch'],
                             pred_acc=cb_epoch_predictions.best_epoch['pred_acc'])
             print('acc_dev: {:.3f}'.format(acc_dev))
-            # save dev probabilities
-            np.save(fname.format('probabilities-dev', ''), best_probabilities_dev)
-            # predict test data with best model and write answer file
-            best_predictions_test, best_probabilities_test = \
-                predict_test(run_idx, best_model, d, o,
-                             write_answer=True,
-                             print_answer=False,
-                             epoch=cb_epoch_predictions.best_epoch['epoch'],
-                             pred_acc=cb_epoch_predictions.best_epoch['pred_acc'])
-            # save test probabilities
-            np.save(fname.format('probabilities-tst', ''), best_probabilities_test)
+            if acc_dev > o['threshold']:
+                best_model.save(fname.format('model', '.hdf5'))
+                # save dev probabilities
+                np.save(fname.format('probabilities-dev', ''), best_probabilities_dev)
+                # predict test data with best model and write answer file
+                best_predictions_test, best_probabilities_test = \
+                    predict_test(run_idx, best_model, d, o,
+                                 write_answer=True,
+                                 print_answer=False,
+                                 epoch=cb_epoch_predictions.best_epoch['epoch'],
+                                 pred_acc=cb_epoch_predictions.best_epoch['pred_acc'])
+                # save test probabilities
+                np.save(fname.format('probabilities-tst', ''), best_probabilities_test)
 
         except KeyError:
             sys.stderr.write('KeyError: couldn\'t save model for timestamp={}, '

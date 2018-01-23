@@ -137,6 +137,8 @@ def get_options():
                         help='save model with each improving epoch')
     parser.add_argument('--true_lc', default=False, type=bool,
                         help='use lowercase when embedding was trained on lowercase tokens')
+    parser.add_argument('--threshold', default=0.67, type=float,
+                        help='saving data only for models exceeding this threshold')
 
     options = vars(parser.parse_args())
     if options['padding'] < 1:
