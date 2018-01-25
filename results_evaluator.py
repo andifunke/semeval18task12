@@ -36,8 +36,9 @@ COLORS = ('red', 'green', 'blue', 'yellow', 'orange', 'violet')
 MARKERS = ('o', '^', 's', 'p')
 
 # paths
-DAT_DIR = './results/'
-FIG_DIR = './figures/'
+SUB_DIR = 'tensorL05add/'
+DAT_DIR = './results/' + SUB_DIR
+FIG_DIR = './figures/' + SUB_DIR
 KEYS = [
     'timestamp',
     'pred_acc',
