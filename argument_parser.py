@@ -66,6 +66,7 @@ def get_options():
         ce_ftx_sg_hs_i20_100_lc="custom_embedding_ftx_hs_iter20_sg_100_lc.vec",
         ce_ftx_sg_hs_i20_300="custom_embedding_ftx_hs_iter20_sg_300.vec",
         ce_ftx_sg_hs_i20_300_lc="custom_embedding_ftx_hs_iter20_sg_300_lc.vec",
+        ce_wiki_lc="custom_embedding_w2v_hs_iter05_sg_300_lc_wiki.vec",
     )
 
     parser = argparse.ArgumentParser(description='semeval 18 task 12 - training project')
