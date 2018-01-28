@@ -1,11 +1,11 @@
+import numpy as np
+np.random.seed(12345)
 import datetime
 import timeit
 import json
 import sys
-import six.moves.cPickle as cPickle
 from collections import OrderedDict
 from pprint import pprint
-import numpy as np
 import data_loader
 import vocabulary_embeddings_extractor
 from argument_parser import get_options, FILES
@@ -177,7 +177,7 @@ def __main__():
     o, emb_files = get_options()
     dt = o['dt'] = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S-%f')
 
-    np.random.seed(o['pre_seed'])  # for reproducibility0
+    np.random.seed(o['pre_seed'])
 
     from keras import __version__ as kv, backend as K
     print('Keras version:', kv)
@@ -198,11 +198,11 @@ def __main__():
 
     # Creating a Callback subclass that stores each epoch prediction
     class PredictionReport(callbacks.Callback):
-        head_written = False
 
-        def __init__(self, idx, modl):
+        def __init__(self, idx: int, modl, reports_list: list):
             self.idx = idx
             self.set_model(modl)
+            self.reports = reports_list
             self.best_epoch = dict(epoch=0,
                                    pred_acc=0,
                                    val_acc=0,
@@ -232,17 +232,9 @@ def __main__():
                           self.best_epoch['epoch'], self.best_epoch['val_acc'], self.best_epoch['pred_acc']))
             if o['verbose'] > 1:
                 pprint(results)
-            # write report file
+            # add report for epoch to reports list
             values = list(results.values())
-            out = "\t".join(map(str, values)) + "\n"
-            # write headline before first data-line
-            if not PredictionReport.head_written:
-                keys = list(results.keys())
-                out = "\t".join(map(str, keys)) + "\n" + out
-                PredictionReport.head_written = True
-            filename = '{}report_{}.csv'.format(o['out_path'], dt)
-            with open(filename, 'a') as fw:
-                fw.write(out)
+            self.reports.append("\t".join(map(str, values)))
 
     # 1st embedding
     # loading data
@@ -335,6 +327,11 @@ def __main__():
          ]
     )
 
+    # initialize reports list with column headlines
+    keys = list(results.keys())
+    report_head = "\t".join(map(str, keys))
+    reports = [report_head]
+
     # Fit model with different seeds
     for run_idx in range(o['run'], o['run'] + o['runs']):
         start = timeit.default_timer()
@@ -393,7 +390,7 @@ def __main__():
             patience=o['patience'],
             verbose=1,
         )
-        cb_epoch_predictions = PredictionReport(run_idx, model)
+        cb_epoch_predictions = PredictionReport(run_idx, model, reports)
 
         cbs = [cb_epoch_predictions,
                # cb_epoch_csvlogger,
@@ -453,6 +450,12 @@ def __main__():
                                  pred_acc=cb_epoch_predictions.best_epoch['pred_acc'])
                 # save test probabilities
                 np.save(fname.format('probabilities-tst', ''), best_probabilities_test)
+
+            filename = '{}report_{}.csv'.format(o['out_path'], dt)
+            with open(filename, 'a') as fw:
+                fw.write('\n'.join(reports))
+            # reset reports list after writing reports for run, but without head
+            reports = ['']
 
         except KeyError:
             sys.stderr.write('KeyError: couldn\'t save model for timestamp={}, '

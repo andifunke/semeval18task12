@@ -1,9 +1,7 @@
 """
 Neural models - new approach with sandwich design
 """
-from keras import Sequential
-
-from attention_lstm import attention_3d_block
+# from attention_lstm import attention_3d_block
 from main import dev_pred
 import keras
 import numpy as np
@@ -13,30 +11,6 @@ from keras.layers import concatenate, Lambda, Dense, Dropout, Embedding, LSTM, B
     MaxPooling1D, Multiply, Add, Average, Maximum, Dot, PReLU, Reshape
 from theano.scalar import float32
 import models_vintage
-
-
-SHORTCUTS = {
-    'LSTM_00',
-    'LSTM_02', 'LSTM_02a', 'LSTM_02b', 'LSTM_02c', 'LSTM_02d',
-    'LSTM_03',
-    'LSTM_04',
-    'LSTM_05', 'LSTM_05', 'LSTM_05add', 'LSTM_05conc', 'LSTM_05avg', 'LSTM_05max', 'LSTM_05dot',
-    'LSTM_06',
-    'LSTM_CNN_07add', 'LSTM_CNN_07mul', 'LSTM_CNN_07con', 'LSTM_CNN_07avg', 'LSTM_CNN_07max',
-    'LSTM_08',
-    'ATT_LSTM_02',
-    'ATT_LSTM_03', 'ATT_LSTM_03a', 'ATT_LSTM_03a2',
-    'ATT_LSTM_03b', 'ATT_LSTM_03b3', 'ATT_LSTM_03c', 'ATT_LSTM_03d', 'ATT_LSTM_03e',
-    'ATT_LSTM_04',
-    'CNN_01', 'CNN_02', 'CNN_03',
-    'CNN_LSTM_02', 'CNN_LSTM_02b', 'CNN_LSTM_03', 'CNN_LSTM_04', 'CNN_LSTM_05',
-}
-VINTAGE = dict(
-    LSTM_01=models_vintage.get_lstm_intra_warrant,
-    ATT_LSTM_01=models_vintage.get_attention_lstm_intra_warrant,
-    CNN_LSTM_01=models_vintage.get_cnn_lstm,
-)
-SHORTCUTS.update(VINTAGE.keys())
 
 
 # from: https://github.com/keras-team/keras/issues/4978
@@ -61,10 +35,6 @@ class NonMasking(Layer):
 
     def compute_output_shape(self, input_shape):
         return input_shape
-
-
-def get_shortcuts():
-    return SHORTCUTS
 
 
 def embedding_to_ndarray(word_embedding):
@@ -146,8 +116,13 @@ def get_attention_vectors(bidi_layers, rich_context=True):
 
 
 def get_model(classifier, word_index_to_embeddings_map, max_len, rich_context, **kwargs):
-    if classifier in VINTAGE:
-        return VINTAGE[classifier](word_index_to_embeddings_map, max_len, rich_context, **kwargs)
+    vintage_classifier = dict(
+        LSTM_01=models_vintage.get_lstm_intra_warrant,
+        ATT_LSTM_01=models_vintage.get_attention_lstm_intra_warrant,
+        CNN_LSTM_01=models_vintage.get_cnn_lstm,
+    )
+    if classifier in vintage_classifier:
+        return vintage_classifier[classifier](word_index_to_embeddings_map, max_len, rich_context, **kwargs)
 
     # converting embeddings to numpy 2d array: shape = (vocabulary_size, emb_dim)
     embeddings = embedding_to_ndarray(word_index_to_embeddings_map)
@@ -484,83 +459,83 @@ def get_model(classifier, word_index_to_embeddings_map, max_len, rich_context, *
         dense1 = Dense(int(lstm_size * factor * 0.5), activation=activation1)(attention_mul)
         output_input = dense1
 
-    # Attention LSTM from https://github.com/philipperemy/keras-attention-mechanism
-    # APPLY_ATTENTION_BEFORE_LSTM
-    # working pretty good!
-    elif classifier == 'ATT_LSTM_03':
-        il = get_input_layers(names, max_len)
-        el = embed_inputs(il, embeddings, max_len, masking=False)
-        conc = Concatenate()(el[:2])
-        attention_mul = attention_3d_block(conc, max_len)
-        lstm = LSTM(lstm_size, return_sequences=False)(attention_mul)
-        output_input = lstm
-
-    # augmented with dropout and additional dense layer
-    elif classifier == 'ATT_LSTM_03a2':
-        il = get_input_layers(names, max_len)
-        el = embed_inputs(il, embeddings, max_len, masking=False)
-        conc = Concatenate()(el[:2])
-        attention_mul = attention_3d_block(conc, max_len)
-        lstm = LSTM(lstm_size, return_sequences=False)(attention_mul)
-        dropout_layer = Dropout(dropout, name='dropout')(lstm)
-        # dense1 = Dense(int(lstm_size * factor), activation=activation1, name='dense_main')(lstm)
-        output_input = dropout_layer
-
-    # !
-    elif classifier == 'ATT_LSTM_03b':
-        il = get_input_layers(names, max_len)
-        el = embed_inputs(il, embeddings, max_len, masking=False)
-        conc = Concatenate()(el[:3])
-        attention_mul = attention_3d_block(conc, max_len)
-        lstm = LSTM(lstm_size, return_sequences=False)(attention_mul)
-        output_input = lstm
-
-    # with dropout and dense
-    elif classifier == 'ATT_LSTM_03b3':
-        print('this one')
-        il = get_input_layers(names, max_len)
-        el = embed_inputs(il, embeddings, max_len, masking=False)
-        conc = Concatenate()(el[:3])
-        attention_mul = attention_3d_block(conc, max_len)
-        lstm = LSTM(lstm_size, return_sequences=False)(attention_mul)
-        dropout_layer = Dropout(0.5, name='dropout')(lstm)
-        # dense1 = Dense(int(lstm_size * factor), activation=activation1, name='dense_main')(lstm)
-        output_input = dropout_layer
-
-    elif classifier == 'ATT_LSTM_03c':
-        il = get_input_layers(names, max_len)
-        el = embed_inputs(il, embeddings, max_len, masking=False)
-        conc = Concatenate()(el[:2] + [el[3]])
-        attention_mul = attention_3d_block(conc, max_len)
-        lstm = LSTM(lstm_size, return_sequences=False)(attention_mul)
-        output_input = lstm
-
-    elif classifier == 'ATT_LSTM_03d':
-        il = get_input_layers(names, max_len)
-        el = embed_inputs(il, embeddings, max_len, masking=False)
-        conc = Concatenate()(el[:4])
-        attention_mul = attention_3d_block(conc, max_len)
-        lstm = LSTM(lstm_size, return_sequences=False)(attention_mul)
-        output_input = lstm
-
-    elif classifier == 'ATT_LSTM_03e':
-        il = get_input_layers(names, max_len)
-        el = embed_inputs(il, embeddings, max_len, masking=False)
-        conc = Concatenate()(el[:2])
-        attention_mul = attention_3d_block(conc, max_len)
-        conc2 = Concatenate()([attention_mul] + el[2:4])
-        lstm = LSTM(lstm_size, return_sequences=False)(conc2)
-        output_input = lstm
-
-    # Attention LSTM from https://github.com/philipperemy/keras-attention-mechanism
-    # APPLY_ATTENTION_AFTER_LSTM
-    elif classifier == 'ATT_LSTM_04':
-        il = get_input_layers(names, max_len)
-        el = embed_inputs(il, embeddings, max_len, masking=False)
-        conc = Concatenate()([el[0], el[1]])
-        lstm = LSTM(lstm_size, return_sequences=True)(conc)
-        attention_mul = attention_3d_block(lstm, max_len)
-        output_input = Flatten()(attention_mul)
+    # # Attention LSTM from https://github.com/philipperemy/keras-attention-mechanism
+    # # APPLY_ATTENTION_BEFORE_LSTM
+    # # working pretty good!
+    # elif classifier == 'ATT_LSTM_03':
+    #     il = get_input_layers(names, max_len)
+    #     el = embed_inputs(il, embeddings, max_len, masking=False)
+    #     conc = Concatenate()(el[:2])
+    #     attention_mul = attention_3d_block(conc, max_len)
+    #     lstm = LSTM(lstm_size, return_sequences=False)(attention_mul)
+    #     output_input = lstm
+    #
+    # # augmented with dropout and additional dense layer
+    # elif classifier == 'ATT_LSTM_03a2':
+    #     il = get_input_layers(names, max_len)
+    #     el = embed_inputs(il, embeddings, max_len, masking=False)
+    #     conc = Concatenate()(el[:2])
+    #     attention_mul = attention_3d_block(conc, max_len)
+    #     lstm = LSTM(lstm_size, return_sequences=False)(attention_mul)
+    #     dropout_layer = Dropout(dropout, name='dropout')(lstm)
+    #     # dense1 = Dense(int(lstm_size * factor), activation=activation1, name='dense_main')(lstm)
+    #     output_input = dropout_layer
+    #
+    # # !
+    # elif classifier == 'ATT_LSTM_03b':
+    #     il = get_input_layers(names, max_len)
+    #     el = embed_inputs(il, embeddings, max_len, masking=False)
+    #     conc = Concatenate()(el[:3])
+    #     attention_mul = attention_3d_block(conc, max_len)
+    #     lstm = LSTM(lstm_size, return_sequences=False)(attention_mul)
+    #     output_input = lstm
+    #
+    # # with dropout and dense
+    # elif classifier == 'ATT_LSTM_03b3':
+    #     print('this one')
+    #     il = get_input_layers(names, max_len)
+    #     el = embed_inputs(il, embeddings, max_len, masking=False)
+    #     conc = Concatenate()(el[:3])
+    #     attention_mul = attention_3d_block(conc, max_len)
+    #     lstm = LSTM(lstm_size, return_sequences=False)(attention_mul)
+    #     dropout_layer = Dropout(0.5, name='dropout')(lstm)
+    #     # dense1 = Dense(int(lstm_size * factor), activation=activation1, name='dense_main')(lstm)
+    #     output_input = dropout_layer
+    #
+    # elif classifier == 'ATT_LSTM_03c':
+    #     il = get_input_layers(names, max_len)
+    #     el = embed_inputs(il, embeddings, max_len, masking=False)
+    #     conc = Concatenate()(el[:2] + [el[3]])
+    #     attention_mul = attention_3d_block(conc, max_len)
+    #     lstm = LSTM(lstm_size, return_sequences=False)(attention_mul)
+    #     output_input = lstm
+    #
+    # elif classifier == 'ATT_LSTM_03d':
+    #     il = get_input_layers(names, max_len)
+    #     el = embed_inputs(il, embeddings, max_len, masking=False)
+    #     conc = Concatenate()(el[:4])
+    #     attention_mul = attention_3d_block(conc, max_len)
+    #     lstm = LSTM(lstm_size, return_sequences=False)(attention_mul)
+    #     output_input = lstm
+    #
+    # elif classifier == 'ATT_LSTM_03e':
+    #     il = get_input_layers(names, max_len)
+    #     el = embed_inputs(il, embeddings, max_len, masking=False)
+    #     conc = Concatenate()(el[:2])
+    #     attention_mul = attention_3d_block(conc, max_len)
+    #     conc2 = Concatenate()([attention_mul] + el[2:4])
+    #     lstm = LSTM(lstm_size, return_sequences=False)(conc2)
+    #     output_input = lstm
+    #
+    # # Attention LSTM from https://github.com/philipperemy/keras-attention-mechanism
+    # # APPLY_ATTENTION_AFTER_LSTM
+    # elif classifier == 'ATT_LSTM_04':
+    #     il = get_input_layers(names, max_len)
+    #     el = embed_inputs(il, embeddings, max_len, masking=False)
+    #     conc = Concatenate()([el[0], el[1]])
+    #     lstm = LSTM(lstm_size, return_sequences=True)(conc)
+    #     attention_mul = attention_3d_block(lstm, max_len)
+    #     output_input = Flatten()(attention_mul)
 
     # TODO:
     # https://machinelearningmastery.com/cnn-long-short-term-memory-networks/

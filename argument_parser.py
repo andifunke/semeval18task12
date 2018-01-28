@@ -12,10 +12,33 @@ FILES = dict(
     # train_swap='data/train/train-w-swap-full.txt',
 )
 
+SHORTCUTS = {
+    'LSTM_00',
+    'LSTM_02', 'LSTM_02a', 'LSTM_02b', 'LSTM_02c', 'LSTM_02d',
+    'LSTM_03',
+    'LSTM_04',
+    'LSTM_05', 'LSTM_05', 'LSTM_05add', 'LSTM_05conc', 'LSTM_05avg', 'LSTM_05max', 'LSTM_05dot',
+    'LSTM_06',
+    'LSTM_CNN_07add', 'LSTM_CNN_07mul', 'LSTM_CNN_07con', 'LSTM_CNN_07avg', 'LSTM_CNN_07max',
+    'LSTM_08',
+    'ATT_LSTM_02',
+    'ATT_LSTM_03', 'ATT_LSTM_03a', 'ATT_LSTM_03a2',
+    'ATT_LSTM_03b', 'ATT_LSTM_03b3', 'ATT_LSTM_03c', 'ATT_LSTM_03d', 'ATT_LSTM_03e',
+    'ATT_LSTM_04',
+    'CNN_01', 'CNN_02', 'CNN_03',
+    'CNN_LSTM_02', 'CNN_LSTM_02b', 'CNN_LSTM_03', 'CNN_LSTM_04', 'CNN_LSTM_05',
+    # vintage classifier:
+    'LSTM_01',
+    'ATT_LSTM_01',
+    'CNN_LSTM_01',
+}
+
+
+def get_shortcuts():
+    return SHORTCUTS
+
 
 def get_options():
-    from models import get_shortcuts
-
     emb_files = dict(
         w2v="embeddings_cache_file_word2vec.pkl.bz2",
         d2v="embeddings_cache_file_dict2vec.pkl.bz2",

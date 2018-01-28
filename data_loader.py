@@ -2,7 +2,6 @@ import spacy
 import gzip
 import os.path
 import math
-
 import vocabulary_embeddings_extractor
 
 MAX_LEN = 0
@@ -10,7 +9,6 @@ SPACY = None
 
 
 def tokenize_with_spacy(string: str):
-    # print('tokenize with spacy')
     global SPACY
     doc = SPACY(string)
     tokens = [str(token) for token in doc]
@@ -34,6 +32,7 @@ def string_to_indices(string: str, word_to_indices_map_param: dict, nb_words: in
         work_string = work_string.lower()
 
     if custom:
+        # print('tokenize with spacy')
         tokens = tokenize_with_spacy(work_string)
     else:
         tokens = vocabulary_embeddings_extractor.tokenize(work_string)
@@ -122,6 +121,7 @@ def load_single_file(file_name: str, word_to_indices_map: dict, nb_words: int = 
     global SPACY
     if custom:
         if SPACY is None:
+            print('loading spacy')
             SPACY = spacy.load('en')
 
     if file_name.endswith('gz'):
