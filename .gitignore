@@ -208,3 +208,4 @@ attention_lstm_dir/
 data/
 svm/
 test*.txt
+prob/

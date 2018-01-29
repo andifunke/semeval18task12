@@ -79,6 +79,13 @@ def get_bidi_lstm_layers(embedded_layers, names, lstm_size, activation=None, dro
     return bl
 
 
+def get_activation_layers(layers, activation=PReLU):
+    al = list()
+    for layer in layers:
+        al.append(activation()(layer))
+    return al
+
+
 def get_cnn_lstm_layers(embedded_layers, names, filters, kernel_size=3, dropout=0.0):
     # cnn lstm layers (cll)
     cll = list()
@@ -300,6 +307,24 @@ def get_model(classifier, word_index_to_embeddings_map, max_len, rich_context, *
         warrant1 = LSTM(lstm_size)(Merger()([bl[1], bl[2], bl[3]]))
         dropout_layer = Dropout(dropout, name='dropout_w')(concatenate([warrant0, warrant1]))
         dense = Dense(int(lstm_size * factor), activation=activation1, name='dense_w')(dropout_layer)
+        output_input = dense
+
+    # LSTM_05 variant using Advanced Activation Function
+    elif classifier[:7] == 'LSTM_15':
+        mergers = dict(mul=Multiply, add=Add, avg=Average, max=Maximum, conc=Concatenate)
+        Merger = mergers[classifier[7:]]
+        il = get_input_layers(names, max_len)
+        el = embed_inputs(il, embeddings, max_len)
+        bl = get_bidi_lstm_layers(el, names, lstm_size, activation='linear')
+        al = get_activation_layers(bl, activation=PReLU)
+        # multiplying warrant0 and warrant1 separately with reason and claim - similar to attention
+        warrant0 = LSTM(lstm_size, activation='linear')(Merger()([bl[0], bl[2], bl[3]]))
+        warrant1 = LSTM(lstm_size, activation='linear')(Merger()([bl[1], bl[2], bl[3]]))
+        warrant0 = PReLU()(warrant0)
+        warrant1 = PReLU()(warrant1)
+        dropout_layer = Dropout(dropout, name='dropout_w')(concatenate([warrant0, warrant1]))
+        dense = Dense(int(lstm_size * factor), activation='linear', name='dense_w')(dropout_layer)
+        dense = PReLU()(dense)
         output_input = dense
 
     # LSTM_06 - similar to LSTM_05, but concatenates claim and reson before merging with warrants and uses dot product

@@ -17,7 +17,8 @@ SHORTCUTS = {
     'LSTM_02', 'LSTM_02a', 'LSTM_02b', 'LSTM_02c', 'LSTM_02d',
     'LSTM_03',
     'LSTM_04',
-    'LSTM_05', 'LSTM_05', 'LSTM_05add', 'LSTM_05conc', 'LSTM_05avg', 'LSTM_05max', 'LSTM_05dot',
+    'LSTM_05', 'LSTM_05add', 'LSTM_05conc', 'LSTM_05avg', 'LSTM_05max', 'LSTM_05dot',
+    'LSTM_15', 'LSTM_15add', 'LSTM_15conc', 'LSTM_15avg', 'LSTM_15max', 'LSTM_15dot',
     'LSTM_06',
     'LSTM_CNN_07add', 'LSTM_CNN_07mul', 'LSTM_CNN_07con', 'LSTM_CNN_07avg', 'LSTM_CNN_07max',
     'LSTM_08',
@@ -90,6 +91,8 @@ def get_options():
         ce_ftx_sg_hs_i20_300="custom_embedding_ftx_hs_iter20_sg_300.vec",
         ce_ftx_sg_hs_i20_300_lc="custom_embedding_ftx_hs_iter20_sg_300_lc.vec",
         ce_wiki_lc="custom_embedding_w2v_hs_iter05_sg_300_lc_wiki.vec",
+        ce_wiki_i20_100_lc="custom_embedding_w2v_hs_iter20_sg_100_lc_wiki.vec",
+        ce_wiki_i20_300_lc="custom_embedding_w2v_hs_iter20_sg_300_lc_wiki.vec",
     )
 
     parser = argparse.ArgumentParser(description='semeval 18 task 12 - training project')
@@ -163,10 +166,22 @@ def get_options():
                         help='use lowercase when embedding was trained on lowercase tokens')
     parser.add_argument('--threshold', default=0.67, type=float,
                         help='saving data only for models exceeding this threshold')
+    parser.add_argument('--spacy', default='en', type=str,
+                        help='spacy shortcut or path to language model')
+    parser.add_argument('--system', default='local', type=str,
+                        choices={'local', 'hpc'},
+                        help='shortcut for several parameters: emb_dir, spacy, runs, epochs, threshold')
+    parser.add_argument('--comment', default='', type=str)
 
     options = vars(parser.parse_args())
     if options['padding'] < 1:
         options['padding'] = None
+    if options['system'] == 'hpc':
+        options['emb_dir'] = '../embeddings/'
+        options['spacy'] = '/home/funkea/.local/lib/python3.4/site-packages/en_core_web_sm/en_core_web_sm-1.2.0/'
+        options['runs'] = 10
+        options['epochs'] = 20
+        options['threshold'] = 0.68
     # print(options)
 
     # TODO:

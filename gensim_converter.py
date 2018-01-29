@@ -70,7 +70,7 @@ def gensim_wikipedia_embedding_wrapper():
 
 
 if __name__ == '__main__':
-    DATA_DIR = './embedding_caches/'
+    DATA_DIR = './embedding_caches/new/'
     # gensim_wrapper_main()
     gensim_wikipedia_embedding_wrapper()
     # quit()
@@ -78,7 +78,7 @@ if __name__ == '__main__':
     verify = True
 
     if verify:
-        fname = 'custom_embedding_w2v_hs_iter05_sg_300_lc_wiki.vec'
+        fname = 'custom_embedding_w2v_hs_iter20_sg_300_lc_wiki.vec'
         with open(DATA_DIR + fname + '.json', 'r') as f:
             vector_dict = json.load(f)
 

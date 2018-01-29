@@ -7,7 +7,7 @@ from matplotlib.ticker import LinearLocator
 from tabulate import tabulate
 import matplotlib.cm as cm
 from matplotlib.colors import Normalize
-import seaborn as sns
+# import seaborn as sns
 
 
 # making stuff more human readable
@@ -267,11 +267,15 @@ def reports_evaluator_main(directory=None):
     # filter for best epoch
     keys = ['timestamp', 'run']
     group = df.groupby(keys)
-    # get the row with the maximum value of 'f1_micro' per group
+    # get the row with the maximum value of 'pred_acc' per group
     df = df.loc[group['pred_acc'].idxmax()]
     # reset the index
     df.set_index(keys, inplace=True)
     tprint(df.sort_values('pred_acc', ascending=False))
+
+    # get mean over all runs
+    df_mean = df.groupby('timestamp').mean()
+    tprint(df_mean.sort_values('pred_acc', ascending=False))
 
     # print grouped tables
     if True:
@@ -284,6 +288,8 @@ def reports_evaluator_main(directory=None):
 
     # for plotting we keep the bad performing max_iter items
 
+    # try also with df_mean:
+    # df = df_mean
     # filtering bad results out
     df = df.loc[
         (df.activation2 != 'softmax')
@@ -346,4 +352,4 @@ def reports_evaluator_main(directory=None):
 
 
 if __name__ == '__main__':
-    reports_evaluator_main()
+    reports_evaluator_main('/media/andreas/Linux_Data/hpc-semeval-failed/tensorL05con2/out/')

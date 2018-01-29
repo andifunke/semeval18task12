@@ -99,9 +99,10 @@ def load_single_instance_from_line(line: str, word_to_indices_map: dict, nb_word
 
 
 def load_single_file(file_name: str, word_to_indices_map: dict, nb_words: int = None, lc=False,
-                     no_labels=False, custom=False) -> tuple:
+                     no_labels=False, custom=False, spacy_model='en') -> tuple:
     """
     Loads a single train/test file and returns a tuple of lists
+    :param spacy_model: shortcut or path to spacy language model, e.g. 'en'
     :param custom: if True, Spacy tokenizer will be used for custom embeddings
     :param no_labels: set True if data does not provide labels
     :param lc: use lowercase on all tokens
@@ -121,8 +122,8 @@ def load_single_file(file_name: str, word_to_indices_map: dict, nb_words: int = 
     global SPACY
     if custom:
         if SPACY is None:
-            print('loading spacy')
-            SPACY = spacy.load('en')
+            print('loading spacy model', spacy_model)
+            SPACY = spacy.load(spacy_model)
 
     if file_name.endswith('gz'):
         f = gzip.open(file_name, 'rb')

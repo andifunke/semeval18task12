@@ -265,16 +265,18 @@ def __main__():
     # train
     print('loading train data')
     (d.train_ids, d.train_warrant0, d.train_warrant1, d.train_label, d.train_reason, d.train_claim, d.train_debate) = \
-        data_loader.load_single_file(o['code_path'] + FILES['train_swap'], word_to_indices_map, lc=lc, custom=custom)
+        data_loader.load_single_file(o['code_path'] + FILES['train_swap'], word_to_indices_map, lc=lc, custom=custom,
+                                     spacy_model=o['spacy'])
     # dev
     print('loading dev data')
     (d.dev_ids, d.dev_warrant0, d.dev_warrant1, d.dev_label, d.dev_reason, d.dev_claim, d.dev_debate) = \
-        data_loader.load_single_file(o['code_path'] + FILES['dev'], word_to_indices_map, lc=lc, custom=custom)
+        data_loader.load_single_file(o['code_path'] + FILES['dev'], word_to_indices_map, lc=lc, custom=custom,
+                                     spacy_model=o['spacy'])
     # test
     print('loading test data')
     (d.test_ids, d.test_warrant0, d.test_warrant1, d.test_label, d.test_reason, d.test_claim, d.test_debate) = \
         data_loader.load_single_file(o['code_path'] + FILES['test'], word_to_indices_map,
-                                     lc=lc, custom=custom, no_labels=True)
+                                     lc=lc, custom=custom, spacy_model=o['spacy'], no_labels=True)
 
     # pad all sequences
     # train

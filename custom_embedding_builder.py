@@ -61,18 +61,18 @@ def custom_embedding_builder_main(add_wikipedia=False):
         s = sentences_lc if lowercase else sentences
         for sg in [1]:  # use [0] or [0, 1] for (additional) CBOW
             mdl = 'cb' if sg == 0 else 'sg'
-            for size in [300]:
+            for size in [100, 300]:
                     print("starting w2v {} modelling, size={:d}".format(mdl, size))
                     model = wv.Word2Vec(s, size=size, alpha=0.025, window=5, min_count=0, max_vocab_size=None,
                                         sample=0.001, seed=1, workers=4, min_alpha=0.0001, sg=sg, hs=0, negative=5,
-                                        cbow_mean=1, iter=5, null_word=0, trim_rule=None, sorted_vocab=1,
+                                        cbow_mean=1, iter=20, null_word=0, trim_rule=None, sorted_vocab=1,
                                         batch_words=10000, compute_loss=False)
                     # model = ftx.FastText(s, size=size, alpha=0.025, window=5, min_count=0, max_vocab_size=None,
                     #                      sample=0.001, seed=1, workers=4, min_alpha=0.0001, sg=sg, hs=1, negative=5,
                     #                      cbow_mean=1, iter=20, null_word=0, trim_rule=None, sorted_vocab=1,
                     #                      batch_words=10000)
                     w = '_wiki' if add_wikipedia else ''
-                    fname = DATA_DIR + 'custom_embedding_w2v_hs_iter05_{}_{:d}{}{}.vec'.format(mdl, size, lc, w)
+                    fname = DATA_DIR + 'custom_embedding_w2v_hs_iter20_{}_{:d}{}{}.vec'.format(mdl, size, lc, w)
                     print("saving vectors to {}".format(fname))
                     model.save(fname)
 
