@@ -204,7 +204,7 @@ checkpoints/
 figures/
 embedding_caches/
 results/
-attention_lstm/
+attention_lstm_dir/
 data/
 svm/
 test*.txt

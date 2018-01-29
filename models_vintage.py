@@ -2,12 +2,17 @@
 Neural models
 """
 
-from main import dev_pred
-import keras
 import numpy as np
+from theano.scalar import float32
+import keras
 from keras.engine import Input, Model
 from keras.layers import concatenate, Lambda, Dense, Dropout, Embedding, LSTM, Bidirectional, multiply
-from theano.scalar import float32
+from keras import backend as K
+
+
+# 'cheating' metric - not working as expected
+def dev_pred(y_true, y_pred):
+    return K.cast(0.5, 'float32')
 
 
 def get_attention_lstm(word_index_to_embeddings_map, max_len, rich_context: bool = False, **kwargs):

@@ -1,15 +1,24 @@
 import numpy as np
-np.random.seed(12345)
+np.random.seed(0)
+import tensorflow as tf
+tf.set_random_seed(0)
+from tensorflow import __version__ as tfv
+from theano import __version__ as thv
+from keras import __version__ as kv, backend as K
+from keras import callbacks
+from keras.preprocessing import sequence
+from keras.models import Model
 import datetime
 import timeit
 import json
 import sys
 from collections import OrderedDict
-from pprint import pprint
+# from pprint import pprint
 import data_loader
 import vocabulary_embeddings_extractor
 from argument_parser import get_options, FILES
 from classes import Data
+from models import get_model
 
 CURRENT_PRED_ACC = 0.0
 
@@ -47,7 +56,7 @@ def detail_model(m, mname, save_weights=False):
     m.summary()
     for layer in m.layers:
         print(layer)
-        pprint(layer.get_config())
+        #pprint(layer.get_config())
     for inpt in m.inputs:
         print(inpt, type(inpt))
     print(m.outputs)
@@ -178,23 +187,14 @@ def __main__():
     dt = o['dt'] = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S-%f')
 
     np.random.seed(o['pre_seed'])
+    tf.set_random_seed(o['pre_seed'])
 
-    from keras import __version__ as kv, backend as K
     print('Keras version:', kv)
     backend = K.backend()
     if backend == 'theano':
-        from theano import __version__ as thv
         print('Theano version:', thv)
     elif backend == 'tensorflow':
-        import tensorflow as tf
-        tf.set_random_seed(o['pre_seed'])
-        from tensorflow import __version__ as tfv
         print('TensorFlow version:', tfv)
-
-    from keras import callbacks
-    from keras.preprocessing import sequence
-    from keras.models import Model
-    from models import get_model
 
     # Creating a Callback subclass that stores each epoch prediction
     class PredictionReport(callbacks.Callback):
@@ -230,8 +230,8 @@ def __main__():
                   .format(self.idx, epoch + 1, logs['loss'], results['val_acc'], results['pred_acc'],
                           # logs['dev_pred'],
                           self.best_epoch['epoch'], self.best_epoch['val_acc'], self.best_epoch['pred_acc']))
-            if o['verbose'] > 1:
-                pprint(results)
+            # if o['verbose'] > 1:
+            #     pprint(results)
             # add report for epoch to reports list
             values = list(results.values())
             self.reports.append("\t".join(map(str, values)))
@@ -255,11 +255,10 @@ def __main__():
         word_to_indices_map2, word_index_to_embeddings_map2, lc2, custom2 = get_embeddings(o['embedding2'],
                                                                                            embeddings_cache_file2,
                                                                                            o['emb_dir'])
-        print('word_to_indices_map2')
-        pprint(word_to_indices_map2)
-        print('word_index_to_embeddings_map2')
-        pprint(word_index_to_embeddings_map2)
-    # quit()
+        # print('word_to_indices_map2')
+        # pprint(word_to_indices_map2)
+        # print('word_index_to_embeddings_map2')
+        # pprint(word_index_to_embeddings_map2)
 
     d = Data()
     # loads data and replaces words with indices from embedding cache
@@ -340,8 +339,7 @@ def __main__():
         results['run'] = run_idx
         run_seed = results['run seed'] = o['pre_seed'] + run_idx
         np.random.seed(run_seed)
-        if backend == 'tensorflow':
-            tf.set_random_seed(run_seed)
+        tf.set_random_seed(run_seed)
 
         global CURRENT_PRED_ACC
         CURRENT_PRED_ACC = 0.0
@@ -464,13 +462,6 @@ def __main__():
                                      run_idx,
                                      cb_epoch_predictions.best_epoch['epoch'],
                                      cb_epoch_predictions.best_epoch['pred_acc']))
-
-
-# 'cheating' metric - not working as expected
-def dev_pred(y_true, y_pred):
-    from keras import backend as K
-    global CURRENT_PRED_ACC
-    return K.cast(CURRENT_PRED_ACC, 'float32')
 
 
 if __name__ == "__main__":
