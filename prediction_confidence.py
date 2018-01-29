@@ -60,8 +60,8 @@ def main():
     # d = '/media/andreas/Linux_Data/hpc-semeval-failed/tensorL05add/out/'
     # d = '/media/andreas/Linux_Data/hpc-semeval-failed/tensorL05add2/out/'
     # d = '/media/andreas/Linux_Data/hpc-semeval-failed/tensorL05con/out/'
-    d = '/media/andreas/Linux_Data/hpc-semeval-failed/tensorL05con2/out/'
-    name = 'tensorL05con2'
+    d = '/media/andreas/Linux_Data/hpc-semeval-failed/tensorL05conX/out/'
+    name = 'tensorL05conX'
     # d = '/media/andreas/Linux_Data/hpc-semeval-failed/theanoL05add/out/'
     # d = './prob/'
 
