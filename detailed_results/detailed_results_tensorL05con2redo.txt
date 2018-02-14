@@ -1,0 +1,316 @@
+/home/andreas/anaconda3/envs/default/bin/python /home/andreas/workspace/semeval/project/results_evaluator.py
+Console output is saving to: /home/andreas/Schreibtisch/detailed-results.txt
+start evaluating
+|                                    |   pred_acc |   val_acc |   epoch | backend    | classifier   |   dimensionality |   padding |   lstm_size | activation1   | activation2   | optimizer   | loss    |   batch_size |   dropout |   vsplit | embedding                                     |   embedding2 |   rich |   runtime | argv                                                                                                                                                                                                                                              |
+|:-----------------------------------|-----------:|----------:|--------:|:-----------|:-------------|-----------------:|----------:|------------:|:--------------|:--------------|:------------|:--------|-------------:|----------:|---------:|:----------------------------------------------|-------------:|-------:|----------:|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ('2018-01-29_12-34-48-613668', 4)  |      0.715 |     0.636 |      10 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   558.038 | ['--emb_dir', '../embeddings/', '--runs', '10', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc']                     |
+| ('2018-02-11_21-30-04-037022', 4)  |      0.703 |     0.674 |       9 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   511.529 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+| ('2018-01-29_12-34-48-613668', 5)  |      0.703 |     0.707 |       9 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   520.207 | ['--emb_dir', '../embeddings/', '--runs', '10', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc']                     |
+| ('2018-01-29_12-34-48-613668', 2)  |      0.693 |     0.661 |      12 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   665.192 | ['--emb_dir', '../embeddings/', '--runs', '10', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc']                     |
+| ('2018-01-29_12-34-46-971255', 4)  |      0.693 |     0.707 |       9 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   524.626 | ['--emb_dir', '../embeddings/', '--runs', '10', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc']                     |
+| ('2018-02-11_21-30-04-037022', 14) |      0.690 |     0.665 |       9 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   627.322 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+| ('2018-01-29_12-34-46-971255', 9)  |      0.687 |     0.686 |      10 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   631.603 | ['--emb_dir', '../embeddings/', '--runs', '10', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc']                     |
+| ('2018-02-11_21-29-36-116601', 4)  |      0.687 |     0.690 |       8 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   456.601 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+| ('2018-01-29_12-34-46-971255', 2)  |      0.684 |     0.645 |      12 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   670.194 | ['--emb_dir', '../embeddings/', '--runs', '10', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc']                     |
+| ('2018-02-11_21-30-04-037022', 3)  |      0.684 |     0.711 |       9 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   504.511 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+| ('2018-01-29_12-34-48-613668', 3)  |      0.680 |     0.702 |       9 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   496.531 | ['--emb_dir', '../embeddings/', '--runs', '10', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc']                     |
+| ('2018-02-11_21-29-36-116601', 9)  |      0.680 |     0.711 |       9 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   559.013 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+| ('2018-02-11_21-29-36-116601', 3)  |      0.680 |     0.711 |       9 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   502.927 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+| ('2018-02-11_21-29-36-116601', 17) |      0.677 |     0.669 |       9 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   637.598 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+| ('2018-02-11_21-29-36-116601', 14) |      0.677 |     0.636 |       9 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   612.860 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+| ('2018-02-11_21-30-04-037022', 5)  |      0.677 |     0.674 |       8 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   468.713 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+| ('2018-02-11_21-29-36-116601', 2)  |      0.677 |     0.682 |      15 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   810.546 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+| ('2018-02-11_21-30-04-037022', 2)  |      0.674 |     0.657 |      12 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   654.370 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+| ('2018-02-11_21-29-36-116601', 13) |      0.674 |     0.661 |       9 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   611.512 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+| ('2018-02-11_21-30-04-037022', 11) |      0.674 |     0.678 |       9 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   581.363 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+| ('2018-01-29_12-34-48-613668', 10) |      0.674 |     0.645 |      13 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   799.919 | ['--emb_dir', '../embeddings/', '--runs', '10', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc']                     |
+| ('2018-02-11_21-29-36-116601', 1)  |      0.674 |     0.669 |       8 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   435.934 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+| ('2018-02-11_21-29-36-116601', 8)  |      0.674 |     0.686 |      18 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |  1021.875 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+| ('2018-01-29_12-34-46-971255', 1)  |      0.671 |     0.665 |       8 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   448.228 | ['--emb_dir', '../embeddings/', '--runs', '10', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc']                     |
+| ('2018-01-29_12-34-48-613668', 8)  |      0.671 |     0.674 |      10 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   606.575 | ['--emb_dir', '../embeddings/', '--runs', '10', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc']                     |
+| ('2018-01-29_12-34-46-971255', 3)  |      0.671 |     0.690 |       8 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   461.041 | ['--emb_dir', '../embeddings/', '--runs', '10', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc']                     |
+| ('2018-01-29_12-34-48-613668', 1)  |      0.671 |     0.669 |       8 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   450.987 | ['--emb_dir', '../embeddings/', '--runs', '10', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc']                     |
+| ('2018-02-11_21-30-04-037022', 8)  |      0.668 |     0.645 |      12 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   707.293 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+| ('2018-02-11_21-29-36-116601', 5)  |      0.665 |     0.694 |       4 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   255.864 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+| ('2018-01-29_12-34-46-971255', 8)  |      0.665 |     0.682 |       5 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   341.112 | ['--emb_dir', '../embeddings/', '--runs', '10', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc']                     |
+| ('2018-02-11_21-30-04-037022', 15) |      0.665 |     0.661 |      10 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   685.908 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+| ('2018-01-29_12-34-48-613668', 9)  |      0.665 |     0.657 |       9 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   566.506 | ['--emb_dir', '../embeddings/', '--runs', '10', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc']                     |
+| ('2018-01-29_12-34-46-971255', 5)  |      0.665 |     0.674 |       8 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   478.286 | ['--emb_dir', '../embeddings/', '--runs', '10', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc']                     |
+| ('2018-02-11_21-29-36-116601', 12) |      0.665 |     0.682 |       9 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   588.418 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+| ('2018-02-11_21-29-36-116601', 16) |      0.665 |     0.669 |       8 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   571.775 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+| ('2018-02-11_21-30-04-037022', 9)  |      0.661 |     0.711 |       7 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   452.996 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+| ('2018-01-29_12-34-48-613668', 6)  |      0.661 |     0.707 |       6 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   371.819 | ['--emb_dir', '../embeddings/', '--runs', '10', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc']                     |
+| ('2018-01-29_12-34-46-971255', 6)  |      0.658 |     0.694 |       6 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   380.406 | ['--emb_dir', '../embeddings/', '--runs', '10', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc']                     |
+| ('2018-02-11_21-30-04-037022', 17) |      0.658 |     0.674 |       9 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   634.136 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+| ('2018-02-11_21-29-36-116601', 11) |      0.658 |     0.690 |       8 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   536.830 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+| ('2018-02-11_21-29-36-116601', 6)  |      0.655 |     0.698 |       6 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   367.528 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+| ('2018-02-11_21-30-04-037022', 6)  |      0.655 |     0.690 |       6 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   372.930 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+| ('2018-02-11_21-30-04-037022', 10) |      0.655 |     0.686 |       8 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   515.888 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+| ('2018-02-11_21-29-36-116601', 10) |      0.655 |     0.669 |      13 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   782.304 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+| ('2018-01-29_12-34-46-971255', 10) |      0.655 |     0.678 |       7 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   469.777 | ['--emb_dir', '../embeddings/', '--runs', '10', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc']                     |
+| ('2018-02-11_21-29-36-116601', 15) |      0.649 |     0.702 |       6 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   464.203 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+| ('2018-02-11_21-30-04-037022', 12) |      0.649 |     0.682 |       4 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   317.945 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+| ('2018-02-11_21-30-04-037022', 7)  |      0.646 |     0.661 |      10 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   585.355 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+| ('2018-02-11_21-30-04-037022', 13) |      0.642 |     0.665 |      13 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   824.773 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+| ('2018-02-11_21-30-04-037022', 1)  |      0.639 |     0.674 |       7 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   383.881 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+| ('2018-01-29_12-34-46-971255', 7)  |      0.639 |     0.694 |       7 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   448.462 | ['--emb_dir', '../embeddings/', '--runs', '10', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc']                     |
+| ('2018-01-29_12-34-48-613668', 7)  |      0.639 |     0.694 |       7 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   433.128 | ['--emb_dir', '../embeddings/', '--runs', '10', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc']                     |
+| ('2018-02-11_21-29-36-116601', 7)  |      0.639 |     0.694 |       7 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   434.914 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+| ('2018-02-11_21-29-36-116601', 18) |      0.636 |     0.707 |       6 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   488.889 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+| ('2018-02-11_21-30-04-037022', 16) |      0.636 |     0.661 |       9 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   645.312 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+
+| timestamp                  |   pred_acc |   val_acc |   epoch |   dimensionality |   padding |   lstm_size |   batch_size |   dropout |   vsplit |   embedding2 |   rich |   runtime |
+|:---------------------------|-----------:|----------:|--------:|-----------------:|----------:|------------:|-------------:|----------:|---------:|-------------:|-------:|----------:|
+| 2018-01-29_12-34-48-613668 |      0.677 |     0.675 |   9.300 |          300.000 |   150.000 |      96.000 |       32.000 |     0.900 |    0.100 |          nan |  3.000 |   546.890 |
+| 2018-01-29_12-34-46-971255 |      0.669 |     0.681 |   8.000 |          300.000 |   150.000 |      96.000 |       32.000 |     0.900 |    0.100 |          nan |  3.000 |   485.373 |
+| 2018-02-11_21-29-36-116601 |      0.666 |     0.685 |   8.944 |          300.000 |   150.000 |      96.000 |       32.000 |     0.900 |    0.100 |          nan |  3.000 |   563.311 |
+| 2018-02-11_21-30-04-037022 |      0.663 |     0.675 |   8.882 |          300.000 |   150.000 |      96.000 |       32.000 |     0.900 |    0.100 |          nan |  3.000 |   557.307 |
+
+********************************************************************************************************
+AGGREGATIONS FOR KEYED GROUP: ['epoch']
+
+on data set:  full data set
+row of maximum for pred_acc per group:
+|   epoch |   pred_acc |   val_acc | backend    | classifier   |   dimensionality |   padding |   lstm_size | activation1   | activation2   | optimizer   | loss    |   batch_size |   dropout |   vsplit | embedding                                     |   embedding2 |   rich |   runtime | argv                                                                                                                                                                                                                                              |
+|--------:|-----------:|----------:|:-----------|:-------------|-----------------:|----------:|------------:|:--------------|:--------------|:------------|:--------|-------------:|----------:|---------:|:----------------------------------------------|-------------:|-------:|----------:|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|      10 |      0.715 |     0.636 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   558.038 | ['--emb_dir', '../embeddings/', '--runs', '10', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc']                     |
+|       9 |      0.703 |     0.707 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   520.207 | ['--emb_dir', '../embeddings/', '--runs', '10', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc']                     |
+|      12 |      0.693 |     0.661 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   665.192 | ['--emb_dir', '../embeddings/', '--runs', '10', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc']                     |
+|       8 |      0.687 |     0.690 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   456.601 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+|      15 |      0.677 |     0.682 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   810.546 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+|      13 |      0.674 |     0.645 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   799.919 | ['--emb_dir', '../embeddings/', '--runs', '10', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc']                     |
+|      18 |      0.674 |     0.686 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |  1021.875 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+|       4 |      0.665 |     0.694 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   255.864 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+|       5 |      0.665 |     0.682 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   341.112 | ['--emb_dir', '../embeddings/', '--runs', '10', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc']                     |
+|       6 |      0.661 |     0.707 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   371.819 | ['--emb_dir', '../embeddings/', '--runs', '10', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc']                     |
+|       7 |      0.661 |     0.711 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   452.996 | ['--emb_dir', '../embeddings/', '--runs', '20', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc', '--threshold', '0'] |
+
+mean of all columns - sorted by pred_acc:
+|   epoch |   pred_acc |
+|--------:|-----------:|
+|      12 |      0.680 |
+|       9 |      0.677 |
+|      15 |      0.677 |
+|      10 |      0.677 |
+|      18 |      0.674 |
+|       8 |      0.669 |
+|       5 |      0.665 |
+|      13 |      0.657 |
+|       4 |      0.657 |
+|       6 |      0.652 |
+|       7 |      0.646 |
+
+********************************************************************************************************
+********************************************************************************************************
+AGGREGATIONS FOR KEYED GROUP: ['backend']
+
+on data set:  full data set
+row of maximum for pred_acc per group:
+| backend    |   pred_acc |   val_acc |   epoch | classifier   |   dimensionality |   padding |   lstm_size | activation1   | activation2   | optimizer   | loss    |   batch_size |   dropout |   vsplit | embedding                                     |   embedding2 |   rich |   runtime | argv                                                                                                                                                                                                                          |
+|:-----------|-----------:|----------:|--------:|:-------------|-----------------:|----------:|------------:|:--------------|:--------------|:------------|:--------|-------------:|----------:|---------:|:----------------------------------------------|-------------:|-------:|----------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| tensorflow |      0.715 |     0.636 |      10 | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   558.038 | ['--emb_dir', '../embeddings/', '--runs', '10', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc'] |
+
+mean of all columns - sorted by pred_acc:
+| backend    |   pred_acc |
+|:-----------|-----------:|
+| tensorflow |      0.668 |
+
+********************************************************************************************************
+********************************************************************************************************
+AGGREGATIONS FOR KEYED GROUP: ['classifier']
+
+on data set:  full data set
+filter: ['classifier']
+row of maximum for pred_acc per group:
+| classifier   |   pred_acc |   val_acc |   epoch | backend    |   dimensionality |   padding |   lstm_size | activation1   | activation2   | optimizer   | loss    |   batch_size |   dropout |   vsplit | embedding                                     |   embedding2 |   rich |   runtime | argv                                                                                                                                                                                                                          |
+|:-------------|-----------:|----------:|--------:|:-----------|-----------------:|----------:|------------:|:--------------|:--------------|:------------|:--------|-------------:|----------:|---------:|:----------------------------------------------|-------------:|-------:|----------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| LSTM_05conc  |      0.715 |     0.636 |      10 | tensorflow |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   558.038 | ['--emb_dir', '../embeddings/', '--runs', '10', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc'] |
+
+mean of all columns - sorted by pred_acc:
+| classifier   |   pred_acc |
+|:-------------|-----------:|
+| LSTM_05conc  |      0.668 |
+
+********************************************************************************************************
+********************************************************************************************************
+AGGREGATIONS FOR KEYED GROUP: ['padding']
+
+on data set:  full data set
+filter: ['padding']
+row of maximum for pred_acc per group:
+|   padding |   pred_acc |   val_acc |   epoch | backend    | classifier   |   dimensionality |   lstm_size | activation1   | activation2   | optimizer   | loss    |   batch_size |   dropout |   vsplit | embedding                                     |   embedding2 |   rich |   runtime | argv                                                                                                                                                                                                                          |
+|----------:|-----------:|----------:|--------:|:-----------|:-------------|-----------------:|------------:|:--------------|:--------------|:------------|:--------|-------------:|----------:|---------:|:----------------------------------------------|-------------:|-------:|----------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|       150 |      0.715 |     0.636 |      10 | tensorflow | LSTM_05conc  |              300 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   558.038 | ['--emb_dir', '../embeddings/', '--runs', '10', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc'] |
+
+mean of all columns - sorted by pred_acc:
+|   padding |   pred_acc |
+|----------:|-----------:|
+|       150 |      0.668 |
+
+********************************************************************************************************
+********************************************************************************************************
+AGGREGATIONS FOR KEYED GROUP: ['lstm_size']
+
+on data set:  full data set
+filter: ['lstm_size']
+row of maximum for pred_acc per group:
+|   lstm_size |   pred_acc |   val_acc |   epoch | backend    | classifier   |   dimensionality |   padding | activation1   | activation2   | optimizer   | loss    |   batch_size |   dropout |   vsplit | embedding                                     |   embedding2 |   rich |   runtime | argv                                                                                                                                                                                                                          |
+|------------:|-----------:|----------:|--------:|:-----------|:-------------|-----------------:|----------:|:--------------|:--------------|:------------|:--------|-------------:|----------:|---------:|:----------------------------------------------|-------------:|-------:|----------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|          96 |      0.715 |     0.636 |      10 | tensorflow | LSTM_05conc  |              300 |       150 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   558.038 | ['--emb_dir', '../embeddings/', '--runs', '10', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc'] |
+
+mean of all columns - sorted by pred_acc:
+|   lstm_size |   pred_acc |
+|------------:|-----------:|
+|          96 |      0.668 |
+
+********************************************************************************************************
+********************************************************************************************************
+AGGREGATIONS FOR KEYED GROUP: ['activation1']
+
+on data set:  full data set
+filter: ['activation1']
+row of maximum for pred_acc per group:
+| activation1   |   pred_acc |   val_acc |   epoch | backend    | classifier   |   dimensionality |   padding |   lstm_size | activation2   | optimizer   | loss    |   batch_size |   dropout |   vsplit | embedding                                     |   embedding2 |   rich |   runtime | argv                                                                                                                                                                                                                          |
+|:--------------|-----------:|----------:|--------:|:-----------|:-------------|-----------------:|----------:|------------:|:--------------|:------------|:--------|-------------:|----------:|---------:|:----------------------------------------------|-------------:|-------:|----------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| softplus      |      0.715 |     0.636 |      10 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   558.038 | ['--emb_dir', '../embeddings/', '--runs', '10', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc'] |
+
+mean of all columns - sorted by pred_acc:
+| activation1   |   pred_acc |
+|:--------------|-----------:|
+| softplus      |      0.668 |
+
+********************************************************************************************************
+********************************************************************************************************
+AGGREGATIONS FOR KEYED GROUP: ['activation2']
+
+on data set:  full data set
+filter: ['activation2']
+row of maximum for pred_acc per group:
+| activation2   | pred_acc   | val_acc   | epoch   | backend   | classifier   | dimensionality   | padding   | lstm_size   | activation1   | optimizer   | loss   | batch_size   | dropout   | vsplit   | embedding   | embedding2   | rich   | runtime   | argv   |
+||
+
+mean of all columns - sorted by pred_acc:
+| activation2   | pred_acc   |
+||
+
+********************************************************************************************************
+********************************************************************************************************
+AGGREGATIONS FOR KEYED GROUP: ['optimizer']
+
+on data set:  full data set
+filter: ['optimizer']
+row of maximum for pred_acc per group:
+| optimizer   |   pred_acc |   val_acc |   epoch | backend    | classifier   |   dimensionality |   padding |   lstm_size | activation1   | activation2   | loss    |   batch_size |   dropout |   vsplit | embedding                                     |   embedding2 |   rich |   runtime | argv                                                                                                                                                                                                                          |
+|:------------|-----------:|----------:|--------:|:-----------|:-------------|-----------------:|----------:|------------:|:--------------|:--------------|:--------|-------------:|----------:|---------:|:----------------------------------------------|-------------:|-------:|----------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| adam        |      0.715 |     0.636 |      10 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | logcosh |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   558.038 | ['--emb_dir', '../embeddings/', '--runs', '10', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc'] |
+
+mean of all columns - sorted by pred_acc:
+| optimizer   |   pred_acc |
+|:------------|-----------:|
+| adam        |      0.668 |
+
+********************************************************************************************************
+********************************************************************************************************
+AGGREGATIONS FOR KEYED GROUP: ['loss']
+
+on data set:  full data set
+filter: ['loss']
+row of maximum for pred_acc per group:
+| loss    |   pred_acc |   val_acc |   epoch | backend    | classifier   |   dimensionality |   padding |   lstm_size | activation1   | activation2   | optimizer   |   batch_size |   dropout |   vsplit | embedding                                     |   embedding2 |   rich |   runtime | argv                                                                                                                                                                                                                          |
+|:--------|-----------:|----------:|--------:|:-----------|:-------------|-----------------:|----------:|------------:|:--------------|:--------------|:------------|-------------:|----------:|---------:|:----------------------------------------------|-------------:|-------:|----------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| logcosh |      0.715 |     0.636 |      10 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        |           32 |     0.900 |    0.100 | custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |          nan |      3 |   558.038 | ['--emb_dir', '../embeddings/', '--runs', '10', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc'] |
+
+mean of all columns - sorted by pred_acc:
+| loss    |   pred_acc |
+|:--------|-----------:|
+| logcosh |      0.668 |
+
+********************************************************************************************************
+********************************************************************************************************
+AGGREGATIONS FOR KEYED GROUP: ['batch_size']
+
+on data set:  full data set
+filter: ['batch_size']
+row of maximum for pred_acc per group:
+| batch_size   | pred_acc   | val_acc   | epoch   | backend   | classifier   | dimensionality   | padding   | lstm_size   | activation1   | activation2   | optimizer   | loss   | dropout   | vsplit   | embedding   | embedding2   | rich   | runtime   | argv   |
+||
+
+mean of all columns - sorted by pred_acc:
+| batch_size   | pred_acc   |
+||
+
+********************************************************************************************************
+********************************************************************************************************
+AGGREGATIONS FOR KEYED GROUP: ['dropout']
+
+on data set:  full data set
+filter: ['dropout']
+row of maximum for pred_acc per group:
+| dropout   | pred_acc   | val_acc   | epoch   | backend   | classifier   | dimensionality   | padding   | lstm_size   | activation1   | activation2   | optimizer   | loss   | batch_size   | vsplit   | embedding   | embedding2   | rich   | runtime   | argv   |
+||
+
+mean of all columns - sorted by pred_acc:
+| dropout   | pred_acc   |
+||
+
+********************************************************************************************************
+********************************************************************************************************
+AGGREGATIONS FOR KEYED GROUP: ['vsplit']
+
+on data set:  full data set
+filter: ['vsplit']
+row of maximum for pred_acc per group:
+| vsplit   | pred_acc   | val_acc   | epoch   | backend   | classifier   | dimensionality   | padding   | lstm_size   | activation1   | activation2   | optimizer   | loss   | batch_size   | dropout   | embedding   | embedding2   | rich   | runtime   | argv   |
+||
+
+mean of all columns - sorted by pred_acc:
+| vsplit   | pred_acc   |
+||
+
+********************************************************************************************************
+********************************************************************************************************
+AGGREGATIONS FOR KEYED GROUP: ['embedding']
+
+on data set:  full data set
+filter: ['embedding']
+row of maximum for pred_acc per group:
+| embedding                                     |   pred_acc |   val_acc |   epoch | backend    | classifier   |   dimensionality |   padding |   lstm_size | activation1   | activation2   | optimizer   | loss    |   batch_size |   dropout |   vsplit |   embedding2 |   rich |   runtime | argv                                                                                                                                                                                                                          |
+|:----------------------------------------------|-----------:|----------:|--------:|:-----------|:-------------|-----------------:|----------:|------------:|:--------------|:--------------|:------------|:--------|-------------:|----------:|---------:|-------------:|-------:|----------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |      0.715 |     0.636 |      10 | tensorflow | LSTM_05conc  |              300 |       150 |          96 | softplus      | sigmoid       | adam        | logcosh |           32 |     0.900 |    0.100 |          nan |      3 |   558.038 | ['--emb_dir', '../embeddings/', '--runs', '10', '--classifier', 'LSTM_05conc', '--lstm_size', '96', '--padding', '150', '--activation1', 'softplus', '--optimizer', 'adam', '--loss', 'logcosh', '--embedding', 'ce_wiki_lc'] |
+
+mean of all columns - sorted by pred_acc:
+| embedding                                     |   pred_acc |
+|:----------------------------------------------|-----------:|
+| custom_embedding_w2v_hs_iter05_sg_300_lc_wiki |      0.668 |
+
+********************************************************************************************************
+********************************************************************************************************
+AGGREGATIONS FOR KEYED GROUP: ['embedding2']
+
+on data set:  full data set
+filter: ['embedding2']
+row of maximum for pred_acc per group:
+| embedding2   | pred_acc   | val_acc   | epoch   | backend   | classifier   | dimensionality   | padding   | lstm_size   | activation1   | activation2   | optimizer   | loss   | batch_size   | dropout   | vsplit   | embedding   | rich   | runtime   | argv   |
+||
+
+mean of all columns - sorted by pred_acc:
+| embedding2   | pred_acc   |
+||
+
+********************************************************************************************************
+********************************************************************************************************
+AGGREGATIONS FOR KEYED GROUP: ['rich']
+
+on data set:  full data set
+filter: ['rich']
+row of maximum for pred_acc per group:
+| rich   | pred_acc   | val_acc   | epoch   | backend   | classifier   | dimensionality   | padding   | lstm_size   | activation1   | activation2   | optimizer   | loss   | batch_size   | dropout   | vsplit   | embedding   | embedding2   | runtime   | argv   |
+||
+
+mean of all columns - sorted by pred_acc:
+| rich   | pred_acc   |
+||
+
+********************************************************************************************************
+
+Process finished with exit code 0

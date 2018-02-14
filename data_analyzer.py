@@ -1,16 +1,11 @@
-from pprint import pprint
-
 import gensim.models.word2vec as wv
 import gensim.models.fasttext as ftx
 import pandas as pd
 import spacy
 from time import time
 from results_evaluator import tprint
+from constants import FILES
 
-FILES = dict(dev='./data/dev/dev-full.txt',
-             test='./data/test/test-only-data.txt',
-             train='./data/train/train-full.txt',
-             train_swap='./data/train/train-w-swap-full.txt')
 SPACY = spacy.load('en')
 
 
@@ -34,19 +29,6 @@ def get_data(file, pad=False, lowercase=False):
 
     if pad:
         print('pad data')
-        # warrant0_max_len = df['warrant0'].map(len).max()
-        # warrant1_max_len = df['warrant1'].map(len).max()
-        # reason_max_len = df['reason'].map(len).max()
-        # claim_max_len = df['claim'].map(len).max()
-        # debate_title_max_len = df['debateTitle'].map(len).max()
-        # debate_info_max_len = df['debateInfo'].map(len).max()
-        # print('warrant0 max_len:', warrant0_max_len)  # 35 -> 36
-        # print('warrant1 max_len:', warrant1_max_len)  # 36
-        # print('reason max_len:', reason_max_len)  # 54
-        # print('claim max_len:', claim_max_len)  # 15
-        # print('debateTitle max_len:', debate_title_max_len)  # 12
-        # print('debateInfo max_len:', debate_info_max_len)  # 32
-
         df['warrant0'] = df['warrant0'].apply(lambda x: x + ['.$.'] * (36 - len(x)))
         df['warrant1'] = df['warrant1'].apply(lambda x: x + ['.$.'] * (36 - len(x)))
         df['reason'] = df['reason'].apply(lambda x: x + ['.$.'] * (54 - len(x)))

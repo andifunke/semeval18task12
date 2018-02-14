@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class Data:
     """ this has become a bit redundant, but anyway... """
     def __init__(self):

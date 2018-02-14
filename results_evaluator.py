@@ -352,4 +352,4 @@ def reports_evaluator_main(directory=None):
 
 
 if __name__ == '__main__':
-    reports_evaluator_main('/media/andreas/Linux_Data/hpc-semeval-failed/tensorX/out/')
+    reports_evaluator_main('/media/andreas/Linux_Data/hpc-semeval/tensorL05con2redo/out/')

@@ -1,108 +1,18 @@
 """ parsing arguments and setting default values """
 import os
 import argparse
-
-
-FILES = dict(
-    dev='data/dev-full_challenge.tsv',
-    # dev='data/dev/dev-full.txt',
-    test='data/test/test-only-data.txt',
-    train='data/train/train-full.txt',
-    train_swap='data/train-w-swap-full_challenge.tsv',
-    # train_swap='data/train/train-w-swap-full.txt',
-)
-
-SHORTCUTS = {
-    'LSTM_00',
-    'LSTM_02', 'LSTM_02a', 'LSTM_02b', 'LSTM_02c', 'LSTM_02d',
-    'LSTM_03',
-    'LSTM_04',
-    'LSTM_05', 'LSTM_05add', 'LSTM_05conc', 'LSTM_05avg', 'LSTM_05max', 'LSTM_05dot',
-    'LSTM_15', 'LSTM_15add', 'LSTM_15conc', 'LSTM_15avg', 'LSTM_15max', 'LSTM_15dot',
-    'LSTM_06',
-    'LSTM_CNN_07add', 'LSTM_CNN_07mul', 'LSTM_CNN_07con', 'LSTM_CNN_07avg', 'LSTM_CNN_07max',
-    'LSTM_08',
-    'ATT_LSTM_02',
-    'ATT_LSTM_03', 'ATT_LSTM_03a', 'ATT_LSTM_03a2',
-    'ATT_LSTM_03b', 'ATT_LSTM_03b3', 'ATT_LSTM_03c', 'ATT_LSTM_03d', 'ATT_LSTM_03e',
-    'ATT_LSTM_04',
-    'CNN_01', 'CNN_02', 'CNN_03',
-    'CNN_LSTM_02', 'CNN_LSTM_02b', 'CNN_LSTM_03', 'CNN_LSTM_04', 'CNN_LSTM_05',
-    # vintage classifier:
-    'LSTM_01',
-    'ATT_LSTM_01',
-    'CNN_LSTM_01',
-}
-
-
-def get_shortcuts():
-    return SHORTCUTS
+from constants import *
 
 
 def get_options():
-    emb_files = dict(
-        w2v="embeddings_cache_file_word2vec.pkl.bz2",
-        d2v="embeddings_cache_file_dict2vec.pkl.bz2",
-        d2v_pf="embeddings_cache_file_dict2vec_prov_freq.pkl.bz2",
-        d2v_pf_lc="embeddings_cache_file_dict2vec_prov_freq_lc.pkl.bz2",
-        d2v_pf_lc2="embeddings_cache_file_dict2vec_prov_freq_lc2.pkl.bz2",
-        ftx="embeddings_cache_file_fastText.pkl.bz2",
-        ftx_pf="embeddings_cache_file_fastText_prov_freq.pkl.bz2",
-        ftx_pf_lc="embeddings_cache_file_fastText_prov_freq_lc.pkl.bz2",
-        ftx_pf_lc2="embeddings_cache_file_fastText_prov_freq_lc2.pkl.bz2",
-        ce_cb_100="custom_embedding_cb_100.vec",
-        ce_cb_100_lc="custom_embedding_cb_100_lc.vec",
-        ce_cb_300="custom_embedding_cb_300.vec",
-        ce_cb_300_lc="custom_embedding_cb_300_lc.vec",
-        ce_sg_100="custom_embedding_sg_100.vec",
-        ce_sg_100_lc="custom_embedding_sg_100_lc.vec",
-        ce_sg_300="custom_embedding_sg_300.vec",
-        ce_sg_300_lc="custom_embedding_sg_300_lc.vec",
-        ce_cb_hs_100="custom_embedding_hs_cb_100.vec",
-        ce_cb_hs_100_lc="custom_embedding_hs_cb_100_lc.vec",
-        ce_cb_hs_300="custom_embedding_hs_cb_300.vec",
-        ce_cb_hs_300_lc="custom_embedding_hs_cb_300_lc.vec",
-        ce_sg_hs_100="custom_embedding_hs_sg_100.vec",
-        ce_sg_hs_100_lc="custom_embedding_hs_sg_100_lc.vec",
-        ce_sg_hs_300="custom_embedding_hs_sg_300.vec",
-        ce_sg_hs_300_lc="custom_embedding_hs_sg_300_lc.vec",
-        ce_cb_i20_100="custom_embedding_iter20_cb_100.vec",
-        ce_cb_i20_100_lc="custom_embedding_iter20_cb_100_lc.vec",
-        ce_cb_i20_300="custom_embedding_iter20_cb_300.vec",
-        ce_cb_i20_300_lc="custom_embedding_iter20_cb_300_lc.vec",
-        ce_sg_i20_100="custom_embedding_iter20_sg_100.vec",
-        ce_sg_i20_100_lc="custom_embedding_iter20_sg_100_lc.vec",
-        ce_sg_i20_300="custom_embedding_iter20_sg_300.vec",
-        ce_sg_i20_300_lc="custom_embedding_iter20_sg_300_lc.vec",
-        ce_cb_hs_i25_100="custom_embedding_hs_iter25_cb_100.vec",
-        ce_cb_hs_i25_100_lc="custom_embedding_hs_iter25_cb_100_lc.vec",
-        ce_cb_hs_i25_300="custom_embedding_hs_iter25_cb_300.vec",
-        ce_cb_hs_i25_300_lc="custom_embedding_hs_iter25_cb_300_lc.vec",
-        ce_sg_hs_i25_100="custom_embedding_hs_iter25_sg_100.vec",
-        ce_sg_hs_i25_100_lc="custom_embedding_hs_iter25_sg_100_lc.vec",
-        ce_sg_hs_i25_300="custom_embedding_hs_iter25_sg_300.vec",
-        ce_sg_hs_i25_300_lc="custom_embedding_hs_iter25_sg_300_lc.vec",
-        ce_ftx_cb_hs_i20_100="custom_embedding_ftx_hs_iter20_cb_100.vec",
-        ce_ftx_cb_hs_i20_100_lc="custom_embedding_ftx_hs_iter20_cb_100_lc.vec",
-        ce_ftx_cb_hs_i20_300="custom_embedding_ftx_hs_iter20_cb_300.vec",
-        ce_ftx_cb_hs_i20_300_lc="custom_embedding_ftx_hs_iter20_cb_300_lc.vec",
-        ce_ftx_sg_hs_i20_100="custom_embedding_ftx_hs_iter20_sg_100.vec",
-        ce_ftx_sg_hs_i20_100_lc="custom_embedding_ftx_hs_iter20_sg_100_lc.vec",
-        ce_ftx_sg_hs_i20_300="custom_embedding_ftx_hs_iter20_sg_300.vec",
-        ce_ftx_sg_hs_i20_300_lc="custom_embedding_ftx_hs_iter20_sg_300_lc.vec",
-        ce_wiki_lc="custom_embedding_w2v_hs_iter05_sg_300_lc_wiki.vec",
-        ce_wiki_i20_100_lc="custom_embedding_w2v_hs_iter20_sg_100_lc_wiki.vec",
-        ce_wiki_i20_300_lc="custom_embedding_w2v_hs_iter20_sg_300_lc_wiki.vec",
-    )
+    emb_files_list = list(EMB_FILES.keys()) + list(EMB_FILES.values())
 
     parser = argparse.ArgumentParser(description='semeval 18 task 12 - training project')
 
     parser.add_argument('--verbose', default=1, type=int,
                         choices=[0, 1],
                         help='project verbosity should be set to 0 for deployment on cluster')
-    parser.add_argument('--classifier', default='LSTM_01', type=str,
-                        choices=get_shortcuts()
-                        )
+    parser.add_argument('--classifier', default='LSTM_01', type=str)
     parser.add_argument('--lstm_size', default=64, type=int,
                         help='size of the lstm hidden layer')
     parser.add_argument('--dense_factor', default=1.0, type=float,
@@ -124,11 +34,9 @@ def get_options():
     parser.add_argument('--runs', default=3, type=int,
                         help='number of runs (starting with index of run)')
     parser.add_argument('--embedding', default='w2v', type=str,
-                        choices=emb_files.keys(),
-                        help='specify first embedding')
+                        choices=emb_files_list, help='specify first embedding')
     parser.add_argument('--embedding2', default='', type=str,
-                        choices=emb_files.keys(),
-                        help='a second embedding is used when specified')
+                        choices=emb_files_list, help='a second embedding is used when specified')
     parser.add_argument('--optimizer', default='adam', type=str,
                         choices=['sgd', 'rmsprop', 'adagrad', 'adadelta', 'adam', 'adamax', 'nadam', 'tfoptimizer'],
                         help='specify optimizer function')
@@ -139,15 +47,12 @@ def get_options():
                                  'categorical_crossentropy', 'sparse_categorical_crossentropy',
                                  'kullback_leibler_divergence', 'poisson, cosine_proximity'],
                         help='specify loss function')
-
     activations = ['relu', 'softmax', 'elu', 'selu', 'softplus', 'softsign', 'tanh', 'sigmoid',
                    'sigmoid', 'linear', 'leakyrelu', 'prelu', 'elu', 'thresholdedrelu']
     parser.add_argument('--activation1', default='relu', type=str,
-                        choices=activations,
-                        help='specify activation function for inner layers')
+                        choices=activations, help='specify activation function for inner layers')
     parser.add_argument('--activation2', default='sigmoid', type=str,
-                        choices=activations,
-                        help='sepcify activation function for output layer')
+                        choices=activations, help='sepcify activation function for output layer')
     parser.add_argument('--vsplit', default=0.1, type=float,
                         help='fraction used for cross validation. should be float(x) with 0 < x < 1. unchecked')
     parser.add_argument('--rich', default=3, type=int,
@@ -156,7 +61,7 @@ def get_options():
                         help='specify code path on cluster. default is project dir.')
     parser.add_argument('--save_path', default=os.getcwd()+'/', type=str,
                         help='specify save path on cluster. default is project dir.')
-    parser.add_argument('--emb_dir', default='embedding_caches/', type=str,
+    parser.add_argument('--emb_dir', default='embeddings/', type=str,
                         help='usually leave as is ')
     parser.add_argument('--out_path', default='out/', type=str,
                         help='usually leave as is')
@@ -178,22 +83,13 @@ def get_options():
         options['padding'] = None
     if options['system'] == 'hpc':
         options['emb_dir'] = '../embeddings/'
-        options['spacy'] = '/home/funkea/.local/lib/python3.4/site-packages/en_core_web_sm/en_core_web_sm-1.2.0/'
+        options['spacy'] = '~/.local/lib/python3.4/site-packages/en_core_web_sm/en_core_web_sm-1.2.0/'
         options['runs'] = 10
         options['epochs'] = 20
         options['threshold'] = 0.68
-    # print(options)
+    if options['embedding'] in EMB_FILES.keys():
+        options['embedding'] = EMB_FILES[options['embedding']]
+    if options['embedding2'] in EMB_FILES.keys():
+        options['embedding2'] = EMB_FILES[options['embedding2']]
 
-    # TODO:
-    # validation_data = dev (or dedicated batch)
-    # shuffle = False
-    # model
-    # train with or without swap
-    # full embeddings
-    # combined embeddings (2x no_of_channels or 2x dimensionality)
-    # reduced number of channels
-    # spelling / pre-processing
-    # set trainable=False on embedding (Input?) layers - may not make sense
-    # stateful RNNs - probably doesn't make sense either
-
-    return options, emb_files
+    return options

@@ -27,6 +27,7 @@ def string_to_indices(string: str, word_to_indices_map_param: dict, nb_words: in
     :param lc: use lowercase on all tokens
     :return: a list of indices
     """
+    # print(string)
     work_string = string.strip('\n')
     if lc:
         work_string = work_string.lower()
@@ -74,12 +75,12 @@ def load_single_instance_from_line(line: str, word_to_indices_map: dict, nb_word
         correct_label_w0_or_w1 = int(split_line[i3])
 
     instance_id = split_line[i0]
-    warrant0 = string_to_indices(split_line[i1], word_to_indices_map, nb_words, lc=lc, custom=custom)
-    warrant1 = string_to_indices(split_line[i2], word_to_indices_map, nb_words, lc=lc, custom=custom)
-    reason = string_to_indices(split_line[i4], word_to_indices_map, nb_words, lc=lc, custom=custom)
-    claim = string_to_indices(split_line[i5], word_to_indices_map, nb_words, lc=lc, custom=custom)
-    debate_title = string_to_indices(split_line[i6], word_to_indices_map, nb_words, lc=lc, custom=custom)
-    debate_info = string_to_indices(split_line[i7], word_to_indices_map, nb_words, lc=lc, custom=custom)
+    warrant0 = split_line[i1]
+    warrant1 = split_line[i2]
+    reason = split_line[i4]
+    claim = split_line[i5]
+    debate_title = split_line[i6]
+    debate_info = split_line[i7]
     # concatenate these two into one vector
     debate_meta_data = debate_title + debate_info
 

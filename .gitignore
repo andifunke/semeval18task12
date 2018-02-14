@@ -203,6 +203,7 @@ hpc/
 checkpoints/
 figures/
 embedding_caches/
+embeddings/
 results/
 attention_lstm_dir/
 data/
