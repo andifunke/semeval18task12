@@ -22,9 +22,11 @@ FILES = dict(
 )
 FILES = dict(
     dev='./data/dev/dev-full.txt',
+    dev_true='./data/dev/dev-only-labels.txt',
     test='./data/test/test-only-data.txt',
+    test_true='./data/gold/truth.txt',
     train='./data/train/train-full.txt',
-    train_swap='./data/train/train-w-swap-full.txt'
+    train_swap='./data/train/train-w-swap-full.txt',
 )
 
 EMB_FILES = dict(

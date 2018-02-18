@@ -12,7 +12,7 @@ from matplotlib.colors import Normalize
 
 # making stuff more human readable
 AXES = {
-    'pred_acc': "Prediction Accuracy",
+    'dev_acc': "Dev Accuracy",
 }
 LABELS = {
     'cb': "CBOW",
@@ -36,13 +36,14 @@ COLORS = ('red', 'green', 'blue', 'yellow', 'orange', 'violet')
 MARKERS = ('o', '^', 's', 'p')
 
 # paths
-SUB_DIR = 'tensorL05add/'
+SUB_DIR = 'tensorL05con2redo2/'
 DAT_DIR = './results/' + SUB_DIR
 FIG_DIR = './figures/' + SUB_DIR
 KEYS = [
     'timestamp',
-    'pred_acc',
+    'dev_acc',
     'val_acc',
+    'test_acc',
     'epoch',
     'backend',
     'classifier',
@@ -100,7 +101,7 @@ def tprint(df: pd.DataFrame, head=0, to_latex=False):
         print(df.to_latex(bold_rows=True))
 
 
-def plot_group(df, columns, x='epoch', y='pred_acc', ylim=(0, 1), interval=None, show=False, log=False):
+def plot_group(df, columns, x='epoch', y='dev_acc', ylim=(0, 1), interval=None, show=False, log=False):
     """
     creates a scatter plot for a given key usually with the train/test time on the x axis
     and the f1_micro measure on the y axis. You can give in two keys at the same time
@@ -157,7 +158,7 @@ def plot_group(df, columns, x='epoch', y='pred_acc', ylim=(0, 1), interval=None,
     plt.close()
 
 
-def boxplot_group(df, x='epoch', y='pred_acc', ylim=None, show=False):
+def boxplot_group(df, x='epoch', y='dev_acc', ylim=None, show=False):
     fname = FIG_DIR + "{}__{}__{}".format('box', x, y)
     df = df[[y, x]]
     print(x, df[x].dtype)
@@ -190,7 +191,7 @@ def aggregate_group(dfs, df_descriptions, keys, to_latex=False):
     print('AGGREGATIONS FOR KEYED GROUP:', keys)
     print()
 
-    main_metric = 'pred_acc'
+    main_metric = 'dev_acc'
 
     if isinstance(dfs, pd.DataFrame):
         df_list = [dfs]
@@ -251,6 +252,7 @@ def load_results(directory=None):
     for fname in files:
         result = pd.read_csv(dat_dir + fname, sep='\t',
                              converters={'classifier': (lambda arg: 'LSTM_01' if arg == 'AttentionLSTM' else arg)})
+        result.rename(columns={'pred_acc': 'dev_acc'}, inplace=True)
         results.append(result)
 
     return pd.concat(results, ignore_index=True)
@@ -262,23 +264,23 @@ def reports_evaluator_main(directory=None):
     """
     print('start evaluating')
     df = load_results(directory)[KEYS]
-    # tprint(df.sort_values('pred_acc', ascending=False), -100)
+    # tprint(df.sort_values('dev_acc', ascending=False), -100)
 
     # filter for best epoch
     keys = ['timestamp', 'run']
     group = df.groupby(keys)
-    # get the row with the maximum value of 'pred_acc' per group
-    df = df.loc[group['pred_acc'].idxmax()]
+    # get the row with the maximum value of 'dev_acc' per group
+    df = df.loc[group['dev_acc'].idxmax()]
     # reset the index
     df.set_index(keys, inplace=True)
-    tprint(df.sort_values('pred_acc', ascending=False))
+    # tprint(df.sort_values('dev_acc', ascending=False))
 
     # get mean over all runs
-    df_mean = df.groupby('timestamp').mean()
-    tprint(df_mean.sort_values('pred_acc', ascending=False))
+    # df_mean = df.groupby('timestamp').mean()
+    # tprint(df_mean.sort_values('dev_acc', ascending=False))
 
     # print grouped tables
-    if True:
+    if False:
         dfs = [df]
         dfs_descriptions = ["full data set"]
 
@@ -291,17 +293,25 @@ def reports_evaluator_main(directory=None):
     # try also with df_mean:
     # df = df_mean
     # filtering bad results out
-    df = df.loc[
-        (df.activation2 != 'softmax')
-        & (df.lstm_size != 512)
-        & (~df.loss.isin(['mean_absolute_percentage_error', 'hinge', 'kullback_leibler_divergence',
-                          'squared_hinge']))
-        & (df.padding != 10)
-        & (df.batch_size != 1)
-        & (~df.optimizer.isin(['adadelta', 'sgd']))
-        & (df.activation1 != 'softmax')
-        # & (~df.dropout.isin([0.1, 1.0]))
-    ]
+    # df = df.loc[
+    #     (df.activation2 != 'softmax')
+    #     & (df.lstm_size != 512)
+    #     & (~df.loss.isin(['mean_absolute_percentage_error', 'hinge', 'kullback_leibler_divergence',
+    #                       'squared_hinge']))
+    #     & (df.padding != 10)
+    #     & (df.batch_size != 1)
+    #     & (~df.optimizer.isin(['adadelta', 'sgd']))
+    #     & (df.activation1 != 'softmax')
+    #     # & (~df.dropout.isin([0.1, 1.0]))
+    # ]
+
+    # dev_val = df[['dev_acc', 'val_acc']]
+    # tprint(dev_val, 10)
+    df.plot(x='val_acc', y='test_acc', kind='scatter', s=2)
+    plt.xlabel('accuracy score: val')
+    plt.ylabel('accuracy score: test')
+    plt.show()
+    quit()
 
     plot = False
     show = False
@@ -352,4 +362,4 @@ def reports_evaluator_main(directory=None):
 
 
 if __name__ == '__main__':
-    reports_evaluator_main('/media/andreas/Linux_Data/hpc-semeval/tensorL05con2redo/out/')
+    reports_evaluator_main('/media/andreas/Linux_Data/hpc-semeval/tensorL05con2redo2/out/')
