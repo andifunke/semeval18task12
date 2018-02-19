@@ -1,3 +1,4 @@
+import random
 import re
 from os import listdir
 import pandas as pd
@@ -7,6 +8,7 @@ from matplotlib.ticker import LinearLocator
 from tabulate import tabulate
 import matplotlib.cm as cm
 from matplotlib.colors import Normalize
+import numpy as np
 # import seaborn as sns
 
 
@@ -306,11 +308,32 @@ def reports_evaluator_main(directory=None):
     # ]
 
     # dev_val = df[['dev_acc', 'val_acc']]
-    # tprint(dev_val, 10)
-    df.plot(x='val_acc', y='test_acc', kind='scatter', s=2)
-    plt.xlabel('accuracy score: val')
-    plt.ylabel('accuracy score: test')
+    # tprint(df, 10)
+    df = df[['dev_acc', 'val_acc', 'test_acc']].applymap(lambda x: x + random.uniform(-0.005, 0.005))
+    fig, ax = plt.subplots(ncols=3)
+
+    df.plot(ax=ax[0], x='dev_acc', y='val_acc', kind='scatter', s=2)
+    ax[0].set_xlim(.45, .75)
+    ax[0].set_ylim(.45, .75)
+    ax[0].set_xlabel('accuracy score: dev')
+    ax[0].set_ylabel('accuracy score: val')
+
+    df.plot(ax=ax[1], x='dev_acc', y='test_acc', kind='scatter', s=2)
+    ax[1].set_xlim(.45, .75)
+    ax[1].set_ylim(.45, .75)
+    ax[1].set_xlabel('accuracy score: dev')
+    ax[1].set_ylabel('accuracy score: test')
+
+    df.plot(ax=ax[2], x='val_acc', y='test_acc', kind='scatter', s=2)
+    ax[2].set_xlim(.45, .75)
+    ax[2].set_ylim(.45, .75)
+    ax[2].set_xlabel('accuracy score: val')
+    ax[2].set_ylabel('accuracy score: test')
+
     plt.show()
+
+
+
     quit()
 
     plot = False
