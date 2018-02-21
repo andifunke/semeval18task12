@@ -9,7 +9,6 @@ from tabulate import tabulate
 import matplotlib.cm as cm
 from matplotlib.colors import Normalize
 import numpy as np
-# import seaborn as sns
 
 
 # making stuff more human readable
@@ -309,7 +308,7 @@ def reports_evaluator_main(directory=None):
 
     # dev_val = df[['dev_acc', 'val_acc']]
     # tprint(df, 10)
-    df = df[['dev_acc', 'val_acc', 'test_acc']].applymap(lambda x: x + random.uniform(-0.005, 0.005))
+    df = df[['val_acc', 'dev_acc', 'test_acc']].applymap(lambda x: x + random.uniform(-0.005, 0.005))
     fig, ax = plt.subplots(ncols=3)
 
     df.plot(ax=ax[0], x='dev_acc', y='val_acc', kind='scatter', s=2)
@@ -332,7 +331,10 @@ def reports_evaluator_main(directory=None):
 
     plt.show()
 
-
+    fig, ax = plt.subplots(nrows=2)
+    df.plot(ax=ax[0], kind='density')
+    df.plot(ax=ax[1], kind='box')
+    plt.show()
 
     quit()
 
@@ -365,23 +367,6 @@ def reports_evaluator_main(directory=None):
         boxplot_group(data, x='optimizer', show=show)
         boxplot_group(data, x='loss', show=show)
         boxplot_group(data, x='embedding', show=show)
-
-    # 'epoch': False,
-    # 'backend': False,
-    # # 'classifier': None,
-    # # 'dimensionality': None,
-    # 'padding': True,
-    # 'lstm_size': True,
-    # 'activation1': True,
-    # 'activation2': True,
-    # 'optimizer': True,
-    # 'loss': True,
-    # 'batch_size': True,
-    # 'dropout': True,
-    # 'vsplit': True,
-    # 'embedding': True,
-    # 'embedding2': True,
-    # 'rich': True,
 
 
 if __name__ == '__main__':

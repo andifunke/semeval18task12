@@ -69,11 +69,18 @@ def main():
 
     for k, d in names.items():
         directory = listdir(d)
-        filtered = False
-        if filtered:
-            suffix = r'.*(\.67|\.68|\.69|\.70|\.71|\.72)\d\.npy$'
+        filtr = 'soft'
+        if filtr == 'soft':
+            suffix = r'.*\.[6-7]\d\d\.npy$'
+        elif filtr == 'default':
+            suffix = r'.*(\.6[7-9]|\.7\d)\d\.npy$'
+        elif filtr == 'hard':
+            suffix = r'.*(\.69|\.7\d)\d\.npy$'
         else:
             suffix = r'.*\.npy$'
+
+        get_dev_score = lambda x: accuracy_score(y_true=dev_true, y_pred=x)
+        get_tst_score = lambda x: accuracy_score(y_true=tst_true, y_pred=x)
 
         dev_files = sorted([f for f in directory if re.match(r'^probabilities-dev'+suffix, f)])
         dev_probs = np.asarray([np.load(d + y).flatten() for y in dev_files])
@@ -81,6 +88,8 @@ def main():
         dev_confs = f(dev_probs.copy())
         dev_conf_scores = []
         dev_major_scores = []
+        dev_scores = np.apply_along_axis(get_dev_score, 1, dev_preds)
+        dev_scores[:] = np.mean(dev_scores)
 
         tst_files = sorted([f for f in directory if re.match(r'^probabilities-tst'+suffix, f)])
         tst_probs = np.asarray([np.load(d + y).flatten() for y in tst_files])
@@ -88,6 +97,8 @@ def main():
         tst_confs = f(tst_probs.copy())
         tst_conf_scores = []
         tst_major_scores = []
+        tst_scores = np.apply_along_axis(get_tst_score, 1, tst_preds)
+        tst_scores[:] = np.mean(tst_scores)
 
         length = range(1, len(dev_files)+1)
         # length = range(1, 100)
@@ -105,6 +116,8 @@ def main():
             'test: confidence vote': tst_conf_scores,
             'dev: majority vote': dev_major_scores,
             'test: majority vore': tst_major_scores,
+            'dev: mean accuracy': dev_scores,
+            'test: mean accuracy': tst_scores,
         }
         df = pd.DataFrame(mtrx)
         # tprint(df)

@@ -25,7 +25,7 @@ def get_data(file, pad=False, lowercase=False):
 
     print('tokenize data')
     df = df.applymap(lambda x: tokenize_cell(x, lowercase))
-    tprint(df, 10)
+    # tprint(df, 10)
 
     if pad:
         print('pad data')

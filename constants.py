@@ -13,18 +13,10 @@ CONTENT = [WARRANT0, WARRANT1, REASON, CLAIM, DEBATE_TITLE, DEBATE_INFO]
 KEYS = META + CONTENT
 
 FILES = dict(
-    dev='data/dev-full_challenge.tsv',
-    test='data/test/test-only-data.txt',
-    train='data/train/train-full.txt',
-    train_swap='data/train-w-swap-full_challenge.tsv',
-    # dev='data/dev/dev-full.txt',
-    # train_swap='data/train/train-w-swap-full.txt',
-)
-FILES = dict(
     dev='./data/dev/dev-full.txt',
     dev_true='./data/dev/dev-only-labels.txt',
-    test='./data/test/test-only-data.txt',
-    test_true='./data/gold/truth.txt',
+    test='./data/test/test-full.txt',
+    test_true='./data/test/test-only-labels.txt',
     train='./data/train/train-full.txt',
     train_swap='./data/train/train-w-swap-full.txt',
 )

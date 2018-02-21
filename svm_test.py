@@ -9,54 +9,61 @@ from os import path
 from itertools import chain
 import numpy as np
 from data_analyzer import *
+import gensim.models.word2vec as wv
+
+
+def get_vectors(sequence, word_vectors, lowercase, zeros):
+    return [
+        word_vectors[token.lower() if lowercase else token]
+        if token in word_vectors
+        else zeros
+        for token in sequence
+    ]
 
 
 def get_xy(dataset, options):
     """ embedding_size, embedding_model and lowercase are only applicable, if pretrained is False.
     In this case the custom trained embeddings are used. Values must correspond to existing w2v model files. """
 
-    lowercase = True if options['wv_file'][-3:] == '_lc' else False
+    lowercase = True if '_lc' in options['wv_file'] else False
+    print('lowercase', lowercase)
     fname = path.join(options['data_dir'], options['wv_file'] + '.vec')
 
-    # gensim cannot be used on hpc
-    if 'OPTIONS' in globals() and options['gensim']:
-        import gensim.models.word2vec as wv
-        model = wv.Word2Vec.load(fname)
-        word_vectors = model.wv
-    else:
-        word_vectors = pd.read_pickle(fname + '.pickle')
     print('loading embeddings from', fname)
+    model = wv.Word2Vec.load(fname)
+    word_vectors = model.wv
 
     print('loading train data')
     X_df = get_data(FILES[dataset], pad=True)[['warrant0', 'warrant1', 'reason', 'claim']]
-    tprint(X_df, 10)
     y = get_labels(FILES[dataset]).as_matrix().flatten()
+
+    dims = len(word_vectors['.'])
+    print('embedding dimensions', dims)
+    zeros = np.zeros(dims)
 
     X = []
     for row in X_df.itertuples():
-        w0 = [word_vectors[token.lower() if lowercase else token] for token in row[1]]
-        w1 = [word_vectors[token.lower() if lowercase else token] for token in row[2]]
-        r = [word_vectors[token.lower() if lowercase else token] for token in row[3]]
-        c = [word_vectors[token.lower() if lowercase else token] for token in row[4]]
+        w0 = get_vectors(row[1], word_vectors, lowercase, zeros)
+        w1 = get_vectors(row[2], word_vectors, lowercase, zeros)
+        r = get_vectors(row[3], word_vectors, lowercase, zeros)
+        c = get_vectors(row[4], word_vectors, lowercase, zeros)
         X.append(list(chain.from_iterable(w0))
                  + list(chain.from_iterable(w1))
                  + list(chain.from_iterable(r))
                  + list(chain.from_iterable(c))
                  )
-
     X = np.asarray(X, dtype=float, order='C')
     y = np.asarray(y, dtype=bool, order='C')
     assert len(X) == len(y)
     return X, y
 
 
-def test_main(clf, options, scaler=None):
+def test_main(clf, options, val_set='dev', scaler=None, proba=False):
     """ a given directory and/or filename overwrites the defaults """
-    print()
-    print('start testing')
-    t0 = time()
+    print('\n')
+    print('start validating on', val_set)
 
-    X, y_true = get_xy('dev', options)
+    X, y_true = get_xy(val_set, options)
 
     # using the scaler only if the data was trained on scaled values
     if scaler is not None:
@@ -65,23 +72,15 @@ def test_main(clf, options, scaler=None):
 
     print('predict')
     y_pred = clf.predict(X)
-    print(y_pred)
-    y_pred_probabilities = clf.predict_proba(X)
-    print(y_pred_probabilities)
-    np.save(path.join(options['data_dir'], options['wv_file']) + '.predictions', y_pred_probabilities)
+    if proba:
+        y_pred_probabilities = clf.predict_proba(X)
+        print(y_pred_probabilities)
+        np.save(path.join(options['data_dir'], options['wv_file']) + '.predictions', y_pred_probabilities)
 
     options['pred_acc'] = pred_acc = accuracy_score(y_true=y_true, y_pred=y_pred)
     print('accuracy:', pred_acc)
 
-    result_fname = path.join(options['data_dir'], options['wv_file'] + '_testresults.json')
-    options['test_time'] = time() - t0
-
-    print('writing results to', result_fname)
-    print(options)
-    with open(result_fname, 'w') as f:
-        json.dump(options, f)
-
-    print("done in {:f}s".format(options['test_time']))
+    return pred_acc
 
 
 def load_data(o):
