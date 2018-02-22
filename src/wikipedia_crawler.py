@@ -2,10 +2,11 @@ from pprint import pprint
 import wikipedia
 import json
 from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
+from constants import EMB_DIR
 
 
 def search(results=1):
-    with open('./embedding_caches/custom_embeddings_freq_lc.json', 'r') as fp:
+    with open(EMB_DIR + 'custom_embeddings_freq_lc.json', 'r') as fp:
         voc = json.load(fp)
 
     pprint(voc)
@@ -22,13 +23,12 @@ def search(results=1):
         print(response)
         voc[word] = response
 
-    with open('./embedding_caches/wikipedia.json', 'w') as fp:
+    with open(EMB_DIR + 'wikipedia.json', 'w') as fp:
         json.dump(voc, fp)
 
 
-if __name__ == '__main__':
-
-    with open('./embedding_caches/wikipedia.json', 'r') as fp:
+def wiki_main():
+    with open(EMB_DIR + 'wikipedia.json', 'r') as fp:
         responses = json.load(fp)
 
     concepts = {r[0] for r in responses.values() if isinstance(r, list) and len(r) > 0}
@@ -43,13 +43,13 @@ if __name__ == '__main__':
             except wikipedia.exceptions.DisambiguationError as de2:
                 try:
                     page = wikipedia.page(de2.options[1])
-                except wikipedia.exceptions.DisambiguationError as de3:
+                except wikipedia.exceptions.DisambiguationError:
                     print('wikipedia.exceptions.DisambiguationError ... giving up.')
-                except wikipedia.exceptions.PageError as pe:
+                except wikipedia.exceptions.PageError:
                     print('wikipedia.exceptions.PageError')
-            except wikipedia.exceptions.PageError as pe:
+            except wikipedia.exceptions.PageError:
                 print('wikipedia.exceptions.PageError')
-        except wikipedia.exceptions.PageError as pe:
+        except wikipedia.exceptions.PageError:
             print('wikipedia.exceptions.PageError')
 
         print('title:', page.title)
@@ -57,5 +57,9 @@ if __name__ == '__main__':
         string += page.title + '\n'
         string += page.content
         string += '\n{{__END_DOC__}}\n'
-        with open('./embedding_caches/wikipedia_corpus.txt', 'a') as fp:
+        with open(EMB_DIR + 'wikipedia_corpus.txt', 'a') as fp:
             fp.write(string)
+
+
+if __name__ == '__main__':
+    wiki_main()

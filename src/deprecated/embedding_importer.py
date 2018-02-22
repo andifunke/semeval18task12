@@ -1,6 +1,5 @@
 import os
 import pandas as pd
-import vocabulary_embeddings_extractor as vx
 
 
 def extract_words_from_embedding(infile, outfile, engine):
@@ -37,8 +36,8 @@ if __name__ == "__main__":
         vx.prepare_word_embeddings_cache([current_dir + '/data/'],
                                          current_dir + '/embeddings_cache_file_fastText_prov_freq_lc',
                                          embeddings_file_name=ftx,
-                                         use_lower= True,
-                                         use_provided_frequencies = True)
+                                         use_lower=True,
+                                         use_provided_frequencies=True)
     if False:
         extract_words_from_embedding(d2v, 'd2v_words.txt', engine='pandas')
         extract_words_from_embedding(ftx, 'ftx_words.txt')

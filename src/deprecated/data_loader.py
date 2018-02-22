@@ -1,3 +1,4 @@
+""" from the original task project - slightly modified """
 import spacy
 import gzip
 import os.path

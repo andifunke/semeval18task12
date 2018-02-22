@@ -1,3 +1,4 @@
+""" defines constants and files often used in the project """
 ID = '#id'
 SET = 'set'
 LABEL = 'correctLabelW0orW1'
@@ -10,17 +11,22 @@ DEBATE_INFO = 'debateInfo'
 
 META = [ID, SET, LABEL]
 CONTENT = [WARRANT0, WARRANT1, REASON, CLAIM, DEBATE_TITLE, DEBATE_INFO]
+CONTENT_SWAP = [WARRANT1, WARRANT0, REASON, CLAIM, DEBATE_TITLE, DEBATE_INFO]
+CONTENT_MIN = [WARRANT0, WARRANT1, REASON, CLAIM]
+CONTENT_MIN_SWAP = [WARRANT1, WARRANT0, REASON, CLAIM]
 KEYS = META + CONTENT
 
 FILES = dict(
-    dev='./data/dev/dev-full.txt',
-    dev_true='./data/dev/dev-only-labels.txt',
-    test='./data/test/test-full.txt',
-    test_true='./data/test/test-only-labels.txt',
-    train='./data/train/train-full.txt',
-    train_swap='./data/train/train-w-swap-full.txt',
+    dev='../data/dev/dev-full.txt',
+    # dev_true='../data/dev/dev-only-labels.txt',
+    test='../data/test/test-full.txt',
+    # test_true='../data/test/test-only-labels.txt',
+    train='../data/train/train-full.txt',
+    train_swap='../data/train/train-w-swap-full.txt',
 )
+SUBSETS = ['train', 'dev', 'test']
 
+EMB_DIR = '../embeddings/'
 EMB_FILES = dict(
     w2v="embeddings_cache_file_word2vec.pkl.bz2",
     d2v="embeddings_cache_file_dict2vec.pkl.bz2",

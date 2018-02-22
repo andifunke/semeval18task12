@@ -1,3 +1,4 @@
+""" externel library """
 from keras.layers import multiply
 from keras.layers.core import *
 from keras.layers.recurrent import LSTM

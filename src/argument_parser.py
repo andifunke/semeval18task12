@@ -61,7 +61,7 @@ def get_options():
                         help='specify code path on cluster. default is project dir.')
     parser.add_argument('--save_path', default=os.getcwd()+'/', type=str,
                         help='specify save path on cluster. default is project dir.')
-    parser.add_argument('--emb_dir', default='embeddings/', type=str,
+    parser.add_argument('--emb_dir', default='../embeddings/', type=str,
                         help='usually leave as is ')
     parser.add_argument('--out_path', default='out/', type=str,
                         help='usually leave as is')

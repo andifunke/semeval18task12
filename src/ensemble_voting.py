@@ -1,3 +1,4 @@
+""" combining predictions based on votes by a set of answer files """
 import pandas as pd
 import numpy as np
 from sklearn.metrics import accuracy_score
@@ -120,8 +121,6 @@ def main():
             'test: mean accuracy': tst_scores,
         }
         df = pd.DataFrame(mtrx)
-        # tprint(df)
-        # df.to_csv('/media/andreas/Linux_Data/hpc-semeval/{}_all_.csv'.format(k), sep='\t')
         plot(df, k + 'all_')
 
 

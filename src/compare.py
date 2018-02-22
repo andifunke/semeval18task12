@@ -1,21 +1,16 @@
+""" simple script to compare dev and test accuracy of answer files in dicretory d """
 from os import listdir
-from pprint import pprint
-
 import pandas as pd
 import matplotlib.pyplot as plt
 import re
-
 from sklearn.metrics import accuracy_score
-
 from constants import *
-from results_evaluator import tprint
+
 
 dev_true = pd.read_csv(FILES['dev_true'], sep='\t', index_col='#id', names=['#id', 'true'], header=0)
 test_true = pd.read_csv(FILES['test_true'], sep='\t', index_col='#id', names=['#id', 'true'], header=0)
 
-print(test_true.head(10))
-
-d = './results/new/'
+d = '../results/new/'
 
 dev_answers = [f for f in listdir(d) if re.match(r'^answer-dev.*', f)]
 test_answers = [f for f in listdir(d) if re.match(r'^answer-tst.*', f)]
@@ -43,5 +38,5 @@ plt.xlabel('accuracy score: dev')
 plt.ylabel('accuracy score: test')
 plt.show()
 
-pprint(accs_dev)
-pprint(accs_test)
+print(accs_dev)
+print(accs_test)

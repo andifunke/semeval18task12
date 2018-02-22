@@ -1,11 +1,11 @@
+""" converts gensim embeddings to json/pickle objetcs """
 import json
 import re
-
 from os import listdir
 from pprint import pprint
-
 import gensim.models.word2vec as wv
 import six.moves.cPickle as cPickle
+import numpy as np
 
 
 def gensim_wrapper_main():
@@ -24,14 +24,14 @@ def gensim_wrapper_main():
         # json
         vector_dict = {word: [float(x) for x in model.wv[word]] for word in model.wv.vocab}
         print('saving dict to json')
-        with open(DATA_DIR + fname + '.json', 'w', encoding='utf8') as f:
-            json.dump(vector_dict, f, ensure_ascii=False)
+        with open(DATA_DIR + fname + '.json', 'w', encoding='utf8') as fp:
+            json.dump(vector_dict, fp, ensure_ascii=False)
 
         # pickle
         vector_dict = {word: model.wv[word] for word in model.wv.vocab}
         print('saving dict to pickle')
-        with open(DATA_DIR + fname + '.pickle', 'wb') as f:
-            cPickle.dump(vector_dict, f)
+        with open(DATA_DIR + fname + '.pickle', 'wb') as fp:
+            cPickle.dump(vector_dict, fp)
 
 
 def gensim_wikipedia_embedding_wrapper():
@@ -59,39 +59,30 @@ def gensim_wikipedia_embedding_wrapper():
         # json
         vector_dict = {word: [float(x) for x in model.wv[word]] for word in vocabulary}
         print('saving dict to json')
-        with open(DATA_DIR + fname + '.json', 'w', encoding='utf8') as f:
-            json.dump(vector_dict, f, ensure_ascii=False)
+        with open(DATA_DIR + fname + '.json', 'w', encoding='utf8') as fp:
+            json.dump(vector_dict, fp, ensure_ascii=False)
 
         # pickle
         vector_dict = {word: model.wv[word] for word in vocabulary}
         print('saving dict to pickle')
-        with open(DATA_DIR + fname + '.pickle', 'wb') as f:
-            cPickle.dump(vector_dict, f)
+        with open(DATA_DIR + fname + '.pickle', 'wb') as fp:
+            cPickle.dump(vector_dict, fp)
 
 
 if __name__ == '__main__':
     DATA_DIR = './embedding_caches/new/'
-    # gensim_wrapper_main()
     gensim_wikipedia_embedding_wrapper()
-    # quit()
 
     verify = True
-
     if verify:
         fname = 'custom_embedding_w2v_hs_iter20_sg_300_lc_wiki.vec'
         with open(DATA_DIR + fname + '.json', 'r') as f:
             vector_dict = json.load(f)
-
         print(vector_dict.keys())
         print(len(vector_dict))
-
-        import numpy as np
-
         with open(DATA_DIR + fname + '.pickle', 'rb') as f:
             vector_dict = cPickle.load(f)
-
         np.set_printoptions(precision=6, threshold=50, edgeitems=3, linewidth=1000, suppress=True, nanstr=None,
                             infstr=None, formatter=None)
-
         pprint(vector_dict, width=1000)
         print(len(vector_dict))

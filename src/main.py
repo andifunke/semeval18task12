@@ -1,6 +1,5 @@
 import datetime
 import json
-import ast
 import sys
 from collections import OrderedDict
 import numpy as np
@@ -16,6 +15,7 @@ from sklearn.metrics import accuracy_score
 from argument_parser import get_options
 from models import get_model
 from constants import *
+from preprocessing import get_data_indexes, pad
 
 
 def detail_model(m, mname, save_weights=False):
@@ -160,49 +160,10 @@ def predict(model, options: dict, df: pd.DataFrame, epoch: int=0, pred_acc: int=
     return acc, probabilities
 
 
-def pad(sequence: list, padding_size: int):
-    sequence = ast.literal_eval(sequence)
-    length = len(sequence)
-    if length > padding_size:
-        s = sequence[-padding_size:]
-    elif length < padding_size:
-        s = ([0] * (padding_size - length)) + sequence
-    else:
-        s = sequence
-    assert len(s) == padding_size
-    # s = np.asarray(s, dtype=int)
-    return s
-
-
 def get_embeddings(options: dict):
     embedding = options['embedding'].split('.')[0]
     embedding_path = options['code_path'] + options['emb_dir'] + options['embedding'] + '.json'
     lc = True if ('_lc' in embedding) else False
-
-    # # offset for all words so their indices don't start with 0
-    # # 0 is reserved for padding
-    # # 1 is reserved for start of sequence
-    # # 2 is reserved for OOV
-    # offset = 3
-    #
-    # # we also need to initialize embeddings for 0, 1, and 2
-    # # what is the dimension of embeddings?
-    # embedding_dimension = len(list(embeddings.values())[0])
-    #
-    # # for padding we will use a zero-vector
-    # vector_padding = np.asarray([0.0] * embedding_dimension)
-    #
-    # # for start of sequence and OOV we add random vectors
-    # if seed > -1:
-    #     np.random.seed(seed)
-    # # print(np.random.get_state())
-    # vector_start_of_sequence = 2 * 0.1 * np.random.rand(embedding_dimension) - 0.1
-    # vector_oov = 2 * 0.1 * np.random.rand(embedding_dimension) - 0.1
-    #
-    # # and add them to the embeddings map (as the first three values)
-    # word_index_to_embeddings_map[0] = vector_padding
-    # word_index_to_embeddings_map[1] = vector_start_of_sequence
-    # word_index_to_embeddings_map[2] = vector_oov
 
     if embedding[:6] == 'custom':
         if lc:
@@ -223,13 +184,6 @@ def get_embeddings(options: dict):
         indices_to_vectors[0] = np.asarray([0.0] * dimension)
     else:
         indices_to_vectors = {}
-
-    # print('words_to_vectors')
-    # print(words_to_vectors)
-    # print('words_to_indices')
-    # print(words_to_indices)
-    # print('indices_to_vectors')
-    # print(indices_to_vectors)
 
     return indices_to_vectors
 
@@ -287,7 +241,7 @@ def __main__():
     print(indices_to_vectors[1])
 
     print('load data')
-    df = pd.read_table('./data/preprocessed_freq.tsv')
+    df = get_data_indexes()
 
     print('pad sequences')
     df[CONTENT] = df[CONTENT].applymap(lambda sequence: pad(sequence, options['padding']))

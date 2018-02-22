@@ -1,3 +1,4 @@
+""" deprecarted """
 import numpy as np
 
 

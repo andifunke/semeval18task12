@@ -1,3 +1,4 @@
+""" the script plots the distribution of the number of overall correctly labeled data points """
 from os import listdir
 import pandas as pd
 from constants import FILES

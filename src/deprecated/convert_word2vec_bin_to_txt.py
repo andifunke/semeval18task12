@@ -1,6 +1,4 @@
-"""
-Converts the original C-binary format of word2vec by Mikolov et al. to a txt format
-"""
+""" Converts the original C-binary format of word2vec by Mikolov et al. to a txt format """
 import sys
 
 

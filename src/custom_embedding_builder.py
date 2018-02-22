@@ -1,3 +1,4 @@
+""" training of custom embeddings """
 import gensim.models.word2vec as wv
 import gensim.models.fasttext as ftx
 import numpy as np
@@ -14,7 +15,6 @@ def tokenize(item, lc=False, cheet=False):
         texts = [[str(word).lower() if lc else str(word) for word in doc]]
     else:
         texts = [[str(word).lower() if lc else str(word) for word in sent] for sent in doc.sents]
-    # print(texts)
     return texts
 
 
@@ -34,7 +34,6 @@ def custom_embedding_builder_main(add_wikipedia=False):
         df = pd.read_csv(file, sep='\t', header=0, index_col=['#id'],
                          usecols=['#id', 'warrant0', 'warrant1', 'reason', 'claim', 'debateTitle', 'debateInfo'])
         print(file)
-        # tprint(df, 10)
         for tple in df.itertuples():
             for item in tple[1:]:
                 # sentences.extend(tokenize(item))
@@ -82,5 +81,4 @@ def custom_embedding_builder_main(add_wikipedia=False):
 if __name__ == '__main__':
     DATA_DIR = './embedding_caches/'
     SPACY = spacy.load('en')
-    # nltk.data.load('tokenizers/punkt/english.pickle')
     custom_embedding_builder_main(add_wikipedia=True)

@@ -293,18 +293,6 @@ def reports_evaluator_main(directory=None):
 
     # try also with df_mean:
     # df = df_mean
-    # filtering bad results out
-    # df = df.loc[
-    #     (df.activation2 != 'softmax')
-    #     & (df.lstm_size != 512)
-    #     & (~df.loss.isin(['mean_absolute_percentage_error', 'hinge', 'kullback_leibler_divergence',
-    #                       'squared_hinge']))
-    #     & (df.padding != 10)
-    #     & (df.batch_size != 1)
-    #     & (~df.optimizer.isin(['adadelta', 'sgd']))
-    #     & (df.activation1 != 'softmax')
-    #     # & (~df.dropout.isin([0.1, 1.0]))
-    # ]
 
     # dev_val = df[['dev_acc', 'val_acc']]
     # tprint(df, 10)

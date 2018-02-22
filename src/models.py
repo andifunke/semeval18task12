@@ -9,8 +9,7 @@ from keras.layers import concatenate, Lambda, Dense, Dropout, Embedding, LSTM, B
     SimpleRNN, Concatenate, Flatten, Convolution1D, ConvLSTM2D, TimeDistributed, Conv2D, MaxPooling2D, Conv1D, \
     MaxPooling1D, Multiply, Add, Average, Maximum, Dot, LeakyReLU, PReLU, ELU, ThresholdedReLU, Reshape
 from keras import backend as K
-import models_vintage
-from attention_lstm import attention_3d_block
+from deprecated.attention_lstm import attention_3d_block
 from constants import *
 
 
@@ -130,6 +129,10 @@ def get_attention_vectors(bidi_layers, rich_context=True):
 
 def get_model(options: dict, indices_to_vectors: dict):
     classifier = options['classifier']
+    if classifier == 'LSTM_01':
+        return get_baseline_model(options, indices_to_vectors)
+
+    # converting embeddings to numpy 2d array: shape = (vocabulary_size, emb_dim)
     dropout = options['dropout']
     lstm_size = options['lstm_size']
     optimizer = options['optimizer']
@@ -139,43 +142,22 @@ def get_model(options: dict, indices_to_vectors: dict):
     dense_factor = options.get('dense_factor', 1)
     padding = options['padding']
     rich_context = options['rich']
-
-    vintage_classifier = dict(
-        LSTM_01=models_vintage.get_lstm_intra_warrant,
-        ATT_LSTM_01=models_vintage.get_attention_lstm_intra_warrant,
-        CNN_LSTM_01=models_vintage.get_cnn_lstm,
-    )
-    if classifier in vintage_classifier:
-        return vintage_classifier[classifier](indices_to_vectors, padding, rich_context)
-
-    # converting embeddings to numpy 2d array: shape = (vocabulary_size, emb_dim)
-    embeddings = embedding_to_ndarray(indices_to_vectors)
-    print('embeddings.shape', embeddings.shape)
-
-    vocabulary = embeddings.shape[0]
-    dimensionality = embeddings.shape[1]
-
     filters = options.get('filters', lstm_size)
     use_input_layers = options.get('input_layers', [0, 1, 2, 3, 4, 5])
-    assert dense_factor
-    assert lstm_size
-    assert dropout
+
+    embeddings = embedding_to_ndarray(indices_to_vectors)
+    vocabulary = embeddings.shape[0]
+    dimensionality = embeddings.shape[1]
+    print('embeddings.shape', embeddings.shape)
 
     # by giving a different set of input layer indexes it is possible to alter the model
     # take care to train the model on related data sources
-    # TODO: test for non unique values (=> duplicate layer names)
     names_default = CONTENT
     names = []
     for input_layer in use_input_layers:
         names.append(names_default[input_layer])
 
-    # TODO: rich (i.e. second) embedding
-
-    # original Attention model
-    # from attention_lstm.attention_lstm import AttentionLSTM
-    # difficult to reproduce since this AtenntionLSTM model is not compatible with Keras 2 anymore:
-    # attention_warrant0 = AttentionLSTM(lstm_size, attention_vector_for_w0)(bidi_lstm_layer_warrant0)
-    # attention_warrant1 = AttentionLSTM(lstm_size, attention_vector_for_w1)(bidi_lstm_layer_warrant1)
+    # --- MODELS --------------------------------------------------------------------
 
     # LSTM_00 - most basic
     if classifier == 'LSTM_00':
@@ -193,7 +175,6 @@ def get_model(options: dict, indices_to_vectors: dict):
         # only warrant layers used
         attention_warrant0 = LSTM(lstm_size)(bl[0])
         attention_warrant1 = LSTM(lstm_size)(bl[1])
-        # TODO: use 'add' instead of 'concatenate' to reconstruct possible bug in original implementation
         dropout_input = concatenate([attention_warrant0, attention_warrant1])
         dropout_layer = Dropout(dropout, name='dropout')(dropout_input)
         dense1 = Dense(int(lstm_size * dense_factor), activation=activation1, name='dense_main')(dropout_layer)
@@ -220,7 +201,6 @@ def get_model(options: dict, indices_to_vectors: dict):
         # only warrant layers used
         attention_warrant0 = LSTM(lstm_size)(bl[2])
         attention_warrant1 = LSTM(lstm_size)(bl[3])
-        # TODO: use 'add' instead of 'concatenate' to reconstruct possible bug in original implementation
         dropout_input = concatenate([attention_warrant0, attention_warrant1])
         dropout_layer = Dropout(dropout, name='dropout')(dropout_input)
         dense1 = Dense(int(lstm_size * dense_factor), activation=activation1, name='dense_main')(dropout_layer)
@@ -236,7 +216,6 @@ def get_model(options: dict, indices_to_vectors: dict):
         warrant1 = LSTM(lstm_size)(bl[1])
         reason = LSTM(lstm_size)(bl[2])
         claim = LSTM(lstm_size)(bl[3])
-        # TODO: use 'add' instead of 'concatenate' to reconstruct possible bug in original implementation
         warrants = concatenate([warrant0, warrant1])
         reason_claim = concatenate([reason, claim])
         dropout_layer_w = Dropout(dropout, name='dropout_w')(warrants)
@@ -255,7 +234,6 @@ def get_model(options: dict, indices_to_vectors: dict):
         warrant1 = LSTM(lstm_size)(bl[1])
         reason = LSTM(lstm_size)(bl[2])
         claim = LSTM(lstm_size)(bl[3])
-        # TODO: use 'add' instead of 'concatenate' to reconstruct possible bug in original implementation
         warrants = concatenate([warrant0, warrant1])
         reason_claim = concatenate([reason, claim])
         dropout_layer_w = Dropout(dropout, name='dropout_w')(warrants)
@@ -331,7 +309,7 @@ def get_model(options: dict, indices_to_vectors: dict):
         el = embed_inputs(il, embeddings, padding)
         bl = get_bidi_lstm_layers(el, names, lstm_size)
         # multiplying warrant0 and warrant1 separately with reason and claim - similar to attention
-        reason_claim = Concatenate()([bl[2], bl[3]])  # TODO: try different axis
+        reason_claim = Concatenate()([bl[2], bl[3]])
         warrant0 = LSTM(lstm_size)(Dot(axes=(1, 1))([bl[0], reason_claim]))
         warrant1 = LSTM(lstm_size)(Dot(axes=(1, 1))([bl[1], reason_claim]))
         dropout_layer = Dropout(dropout, name='dropout_w')(concatenate([warrant0, warrant1]))
@@ -506,7 +484,6 @@ def get_model(options: dict, indices_to_vectors: dict):
         attention_mul = attention_3d_block(conc, padding)
         lstm = LSTM(lstm_size, return_sequences=False)(attention_mul)
         dropout_layer = Dropout(dropout, name='dropout')(lstm)
-        # dense1 = Dense(int(lstm_size * factor), activation=activation1, name='dense_main')(lstm)
         output_input = dropout_layer
 
     # !
@@ -527,7 +504,6 @@ def get_model(options: dict, indices_to_vectors: dict):
         attention_mul = attention_3d_block(conc, padding)
         lstm = LSTM(lstm_size, return_sequences=False)(attention_mul)
         dropout_layer = Dropout(0.5, name='dropout')(lstm)
-        # dense1 = Dense(int(lstm_size * factor), activation=activation1, name='dense_main')(lstm)
         output_input = dropout_layer
 
     elif classifier == 'ATT_LSTM_03c':
@@ -565,9 +541,6 @@ def get_model(options: dict, indices_to_vectors: dict):
         attention_mul = attention_3d_block(lstm, padding)
         output_input = Flatten()(attention_mul)
 
-    # TODO:
-    # https://machinelearningmastery.com/cnn-long-short-term-memory-networks/
-
     else:
         raise ValueError('wrong classifier shortcut')
 
@@ -577,5 +550,60 @@ def get_model(options: dict, indices_to_vectors: dict):
 
     # from keras.utils import plot_model
     # plot_model(model, show_shapes=True, to_file='./figures/{}.png'.format(classifier))
+
+    return model
+
+
+def get_baseline_model(options: dict, indices_to_vectors: dict):
+    # converting embeddings to numpy 2d array: shape = (vocabulary_size, emb_dim)
+    max_len = options.get('padding')
+    lstm_size = options.get('lstm_size')
+    dropout = options.get('dropout')
+    optimizer = options.get('optimizer')
+    loss = options.get('loss')
+    activation1 = options.get('activation1')
+    activation2 = options.get('activation2')
+
+    embeddings = np.asarray([np.array(x, dtype=float32) for x in indices_to_vectors.values()])
+    print('LSTM_01: embeddings.shape', embeddings.shape)
+
+    # define basic four input layers - for warrant0, warrant1, reason, claim
+    sequence_layer_warrant0_input = Input(shape=(max_len,), dtype='int32', name="sequence_layer_input_warrant0")
+    sequence_layer_warrant1_input = Input(shape=(max_len,), dtype='int32', name="sequence_layer_input_warrant1")
+    sequence_layer_reason_input = Input(shape=(max_len,), dtype='int32', name="sequence_layer_input_reason")
+    sequence_layer_claim_input = Input(shape=(max_len,), dtype='int32', name="sequence_layer_input_claim")
+    sequence_layer_debate_input = Input(shape=(max_len,), dtype='int32', name="sequence_layer_input_debate")
+
+    # now define embedded layers of the input
+    embedded_layer_warrant0_input = Embedding(
+        embeddings.shape[0], embeddings.shape[1], input_length=max_len, weights=[embeddings], mask_zero=True)(
+        sequence_layer_warrant0_input)
+    embedded_layer_warrant1_input = Embedding(
+        embeddings.shape[0], embeddings.shape[1], input_length=max_len, weights=[embeddings], mask_zero=True)(
+        sequence_layer_warrant1_input)
+
+    bidi_lstm_layer_warrant0 = Bidirectional(
+        LSTM(lstm_size, return_sequences=True), name='BiDiLSTM_W0')(embedded_layer_warrant0_input)
+    bidi_lstm_layer_warrant1 = Bidirectional(
+        LSTM(lstm_size, return_sequences=True), name='BiDiLSTM_W1')(embedded_layer_warrant1_input)
+
+    # max-pooling
+    max_pool_lambda_layer = Lambda(lambda x: keras.backend.max(x, axis=1, keepdims=False),
+                                   output_shape=lambda x: (x[0], x[2]))
+    max_pool_lambda_layer.supports_masking = True
+
+    attention_warrant0 = LSTM(lstm_size)(bidi_lstm_layer_warrant0)
+    attention_warrant1 = LSTM(lstm_size)(bidi_lstm_layer_warrant1)
+
+    # concatenate them
+    dropout_layer = Dropout(dropout)(concatenate([attention_warrant0, attention_warrant1]))
+
+    # and add one extra dense layer
+    dense1 = Dense(int(lstm_size), activation=activation1)(dropout_layer)
+    output_layer = Dense(1, activation=activation2)(dense1)
+
+    model = Model(inputs=[sequence_layer_warrant0_input, sequence_layer_warrant1_input, sequence_layer_reason_input,
+                          sequence_layer_claim_input, sequence_layer_debate_input], outputs=output_layer)
+    model.compile(loss=loss, optimizer=optimizer, metrics=['accuracy', dev_pred])
 
     return model
