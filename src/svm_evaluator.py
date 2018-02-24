@@ -17,7 +17,7 @@ files = sorted([f for f in listdir(dat_dir) if re.match(r'^svm_results.*\.csv$',
 colors = ['navy', 'darkmagenta', 'r', 'm', 'b', 'c', 'y', 'g', 'k', 'w']
 acc_col = ['dev', 'test']
 label = {'svm_results_alt_split_fair_swap.csv': 'fair split ratio',
-         'svm_results_swap.csv': 'original split ratio',
+         'svm_results_alt_split_swap.csv': 'original split ratio',
          'svm_results_alt_split_fair_swap_scale.csv': 'fair split ratio (scaled)'
          }
 
@@ -32,21 +32,23 @@ for i, fname in enumerate(files):
     results.append(d)
     d[acc_col] = d[acc_col].applymap(lambda x: x + random.uniform(-0.0001, 0.0001))
     sns.regplot(x=d['dev'], y=d['test'], ax=ax[0], scatter=True, fit_reg=False, color=colors[i], label=label[fname])
-ax[0].set_xlim(.475, .675)
-ax[0].set_ylim(.475, .675)
+ax[0].set_xlim(.45, .675)
+ax[0].set_ylim(.45, .675)
 ax[0].set_xlabel('accuracy score: dev', weight='bold')
 ax[0].set_ylabel('accuracy score: test', weight='bold')
-ax[0].legend(loc='upper left')
+ax[0].legend(loc='lower right')
 
 df = pd.concat(results)
 
 sns.distplot(df['dev'], ax=ax[1], bins=5, rug=False, kde=True, label='dev')
 sns.distplot(df['test'], ax=ax[1], bins=5, rug=False, kde=True, label='test')
+ax[1].set_xlim(.45, .675)
 ax[1].set_xlabel('distribution of accuracy scores', weight='bold')
 ax[1].legend()
 
 sns.boxplot(data=df[acc_col], ax=ax[2], notch=True, width=.3)
 ax[2].set_xlabel('distribution of accuracy scores', weight='bold')
+ax[2].set_ylim(.45, .675)
 fig.tight_layout()
 plt.show()
 
@@ -55,6 +57,10 @@ g = sns.pairplot(df, y_vars=['dev accuracy', 'test accuracy'],
                  x_vars=['dev accuracy', 'test accuracy', 'embedding', 'dimensions', 'kernel', 'scaled', 'C'])
 g.axes[0][0].set_ylim(0.45, 0.675)
 g.axes[1][0].set_ylim(0.45, 0.675)
+g.axes[1][0].set_xlim(0.45, 0.675)
+g.axes[1][1].set_xlim(0.45, 0.675)
+g.axes[1][0].set_xticks([0.45, 0.5, 0.55, 0.6, 0.65])
+g.axes[1][1].set_xticks([0.45, 0.5, 0.55, 0.6, 0.65])
 # embedding
 g.axes[1][2].set_xticklabels([1, 2, 3, 4, 5, 6])
 # dimensions
