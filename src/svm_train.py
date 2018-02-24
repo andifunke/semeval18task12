@@ -3,7 +3,8 @@ import argparse
 import six.moves.cPickle as cPickle
 from sklearn import svm, preprocessing
 from constants import EMB_DIR
-from svm_test import test_main, get_xy
+from results_evaluator import tprint
+from svm_test import test_main, get_data, add_swap, get_xy, split_train_dev_test
 import pandas as pd
 
 
@@ -37,7 +38,9 @@ def get_options():
     return vars(parser.parse_args())
 
 
-def train_main(predict=False, proba=False, embedding=None, kernel=None, c=None, scale=None):
+def train_main(predict=False, proba=False, embedding=None, kernel=None, c=None, scale=None,
+               alternative_split=True):
+
     options = get_options()
     kernel = options['kernel'] if kernel is None else kernel
     c = options['C'] if c is None else c
@@ -45,12 +48,30 @@ def train_main(predict=False, proba=False, embedding=None, kernel=None, c=None, 
     options['wv_file'] = options['wv_file'] if embedding is None else embedding
     options['lowercase'] = '_lc' in embedding
 
-    x, y = get_xy('train', options, swap=True)
+    if alternative_split:
+        print('use alternative split')
+        df = get_data(dataset=['train', 'dev', 'test'], lowercase=options['lowercase'])
+        # get data set splits
+        tprint(df, 10)
+        df_train, df_dev, df_test = split_train_dev_test(df, train_ratio=0.67, dev_test_ratio=0.5)
+    else:
+        print('use default split')
+        df_train = get_data('train', lowercase=options['lowercase'])
+        # df_train_swap = get_data('train_swap', lowercase=options['lowercase'])
+        df_dev = get_data('dev', lowercase=options['lowercase'])
+        df_test = get_data('test', lowercase=options['lowercase'])
+
+    # upsampling the train set
+    df_train = add_swap(df_train)
+    # get X and y vectors from the splits
+    x_train, y_train = get_xy(df_train, options=options)
+    x_dev, y_dev = get_xy(df_dev, options=options)
+    x_test, y_test = get_xy(df_test, options=options)
 
     if options['scale']:
         scaler = preprocessing.MinMaxScaler()
-        scaler.fit(x)
-        x = scaler.transform(x)
+        scaler.fit(x_train)
+        x_train = scaler.transform(x_train)
         scale_fname = EMB_DIR + options['wv_file'] + '_scale.pickle'
         print('saving scaler to', scale_fname)
         with open(scale_fname, 'wb') as f:
@@ -62,11 +83,13 @@ def train_main(predict=False, proba=False, embedding=None, kernel=None, c=None, 
                   decision_function_shape='ovr', gamma='auto', random_state=None,
                   shrinking=options['shrinking'], tol=0.001, verbose=options['verbose'], probability=proba)
     print('fit model')
-    clf.fit(x, y)
+    clf.fit(x_train, y_train)
 
     if predict:
-        dev_acc = test_main(clf, options, 'dev', scaler)
-        test_acc = test_main(clf, options, 'test', scaler)
+        print('\nstart validating on', 'dev')
+        dev_acc = test_main(clf, options, x=x_dev, y=y_dev, scaler=scaler)
+        print('\nstart validating on', 'test')
+        test_acc = test_main(clf, options, x=x_test, y=y_test, scaler=scaler)
         return pd.Series({
             'kernel': kernel,
             'embedding': options['wv_file'],
@@ -95,9 +118,9 @@ if __name__ == '__main__':
         for k in kernels[:]:
             for C in Cs[:]:
                 print('\n----------------------------------------------------------')
-                result = train_main(predict=True, proba=False, kernel=k, embedding=e, c=C, scale=False)
+                result = train_main(predict=True, proba=False, kernel=k, embedding=e, c=C, scale=True)
                 print()
                 print(result)
                 results.append(result)
-                df = pd.DataFrame(results)
-                df.to_csv('../out/svm_results_swap.csv', sep='\t')
+                df_results = pd.DataFrame(results)
+                df_results.to_csv('../out/svm_results_alt_split_fair_swap_scale_.csv', sep='\t')

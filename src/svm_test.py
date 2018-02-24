@@ -8,14 +8,12 @@ import gensim.models.word2vec as wv
 import pandas as pd
 from constants import *
 from preprocessing import get_data_strings, pad
+from sklearn.model_selection import train_test_split
 
 np.random.seed(0)
 
 
 def get_vectors(sequence, word_vectors, lowercase, zeros):
-    # for token in sequence:
-    #     if token not in word_vectors:
-    #         print(token)
     return [
         word_vectors[token.lower() if lowercase else token]
         if token in word_vectors
@@ -24,11 +22,23 @@ def get_vectors(sequence, word_vectors, lowercase, zeros):
     ]
 
 
-def get_xy(dataset, options, swap=False):
+def add_swap(df: pd.DataFrame):
+    print('add swap')
+    # upsample the train set with swapped warrant 0<->1
+    df_copy = df.copy(deep=True)
+    df_copy = df_copy.rename(columns={WARRANT0: WARRANT1, WARRANT1: WARRANT0})
+    df_copy[LABEL] ^= 1
+    df_swapped = pd.concat([df, df_copy]).sort_index(kind="mergesort").reset_index(drop=True)
+    df_swapped = df_swapped[KEYS]
+    return df_swapped
+
+
+def get_xy(df: pd.DataFrame, options, padding_size=54):
+    print('get x_y')
+
     lowercase = options['lowercase']
     print('lowercase', lowercase)
     fname = EMB_DIR + options['wv_file'] + '.vec'
-
     print('loading embeddings from', fname)
     model = wv.Word2Vec.load(fname)
     word_vectors = model.wv
@@ -36,20 +46,9 @@ def get_xy(dataset, options, swap=False):
     print('embedding dimensions', dims)
     zeros = np.zeros(dims)
 
-    print('loading data')
-    # get data
-    df = get_data_strings(lc=lowercase)
-    df = df[df['set'] == dataset]
-
-    if swap:
-        # upsample the data set
-        df_swap = df.copy(deep=True)
-        df_swap = df_swap.rename(columns={WARRANT0: WARRANT1, WARRANT1: WARRANT0})
-        df_swap[LABEL] = df_swap[LABEL] * -1 + 1
-        df = pd.concat([df, df_swap]).sort_index(kind="mergesort").reset_index(drop=True)
-
     # pad data
-    df[CONTENT] = df[CONTENT].applymap(lambda sequence: pad(sequence, padding_size=54, padding_symbol='.$.'))
+    df[CONTENT] = df[CONTENT].applymap(lambda sequence:
+                                       pad(sequence, padding_size=padding_size, padding_symbol='.$.'))
     # replace with word vectors
     df[CONTENT] = df[CONTENT].applymap(lambda sequence: get_vectors(sequence, word_vectors, lowercase, zeros))
 
@@ -58,17 +57,40 @@ def get_xy(dataset, options, swap=False):
     x = np.asarray(x_list)
     x = np.reshape(x, (x.shape[0], x.shape[1] * x.shape[2] * x.shape[3]), order='C')
     y = np.asarray(y_list, dtype=bool, order='C')
-
     assert len(x) == len(y)
     return x, y
 
 
-def test_main(clf, options, val_set='dev', scaler=None, proba=False):
-    """ a given directory and/or filename overwrites the defaults """
-    print('\n')
-    print('start validating on', val_set)
+def split_train_dev_test(df: pd.DataFrame, train_ratio=0.6145, dev_test_ratio=0.416, seed: int=0):
+    print('split train dev test')
+    np.random.seed(seed)
+    train, dev_test = train_test_split(df, test_size=None, train_size=train_ratio)
+    dev, test = train_test_split(dev_test, test_size=None, train_size=dev_test_ratio)
+    return train, dev, test
 
-    x, y_true = get_xy(val_set, options)
+
+def get_data(dataset: [str, list]=None, lowercase: bool=True):
+    """ get data """
+    print('loading data for', dataset)
+    df = get_data_strings(lc=lowercase)
+    if isinstance(dataset, str) and dataset in FILES.keys():
+        df = df[df['set'] == dataset]
+    elif isinstance(dataset, list):
+        df = df[df['set'].isin(dataset)]
+    else:
+        return None
+    return df.reset_index(drop=True)
+
+
+def test_main(clf, options: dict, x: np.ndarray = None, y: np.ndarray = None,
+              val_set: str = None, scaler=None, proba: bool = False):
+    """ a given directory and/or filename overwrites the defaults """
+    if val_set is not None:
+        print('\n')
+        print('start validating on', val_set)
+        # x, y_true = get_data(val_set, options)
+    else:
+        y_true = y
 
     # using the scaler only if the data was trained on scaled values
     if scaler is not None:
@@ -119,5 +141,6 @@ def load_data(o):
 
 if __name__ == '__main__':
     from svm_train import get_options
+
     OPTIONS = get_options()
     load_data(OPTIONS)
