@@ -256,7 +256,11 @@ def load_results(directory=None):
         result.rename(columns={'pred_acc': 'dev_acc'}, inplace=True)
         results.append(result)
 
-    return pd.concat(results, ignore_index=True)
+    df = pd.concat(results, ignore_index=True)
+    if 'test_acc' not in df.keys():
+        df['test_acc'] = np.nan
+
+    return df
 
 
 def reports_evaluator_main(directory=None):
@@ -276,12 +280,15 @@ def reports_evaluator_main(directory=None):
     df.set_index(keys, inplace=True)
     # tprint(df.sort_values('dev_acc', ascending=False))
 
-    # get mean over all runs
-    # df_mean = df.groupby('timestamp').mean()
-    # tprint(df_mean.sort_values('dev_acc', ascending=False))
+    # get statistics over all runs
+    show_stats = False
+    if show_stats:
+        df_stats = df.groupby('timestamp').describe()
+        tprint(df_stats.sort_values(('dev_acc', 'mean'), ascending=False))
 
     # print grouped tables
-    if False:
+    print_metrics = False
+    if print_metrics:
         dfs = [df]
         dfs_descriptions = ["full data set"]
 
@@ -294,68 +301,68 @@ def reports_evaluator_main(directory=None):
     # try also with df_mean:
     # df = df_mean
 
-    # dev_val = df[['dev_acc', 'val_acc']]
-    # tprint(df, 10)
-    df = df[['val_acc', 'dev_acc', 'test_acc']].applymap(lambda x: x + random.uniform(-0.005, 0.005))
-    fig, ax = plt.subplots(ncols=3)
+    plot_stuff = False
+    if plot_stuff:
+        # dev_val = df[['dev_acc', 'val_acc']]
+        # tprint(df, 10)
+        df = df[['val_acc', 'dev_acc', 'test_acc']].applymap(lambda x: x + random.uniform(-0.005, 0.005))
+        fig, ax = plt.subplots(ncols=3)
 
-    df.plot(ax=ax[0], x='dev_acc', y='val_acc', kind='scatter', s=2)
-    ax[0].set_xlim(.45, .75)
-    ax[0].set_ylim(.45, .75)
-    ax[0].set_xlabel('accuracy score: dev')
-    ax[0].set_ylabel('accuracy score: val')
+        df.plot(ax=ax[0], x='dev_acc', y='val_acc', kind='scatter', s=2)
+        ax[0].set_xlim(.45, .75)
+        ax[0].set_ylim(.45, .75)
+        ax[0].set_xlabel('accuracy score: dev')
+        ax[0].set_ylabel('accuracy score: val')
 
-    df.plot(ax=ax[1], x='dev_acc', y='test_acc', kind='scatter', s=2)
-    ax[1].set_xlim(.45, .75)
-    ax[1].set_ylim(.45, .75)
-    ax[1].set_xlabel('accuracy score: dev')
-    ax[1].set_ylabel('accuracy score: test')
+        df.plot(ax=ax[1], x='dev_acc', y='test_acc', kind='scatter', s=2)
+        ax[1].set_xlim(.45, .75)
+        ax[1].set_ylim(.45, .75)
+        ax[1].set_xlabel('accuracy score: dev')
+        ax[1].set_ylabel('accuracy score: test')
 
-    df.plot(ax=ax[2], x='val_acc', y='test_acc', kind='scatter', s=2)
-    ax[2].set_xlim(.45, .75)
-    ax[2].set_ylim(.45, .75)
-    ax[2].set_xlabel('accuracy score: val')
-    ax[2].set_ylabel('accuracy score: test')
+        df.plot(ax=ax[2], x='val_acc', y='test_acc', kind='scatter', s=2)
+        ax[2].set_xlim(.45, .75)
+        ax[2].set_ylim(.45, .75)
+        ax[2].set_xlabel('accuracy score: val')
+        ax[2].set_ylabel('accuracy score: test')
 
-    plt.show()
+        plt.show()
 
-    fig, ax = plt.subplots(nrows=2)
-    df.plot(ax=ax[0], kind='density')
-    df.plot(ax=ax[1], kind='box')
-    plt.show()
+        fig, ax = plt.subplots(nrows=2)
+        df.plot(ax=ax[0], kind='density')
+        df.plot(ax=ax[1], kind='box')
+        plt.show()
 
-    quit()
+        plot_more_stuff = False
+        show = False
+        data = df
+        ylim = [0.4, 0.8]
+        additional_keys = []
+        if plot_more_stuff:
+            plot_group(data, ['epoch'], x='dropout', interval=(1, 20), show=show, ylim=ylim)
+            plot_group(data, ['epoch'], x='epoch', interval=(1, 20), show=show, ylim=ylim)
+            plot_group(data, ['epoch'], x='padding', interval=(1, 20), show=show, ylim=ylim)
+            plot_group(data, ['epoch'], x='lstm_size', interval=(1, 20), show=show, ylim=ylim, log=True)
+            plot_group(data, ['epoch'], x='batch_size', interval=(1, 20), show=show, ylim=ylim, log=True)
+            plot_group(data, ['epoch'], x='vsplit', interval=(1, 20), show=show, ylim=ylim)
 
-    plot = False
-    show = False
-    data = df
-    ylim = [0.4, 0.8]
-    additional_keys = []
-    if plot:
-        plot_group(data, ['epoch'], x='dropout', interval=(1, 20), show=show, ylim=ylim)
-        plot_group(data, ['epoch'], x='epoch', interval=(1, 20), show=show, ylim=ylim)
-        plot_group(data, ['epoch'], x='padding', interval=(1, 20), show=show, ylim=ylim)
-        plot_group(data, ['epoch'], x='lstm_size', interval=(1, 20), show=show, ylim=ylim, log=True)
-        plot_group(data, ['epoch'], x='batch_size', interval=(1, 20), show=show, ylim=ylim, log=True)
-        plot_group(data, ['epoch'], x='vsplit', interval=(1, 20), show=show, ylim=ylim)
-
-    plot = False
-    show = False
-    if plot:
-        boxplot_group(data, x='backend', show=show, ylim=ylim)
-        boxplot_group(data, x='dropout', show=show)
-        boxplot_group(data, x='epoch', show=show)
-        boxplot_group(data, x='padding', show=show)
-        boxplot_group(data, x='lstm_size', show=show)
-        boxplot_group(data, x='batch_size', show=show)
-        boxplot_group(data, x='vsplit', show=show)
-        boxplot_group(data, x='rich', show=show)
-        boxplot_group(data, x='rich', show=show)
-        boxplot_group(data, x='activation1', show=show)
-        boxplot_group(data, x='optimizer', show=show)
-        boxplot_group(data, x='loss', show=show)
-        boxplot_group(data, x='embedding', show=show)
+        plot_more_stuff = False
+        show = False
+        if plot_more_stuff:
+            boxplot_group(data, x='backend', show=show, ylim=ylim)
+            boxplot_group(data, x='dropout', show=show)
+            boxplot_group(data, x='epoch', show=show)
+            boxplot_group(data, x='padding', show=show)
+            boxplot_group(data, x='lstm_size', show=show)
+            boxplot_group(data, x='batch_size', show=show)
+            boxplot_group(data, x='vsplit', show=show)
+            boxplot_group(data, x='rich', show=show)
+            boxplot_group(data, x='rich', show=show)
+            boxplot_group(data, x='activation1', show=show)
+            boxplot_group(data, x='optimizer', show=show)
+            boxplot_group(data, x='loss', show=show)
+            boxplot_group(data, x='embedding', show=show)
 
 
 if __name__ == '__main__':
-    reports_evaluator_main('/media/andreas/Linux_Data/hpc-semeval/tensorL05con2redo2/out/')
+    reports_evaluator_main('/media/andreas/Linux_Data/hpc-semeval/tensorL05con2redo/out/')

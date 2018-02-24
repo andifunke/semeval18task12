@@ -52,8 +52,11 @@ def train_main(predict=False, proba=False, embedding=None, kernel=None, c=None, 
         print('use alternative split')
         df = get_data(dataset=['train', 'dev', 'test'], lowercase=options['lowercase'])
         # get data set splits
-        tprint(df, 10)
-        df_train, df_dev, df_test = split_train_dev_test(df, train_ratio=0.67, dev_test_ratio=0.5)
+        # tprint(df, 10)
+        # equal ratio:
+        df_train, df_dev, df_test = split_train_dev_test(df, dev_test_ratio=0.5)
+        # odd (= default) ratio:
+        # df_train, df_dev, df_test = split_train_dev_test(df)
     else:
         print('use default split')
         df_train = get_data('train', lowercase=options['lowercase'])
@@ -91,13 +94,13 @@ def train_main(predict=False, proba=False, embedding=None, kernel=None, c=None, 
         print('\nstart validating on', 'test')
         test_acc = test_main(clf, options, x=x_test, y=y_test, scaler=scaler)
         return pd.Series({
-            'kernel': kernel,
-            'embedding': options['wv_file'],
             'C': c,
+            'dims': options['dims'],
+            'embedding': options['wv_file'],
+            'kernel': kernel,
+            'scale': options['scale'],
             'dev_acc': dev_acc,
             'test_acc': test_acc,
-            'dims': options['dims'],
-            'scale': options['scale'],
         })
 
 
@@ -118,9 +121,9 @@ if __name__ == '__main__':
         for k in kernels[:]:
             for C in Cs[:]:
                 print('\n----------------------------------------------------------')
-                result = train_main(predict=True, proba=False, kernel=k, embedding=e, c=C, scale=True)
+                result = train_main(predict=True, proba=False, kernel=k, embedding=e, c=C, scale=False)
                 print()
                 print(result)
                 results.append(result)
-                df_results = pd.DataFrame(results)
-                df_results.to_csv('../out/svm_results_alt_split_fair_swap_scale_.csv', sep='\t')
+                df_results = pd.DataFrame(results)[['C', 'dims', 'embedding', 'kernel', 'scale', 'dev_acc', 'test_acc']]
+                df_results.to_csv('../out/svm_results_alt-split_equal-ratio_new.csv', sep='\t', index=None)

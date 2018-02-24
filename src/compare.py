@@ -7,8 +7,10 @@ from sklearn.metrics import accuracy_score
 from constants import *
 
 
-dev_true = pd.read_csv(FILES['dev_true'], sep='\t', index_col='#id', names=['#id', 'true'], header=0)
-test_true = pd.read_csv(FILES['test_true'], sep='\t', index_col='#id', names=['#id', 'true'], header=0)
+dev_true = pd.read_csv(FILES['dev'], sep='\t', index_col=ID, usecols=[0, 3], names=[ID, 'true'],
+                       header=0)
+test_true = pd.read_csv(FILES['test'], sep='\t', index_col=ID, usecols=[0, 3], names=[ID, 'true'],
+                        header=0)
 
 d = '../results/new/'
 
@@ -33,10 +35,13 @@ accs_test = get_answers(test_answers, test_true)
 accs_dev = [x[1] for x in accs_dev]
 accs_test = [x[1] for x in accs_test]
 
+df = pd.DataFrame({'dev': accs_dev, 'test': accs_test})
+print(df)
+df = df.describe()
+print(df)
+
 plt.scatter(x=accs_dev, y=accs_test)
 plt.xlabel('accuracy score: dev')
 plt.ylabel('accuracy score: test')
 plt.show()
 
-print(accs_dev)
-print(accs_test)
