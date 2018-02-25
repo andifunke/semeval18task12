@@ -3,13 +3,13 @@ import re
 from os import listdir
 import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib import pylab
+from matplotlib import pylab, gridspec
 from matplotlib.ticker import LinearLocator
 from tabulate import tabulate
 import matplotlib.cm as cm
 from matplotlib.colors import Normalize
 import numpy as np
-
+import seaborn as sns
 
 # making stuff more human readable
 AXES = {
@@ -89,6 +89,7 @@ DEF_KEYS = {
     'embedding2': True,
     'rich': True,
 }
+LIM = .45, .75
 
 
 def tprint(df: pd.DataFrame, head=0, to_latex=False):
@@ -220,9 +221,6 @@ def aggregate_group(dfs, df_descriptions, keys, to_latex=False):
         # to avoid missing keys
         columns_full = [
             main_metric,
-            # 'val_acc',
-            # 'epoch',
-            # 'runtime'
         ]
         columns_reduced = []
         for column in columns_full:
@@ -236,10 +234,6 @@ def aggregate_group(dfs, df_descriptions, keys, to_latex=False):
 
         print("mean of all columns - sorted by {}:".format(main_metric))
         tprint(group.mean()[columns_reduced].sort_values(main_metric, ascending=False), to_latex=to_latex)
-
-        # print("minimum train and test time - sorted by train_time:")
-        # columns = ['train_time', 'test_time']
-        # tprint(group.min()[columns].sort_values('train_time', ascending=True), to_latex=to_latex)
 
     print('********************************************************************************************************')
 
@@ -263,13 +257,161 @@ def load_results(directory=None):
     return df
 
 
-def reports_evaluator_main(directory=None):
+def plot1(df: pd.DataFrame):
+    df = df[['val_acc', 'dev_acc', 'test_acc']].applymap(lambda x: x + random.uniform(-0.001, 0.001))
+    fig, ax = plt.subplots(ncols=3)
+
+    df.plot(ax=ax[0], x='dev_acc', y='val_acc', kind='scatter', s=2)
+    ax[0].set_xlim(LIM)
+    ax[0].set_ylim(LIM)
+    ax[0].set_xlabel('accuracy score: dev')
+    ax[0].set_ylabel('accuracy score: val')
+
+    df.plot(ax=ax[1], x='dev_acc', y='test_acc', kind='scatter', s=2)
+    ax[1].set_xlim(LIM)
+    ax[1].set_ylim(LIM)
+    ax[1].set_xlabel('accuracy score: dev')
+    ax[1].set_ylabel('accuracy score: test')
+
+    df.plot(ax=ax[2], x='val_acc', y='test_acc', kind='scatter', s=2)
+    ax[2].set_xlim(LIM)
+    ax[2].set_ylim(LIM)
+    ax[2].set_xlabel('accuracy score: val')
+    ax[2].set_ylabel('accuracy score: test')
+    plt.show()
+
+    fig, ax = plt.subplots(nrows=2)
+    df.plot(ax=ax[0], kind='density')
+    df.plot(ax=ax[1], kind='box')
+    plt.show()
+    plt.close('all')
+
+
+def plot2(df):
+    data = df
+    ylim = [0.4, 0.8]
+    plot_group(data, ['epoch'], x='dropout', interval=(1, 20), ylim=ylim)
+    plot_group(data, ['epoch'], x='epoch', interval=(1, 20), ylim=ylim)
+    plot_group(data, ['epoch'], x='padding', interval=(1, 20), ylim=ylim)
+    plot_group(data, ['epoch'], x='lstm_size', interval=(1, 20), ylim=ylim, log=True)
+    plot_group(data, ['epoch'], x='batch_size', interval=(1, 20), ylim=ylim, log=True)
+    plot_group(data, ['epoch'], x='vsplit', interval=(1, 20), ylim=ylim)
+
+    boxplot_group(data, x='backend', ylim=ylim)
+    boxplot_group(data, x='dropout')
+    boxplot_group(data, x='epoch')
+    boxplot_group(data, x='padding')
+    boxplot_group(data, x='lstm_size')
+    boxplot_group(data, x='batch_size')
+    boxplot_group(data, x='vsplit')
+    boxplot_group(data, x='rich')
+    boxplot_group(data, x='rich')
+    boxplot_group(data, x='activation1')
+    boxplot_group(data, x='optimizer')
+    boxplot_group(data, x='loss')
+    boxplot_group(data, x='embedding')
+    plt.close('all')
+
+
+def plot3(df_, save=False, directory='', fname=''):
+    df = df_.copy(deep=True)
+
+    sns.set(color_codes=True, font_scale=1)
+    sns.set_style("whitegrid", {'legend.frameon': True})
+    df.rename(columns={'dev_acc': 'dev', 'test_acc': 'test', 'val_acc': 'cross validation'}, inplace=True)
+    # adding some jitter for a less quantized plot
+    df = df[['cross validation', 'dev', 'test']].applymap(lambda x: x + random.uniform(-0.0005, 0.0005))
+
+    def single_scatter(data, x_key, y_key, axis, xlim=LIM, ylim=LIM, xticks=None, yticks=None):
+        axis.set_xlim(xlim)
+        axis.set_ylim(ylim)
+        if xticks is not None:
+            axis.set_xticks(xticks)
+        if yticks is not None:
+            axis.set_yticks(yticks)
+        sns.regplot(x=data[x_key], y=data[y_key], ax=axis, scatter=True, fit_reg=False, scatter_kws={'s': 4})
+        axis.set_xlabel('accuracy score: ' + x_key, weight='bold', size=11)
+        axis.set_ylabel('accuracy score: ' + y_key, weight='bold', size=11)
+
+    # single scatter plot dev/test
+    fig, ax = plt.subplots(figsize=(5, 3.3))
+    single_scatter(df, 'dev', 'test', ax, ylim=(.45, .65), yticks=[.45, .5, .55, .6, .65])
+    fig.tight_layout()
+    if save:
+        fig.savefig(directory + fname + '_dev-test_scatter.pdf', bbox_inches='tight')
+    plt.show()
+    plt.close('all')
+
+    # multi-plot
+    gs = gridspec.GridSpec(2, 6)
+    fig = plt.figure(figsize=(15, 10))
+    ax0_0 = fig.add_subplot(gs[0, :2])
+    ax0_1 = fig.add_subplot(gs[0, 2:4])
+    ax0_2 = fig.add_subplot(gs[0, 4:])
+    ax1_0 = fig.add_subplot(gs[1, :3])
+    ax1_1 = fig.add_subplot(gs[1, 3:])
+
+    # scatter plot for dev/test, val/test, dev/val
+    single_scatter(df, 'dev', 'test', ax0_0)
+    single_scatter(df, 'cross validation', 'test', ax0_1)
+    single_scatter(df, 'dev', 'cross validation', ax0_2)
+
+    # plot distributions
+    sns.distplot(df['dev'], ax=ax1_0, bins=5, rug=False, kde=True, label='dev')
+    sns.distplot(df['test'], ax=ax1_0, bins=5, rug=False, kde=True, label='test')
+    sns.distplot(df['cross validation'], ax=ax1_0, bins=5, rug=False, kde=True, label='cross validation')
+    ax1_0.set_xlim(LIM)
+    ax1_0.set_xlabel('distribution of accuracy scores', weight='bold')
+    ax1_0.legend()
+
+    sns.boxplot(data=df[['dev', 'test', 'cross validation']], ax=ax1_1, notch=True, width=.3)
+    ax1_1.set_xlabel('distribution of accuracy scores', weight='bold')
+    ax1_1.set_ylim(LIM)
+
+    fig.tight_layout()
+    if save:
+        fig.savefig(directory + fname + '_distributions.pdf', bbox_inches='tight')
+    plt.show()
+    plt.close('all')
+
+
+def print_stats(df, by_group=False, write=False, directory='', fname=''):
+    """ get statistics over all runs """
+    df = df[['val_acc', 'dev_acc', 'test_acc']]
+    if by_group:
+        df_stats = df.groupby('timestamp').describe()
+        print(df_stats.sort_values(('dev_acc', 'mean'), ascending=False))
+    else:
+        df_stats = df.describe()
+        print(df_stats)
+
+    if write:
+        fname = directory + fname + '_stats.csv'
+        df_stats.to_csv(fname, sep='\t')
+
+
+def print_metrics(dfs, additional_keys=None):
+    if additional_keys is None:
+        additional_keys = []
+    dfs_descriptions = ["full data set"]
+    for c in DEF_KEYS:
+        aggregate_group(dfs, dfs_descriptions, [c] + additional_keys)
+
+
+def print_results(df, write=False, directory=None, fname=''):
+    tprint(df.sort_values('dev_acc', ascending=False))
+
+    if write:
+        fname = directory + fname + '_metrics.csv'
+        df.to_csv(fname, sep='\t')
+
+
+def reports_evaluator_main(in_directory=None, out_directory='../out/', fname=''):
     """
     a given directory overwrites the defaults. The function will look for all test-result files in this directory.
     """
     print('start evaluating')
-    df = load_results(directory)[KEYS]
-    # tprint(df.sort_values('dev_acc', ascending=False), -100)
+    df = load_results(in_directory)[KEYS]
 
     # filter for best epoch
     keys = ['timestamp', 'run']
@@ -278,91 +420,14 @@ def reports_evaluator_main(directory=None):
     df = df.loc[group['dev_acc'].idxmax()]
     # reset the index
     df.set_index(keys, inplace=True)
-    # tprint(df.sort_values('dev_acc', ascending=False))
-
-    # get statistics over all runs
-    show_stats = False
-    if show_stats:
-        df_stats = df.groupby('timestamp').describe()
-        tprint(df_stats.sort_values(('dev_acc', 'mean'), ascending=False))
 
     # print grouped tables
-    print_metrics = False
-    if print_metrics:
-        dfs = [df]
-        dfs_descriptions = ["full data set"]
-
-        additional_keys = []  # could add some additional keys to a group
-        for c in DEF_KEYS:
-            aggregate_group(dfs, dfs_descriptions, [c] + additional_keys)
-
-    # for plotting we keep the bad performing max_iter items
-
-    # try also with df_mean:
-    # df = df_mean
-
-    plot_stuff = False
-    if plot_stuff:
-        # dev_val = df[['dev_acc', 'val_acc']]
-        # tprint(df, 10)
-        df = df[['val_acc', 'dev_acc', 'test_acc']].applymap(lambda x: x + random.uniform(-0.005, 0.005))
-        fig, ax = plt.subplots(ncols=3)
-
-        df.plot(ax=ax[0], x='dev_acc', y='val_acc', kind='scatter', s=2)
-        ax[0].set_xlim(.45, .75)
-        ax[0].set_ylim(.45, .75)
-        ax[0].set_xlabel('accuracy score: dev')
-        ax[0].set_ylabel('accuracy score: val')
-
-        df.plot(ax=ax[1], x='dev_acc', y='test_acc', kind='scatter', s=2)
-        ax[1].set_xlim(.45, .75)
-        ax[1].set_ylim(.45, .75)
-        ax[1].set_xlabel('accuracy score: dev')
-        ax[1].set_ylabel('accuracy score: test')
-
-        df.plot(ax=ax[2], x='val_acc', y='test_acc', kind='scatter', s=2)
-        ax[2].set_xlim(.45, .75)
-        ax[2].set_ylim(.45, .75)
-        ax[2].set_xlabel('accuracy score: val')
-        ax[2].set_ylabel('accuracy score: test')
-
-        plt.show()
-
-        fig, ax = plt.subplots(nrows=2)
-        df.plot(ax=ax[0], kind='density')
-        df.plot(ax=ax[1], kind='box')
-        plt.show()
-
-        plot_more_stuff = False
-        show = False
-        data = df
-        ylim = [0.4, 0.8]
-        additional_keys = []
-        if plot_more_stuff:
-            plot_group(data, ['epoch'], x='dropout', interval=(1, 20), show=show, ylim=ylim)
-            plot_group(data, ['epoch'], x='epoch', interval=(1, 20), show=show, ylim=ylim)
-            plot_group(data, ['epoch'], x='padding', interval=(1, 20), show=show, ylim=ylim)
-            plot_group(data, ['epoch'], x='lstm_size', interval=(1, 20), show=show, ylim=ylim, log=True)
-            plot_group(data, ['epoch'], x='batch_size', interval=(1, 20), show=show, ylim=ylim, log=True)
-            plot_group(data, ['epoch'], x='vsplit', interval=(1, 20), show=show, ylim=ylim)
-
-        plot_more_stuff = False
-        show = False
-        if plot_more_stuff:
-            boxplot_group(data, x='backend', show=show, ylim=ylim)
-            boxplot_group(data, x='dropout', show=show)
-            boxplot_group(data, x='epoch', show=show)
-            boxplot_group(data, x='padding', show=show)
-            boxplot_group(data, x='lstm_size', show=show)
-            boxplot_group(data, x='batch_size', show=show)
-            boxplot_group(data, x='vsplit', show=show)
-            boxplot_group(data, x='rich', show=show)
-            boxplot_group(data, x='rich', show=show)
-            boxplot_group(data, x='activation1', show=show)
-            boxplot_group(data, x='optimizer', show=show)
-            boxplot_group(data, x='loss', show=show)
-            boxplot_group(data, x='embedding', show=show)
+    # print_results(df)
+    # print_metrics(df)
+    # print_stats(df, write=True, directory=out_directory, fname=fname)
+    plot3(df, save=True, directory=out_directory, fname=fname)
 
 
 if __name__ == '__main__':
-    reports_evaluator_main('/media/andreas/Linux_Data/hpc-semeval/tensorL05con2redo/out/')
+    reports_evaluator_main('/media/andreas/Linux_Data/hpc-semeval/tensorL05con2redo2/out/',
+                           fname='results_2560-single_orig-split_rescaled')

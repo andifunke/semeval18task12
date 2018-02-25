@@ -1,10 +1,13 @@
 """ combining predictions based on votes by a set of answer files """
 import pandas as pd
 import numpy as np
+from scipy.stats import describe
 from sklearn.metrics import accuracy_score
 from os import listdir
 import re
 import matplotlib.pyplot as plt
+
+from constants import LABEL, ID
 from results_evaluator import tprint
 
 
@@ -53,24 +56,26 @@ def main():
         # 'tensorL05add': '/media/andreas/Linux_Data/hpc-semeval/tensorL05add/out/',
         # 'tensorL05add2': '/media/andreas/Linux_Data/hpc-semeval/tensorL05add2/out/',
         # 'tensorL05con': '/media/andreas/Linux_Data/hpc-semeval/tensorL05con/out/',
-        # 'tensorL05con2': '/media/andreas/Linux_Data/hpc-semeval/tensorL05con2/out/',
+        'tensorL05con2': '/media/andreas/Linux_Data/hpc-semeval/tensorL05con2/out/',
         # 'theanoL05add': '/media/andreas/Linux_Data/hpc-semeval/theanoL05add/out/',
         # 'local2': '/media/andreas/Linux_Data/hpc-semeval/local/done2/',
         # 'tensorL05conX': '/media/andreas/Linux_Data/hpc-semeval/tensorL05conX/out/',
         # 'tensorX': '/media/andreas/Linux_Data/hpc-semeval/tensorX/out/',
         # 'all': '/home/andreas/workspace/semeval/project/prob/',
-        'tensorL05con2redo2': '/media/andreas/Linux_Data/hpc-semeval/tensorL05con2redo2/out/',
+        # 'tensorL05con2redo2': '/media/andreas/Linux_Data/hpc-semeval/tensorL05con2redo2/out/',
     }
 
-    ser_dev_true = pd.read_csv('./data/dev/dev-only-labels.txt', sep='\t', index_col=0, header=0, squeeze=True)
-    ser_tst_true = pd.read_csv('./data/gold/truth.txt', sep='\t', index_col=0, header=0, squeeze=True)
+    ser_dev_true = pd.read_csv('../data/dev/dev-full.txt', sep='\t',
+                               index_col=0, usecols=[ID, LABEL], header=0, squeeze=True)
+    ser_tst_true = pd.read_csv('../data/test/test-full.txt', sep='\t',
+                               index_col=0, usecols=[ID, LABEL], header=0, squeeze=True)
     dev_true = ser_dev_true.values.flatten()
     tst_true = ser_tst_true.values.flatten()
     f = np.vectorize(get_conf, otypes=[np.float])
 
     for k, d in names.items():
         directory = listdir(d)
-        filtr = 'soft'
+        filtr = ''
         if filtr == 'soft':
             suffix = r'.*\.[6-7]\d\d\.npy$'
         elif filtr == 'default':
@@ -100,6 +105,12 @@ def main():
         tst_major_scores = []
         tst_scores = np.apply_along_axis(get_tst_score, 1, tst_preds)
         tst_scores[:] = np.mean(tst_scores)
+
+        # print more stats
+        if False:
+            pd.set_option('display.float_format', lambda x: '%.6f' % x)
+            print('dev:\n', pd.Series(dev_scores).describe())
+            print('test:\n', pd.Series(tst_scores).describe())
 
         length = range(1, len(dev_files)+1)
         # length = range(1, 100)
