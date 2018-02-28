@@ -2,10 +2,13 @@ import datetime
 import json
 import sys
 from collections import OrderedDict
+
 import numpy as np
 np.random.seed(12345)
+
 import tensorflow as tf
 tf.set_random_seed(12345)
+
 from tensorflow import __version__ as tfv
 from theano import __version__ as thv
 from keras import __version__ as kv, backend as K, callbacks
@@ -15,7 +18,9 @@ from sklearn.metrics import accuracy_score
 from argument_parser import get_options
 from models import get_model
 from constants import *
-from preprocessing import get_data_indexes, pad
+from preprocessing import get_embedding, get_data, pad, split_train_dev_test, add_swap
+from results_evaluator import tprint
+
 
 
 def detail_model(m, mname, save_weights=False):
@@ -43,12 +48,13 @@ def detail_model(m, mname, save_weights=False):
 class PredictionReport(callbacks.Callback):
     """callback subclass that stores each epoch prediction"""
 
-    def __init__(self, model, options: dict, results: dict, reports: list, df: pd.DataFrame):
+    def __init__(self, model, options: dict, results: dict, reports: list, df_dev: pd.DataFrame, df_test: pd.DataFrame):
         self.set_model(model)
         self.options = options
         self.results = results
         self.reports = reports
-        self.df = df
+        self.df_dev = df_dev
+        self.df_test = df_test
         self.best_epoch = dict(epoch=0, pred_acc=0, val_acc=0, config=None, weights=None)
 
     def on_epoch_end(self, epoch, logs=None):
@@ -65,7 +71,7 @@ class PredictionReport(callbacks.Callback):
 
         results['epoch'] = epoch + 1
         results['runtime'] = datetime.datetime.now() - results['start']
-        results['pred_acc'], _ = predict(self.model, self.options, self.df)
+        results['pred_acc'], _ = predict(self.model, self.options, self.df_dev)
         logs['dev_pred'] = results['pred_acc']
 
         if results['pred_acc'] > best_epoch['pred_acc']:
@@ -85,7 +91,6 @@ class PredictionReport(callbacks.Callback):
         self.reports.append("\t".join(map(str, values)))
 
     def persist(self):
-        df = self.df
         options = self.options
         best_epoch = self.best_epoch
         run_idx = self.results['run']
@@ -96,14 +101,10 @@ class PredictionReport(callbacks.Callback):
         best_model.set_weights(best_epoch['weights'])
         fname = '%s{}_%s_rn%2d_ep%2d_ac%.3f{}' % (options['out_path'], dt, run_idx,
                                                   best_epoch['epoch'], best_epoch['pred_acc'])
-        # print('best-fit')
-        # print(best_model.to_json())
-        # print(best_model.get_config())
-        # print(best_model.get_weights())
 
         # --- predict dev data with best model and write answer file ----------------------
         acc_dev, best_probabilities_dev = \
-            predict(best_model, options, df[df.set == 'dev'],
+            predict(best_model, options, self.df_dev,
                     epoch=best_epoch['epoch'], pred_acc=best_epoch['pred_acc'],
                     write_answer=True, print_answer=True)
         print('acc_dev: {:.3f}'.format(acc_dev))
@@ -116,7 +117,7 @@ class PredictionReport(callbacks.Callback):
             np.save(fname.format('probabilities-dev', ''), best_probabilities_dev)
             # predict test data with best model and write answer file
             acc_test, best_probabilities_test = \
-                predict(best_model, options, df[df.set == 'test'],
+                predict(best_model, options, self.df_test,
                         epoch=best_epoch['epoch'], pred_acc=best_epoch['pred_acc'],
                         write_answer=True, print_answer=True)
             # save test probabilities
@@ -160,34 +161,6 @@ def predict(model, options: dict, df: pd.DataFrame, epoch: int=0, pred_acc: int=
     return acc, probabilities
 
 
-def get_embeddings(options: dict):
-    embedding = options['embedding'].split('.')[0]
-    embedding_path = options['code_path'] + options['emb_dir'] + options['embedding'] + '.json'
-    lc = True if ('_lc' in embedding) else False
-
-    if embedding[:6] == 'custom':
-        if lc:
-            freq_path = options['code_path'] + options['emb_dir'] + 'custom_embeddings_freq_lc.json'
-        else:
-            freq_path = options['code_path'] + options['emb_dir'] + 'custom_embeddings_freq.json'
-
-        # TODO: add OOV and other special vectors
-        with open(embedding_path, 'r') as fp:
-            print(embedding_path)
-            words_to_vectors = json.load(fp)
-        with open(freq_path, 'r') as fp:
-            print(freq_path)
-            words_to_indices = json.load(fp)
-        indices_to_vectors = {index: words_to_vectors[word] for word, index in words_to_indices.items()}
-        dimension = len(indices_to_vectors[4])
-        print(dimension)
-        indices_to_vectors[0] = np.asarray([0.0] * dimension)
-    else:
-        indices_to_vectors = {}
-
-    return indices_to_vectors
-
-
 def initialize_results(options: dict, indices_to_vectors):
     return OrderedDict([
             ('timestamp', datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S-%f')),
@@ -225,7 +198,7 @@ def __main__():
     options = get_options()
     options['backend'] = K.backend()
 
-    # --- verbosity -----------------------------------------------------------
+    # --- verbosity ----------------------------------------------------------------------------------------------------
     print('argv:', sys.argv[1:])
     print('Python version:', sys.version)
     print('Keras version:', kv)
@@ -234,31 +207,29 @@ def __main__():
     elif options['backend'] == 'tensorflow':
         print('TensorFlow version:', tfv)
 
-    # --- loading -----------------------------------------------------------
-    print('load embedding')
-    indices_to_vectors = get_embeddings(options)
-    print(indices_to_vectors[0])
-    print(indices_to_vectors[1])
+    # --- loading ------------------------------------------------------------------------------------------------------
+    embedding = get_embedding(options)
 
-    print('load data')
-    df = get_data_indexes()
-
+    df = get_data(dataset=['train', 'dev', 'test'], lowercase=options['lowercase'], use_indexes=True)
     print('pad sequences')
-    df[CONTENT] = df[CONTENT].applymap(lambda sequence: pad(sequence, options['padding']))
-    df_train = df[df.set == 'train_swap']
+    df[CONTENT] = df[CONTENT].applymap(lambda sequence: pad(sequence, padding_size=options['padding']))
+    df_train, df_dev, df_test = split_train_dev_test(df)
+    df_train = add_swap(df_train)
 
-    # --- dictionary to collect result metrics --------------------------------
-    results = initialize_results(options, indices_to_vectors)
+    # --- dictionary to collect result metrics -------------------------------------------------------------------------
+    results = initialize_results(options, embedding)
 
-    # --- preparing loop -----------------------------------------------------
+    # --- preparing loop -----------------------------------------------------------------------------------------------
     # initialize reports list with column headlines
     keys = list(results.keys())
     report_head = "\t".join(map(str, keys))
     reports = [report_head]
 
-    # --- loop -> fit model with different seeds -----------------------------
+    # --- loop -> fit model with different seeds -----------------------------------------------------------------------
+    # reproducibility from the 2nd run onwards works only with Theano, not with TensorFlow
     for run_idx in range(options['run'], options['run'] + options['runs']):
-        # --- preparation ----------------------------------------------------
+
+        # --- preparation ----------------------------------------------------------------------------------------------
         results['start'] = datetime.datetime.now()
         print(results['start'], type(results['start']))
 
@@ -268,22 +239,16 @@ def __main__():
         run_seed = results['run seed'] = options['pre_seed'] + run_idx
         np.random.seed(run_seed)
         tf.set_random_seed(run_seed)
-
         print("Run: ", run_idx)
         print('seed=' + str(run_seed), 'random int=' + str(np.random.randint(100000)))
 
-        # --- initializing model ------------------------------------------------
-        print('get model')
-        model = get_model(options, indices_to_vectors)
-        # print('init model')
-        # print(model.to_json())
-        # print(model.get_config())
-        # print(model.get_weights())
+        # --- initializing model ---------------------------------------------------------------------------------------
+        model = get_model(options, embedding)
 
-        # --- training model -----------------------------------------------------
+        # --- training model -------------------------------------------------------------------------------------------
         # define training callbacks
         cb_epoch_stopping = callbacks.EarlyStopping(monitor='dev_pred', mode='max', patience=options['patience'])
-        cb_epoch_predictions = PredictionReport(model, options, results, reports, df)
+        cb_epoch_predictions = PredictionReport(model, options, results, reports, df_dev, df_test)
         train = np.array(df_train[CONTENT].values.T.tolist())
 
         print('fit model')
@@ -303,14 +268,10 @@ def __main__():
             callbacks=[cb_epoch_predictions, cb_epoch_stopping],
             verbose=0,
         )
-        # print('post-fit')
-        # print(model.to_json())
-        # print(model.get_config())
-        # print(model.get_weights())
 
         print('finished in {:.3f} minutes'.format((datetime.datetime.now() - results['start']) / 60))
 
-        # --- storing model, predictions, metrics -------------------------------------
+        # --- storing model, predictions, metrics ----------------------------------------------------------------------
         print('save model')
         cb_epoch_predictions.persist()
 
@@ -319,6 +280,6 @@ def __main__():
 
 
 if __name__ == "__main__":
-    np.set_printoptions(precision=6, threshold=50, edgeitems=3, linewidth=1000, suppress=True, nanstr=None,
-                        infstr=None, formatter=None)
+    # np.set_printoptions(precision=6, threshold=50, edgeitems=3, linewidth=1000, suppress=True, nanstr=None,
+    #                     infstr=None, formatter=None)
     __main__()

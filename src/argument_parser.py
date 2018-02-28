@@ -33,7 +33,7 @@ def get_options():
                         help='chose the first run index (1-based indexing')
     parser.add_argument('--runs', default=3, type=int,
                         help='number of runs (starting with index of run)')
-    parser.add_argument('--embedding', default='w2v', type=str,
+    parser.add_argument('--embedding', default='custom_embedding_w2v_hs_iter20_sg_300_lc_wiki.vec', type=str,
                         choices=emb_files_list, help='specify first embedding')
     parser.add_argument('--embedding2', default='', type=str,
                         choices=emb_files_list, help='a second embedding is used when specified')
@@ -77,6 +77,22 @@ def get_options():
                         choices={'local', 'hpc'},
                         help='shortcut for several parameters: emb_dir, spacy, runs, epochs, threshold')
     parser.add_argument('--comment', default='', type=str)
+
+    # SVM arguments
+    parser.add_argument('--shrinking', dest='shrinking', action='store_true')
+    parser.add_argument('--no-shrinking', dest='shrinking', action='store_false')
+    parser.set_defaults(shrinking=False)
+    parser.add_argument('--scale', dest='scale', action='store_true')
+    parser.add_argument('--no-scale', dest='scale', action='store_false')
+    parser.set_defaults(scale=False)
+    parser.add_argument('--lowercase', dest='lowercase', action='store_true')
+    parser.add_argument('--no-lowercase', dest='lowercase', action='store_false')
+    parser.set_defaults(lowercase=False)
+    parser.add_argument('--C', default=1.0, type=float)
+    parser.add_argument('--cache_size', default=2000, type=int)
+    parser.add_argument('--kernel', default='linear', type=str,
+                        choices=['linear', 'poly', 'rbf'])
+    parser.add_argument('--clf_file', default='', type=str)
 
     options = vars(parser.parse_args())
     if options['padding'] < 1:
