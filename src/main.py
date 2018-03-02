@@ -2,6 +2,7 @@ import datetime
 import json
 import sys
 from collections import OrderedDict
+from time import time
 
 import numpy as np
 np.random.seed(12345)
@@ -18,8 +19,7 @@ from sklearn.metrics import accuracy_score
 from argument_parser import get_options
 from models import get_model
 from constants import *
-from preprocessing import get_embedding, get_data, pad, split_train_dev_test, add_swap
-from results_evaluator import tprint
+from preprocessing import load_embedding, load_data, pad, split_train_dev_test, add_swap
 
 
 
@@ -55,7 +55,9 @@ class PredictionReport(callbacks.Callback):
         self.reports = reports
         self.df_dev = df_dev
         self.df_test = df_test
-        self.best_epoch = dict(epoch=0, pred_acc=0, val_acc=0, config=None, weights=None)
+        self.values_dev = np.array(df_dev[CONTENT].values.T.tolist())
+        self.values_test = np.array(df_test[CONTENT].values.T.tolist())
+        self.best_epoch = dict(epoch=0, dev_acc=0, val_acc=0, config=None, weights=None)
 
     def on_epoch_end(self, epoch, logs=None):
         if logs is None:
@@ -70,24 +72,26 @@ class PredictionReport(callbacks.Callback):
             print('\npredict:', end='')
 
         results['epoch'] = epoch + 1
-        results['runtime'] = datetime.datetime.now() - results['start']
-        results['pred_acc'], _ = predict(self.model, self.options, self.df_dev)
-        logs['dev_pred'] = results['pred_acc']
+        results['runtime'] = time() - results['start']
+        results['dev_acc'], _ = predict(self.model, self.options, self.values_dev, self.df_dev)
+        results['test_acc'], _ = predict(self.model, self.options, self.values_test, self.df_test)
+        logs['dev_pred'] = results['dev_acc']
+        logs['test_pred'] = results['test_acc']
 
-        if results['pred_acc'] > best_epoch['pred_acc']:
+        if results['dev_acc'] > best_epoch['dev_acc']:
             best_epoch['epoch'] = epoch + 1
-            best_epoch['pred_acc'] = results['pred_acc']
+            best_epoch['dev_acc'] = results['dev_acc']
             best_epoch['val_acc'] = results['val_acc']
+            best_epoch['test_acc'] = results['test_acc']
             best_epoch['config'] = self.model.get_config()
             best_epoch['weights'] = self.model.get_weights()
-        print('run {:02d} epoch {:02d} has finished with, loss={:.3f}, val_acc={:.3f}, pred_acc={:.3f} | '
-              'best epoch: {:02d}, val_acc={:.3f}, pred_acc={:.3f}'
-              .format(results['run'], epoch + 1, logs['loss'], results['val_acc'], results['pred_acc'],
-                      best_epoch['epoch'], best_epoch['val_acc'], best_epoch['pred_acc']))
+        print('run {:02d} epoch {:02d} has finished with, loss={:.3f}, val_acc={:.3f}, dev_acc={:.3f}, test_acc={:.3f} | '
+              'best epoch: {:02d}, val_acc={:.3f}, dev_acc={:.3f}, test_acc={:.3f}'
+              .format(results['run'], epoch + 1, logs['loss'], results['val_acc'], results['dev_acc'], results['test_acc'],
+                      best_epoch['epoch'], best_epoch['val_acc'], best_epoch['dev_acc'], best_epoch['test_acc']))
 
         # add report for epoch to reports list
-        del results['start']
-        values = list(results.values())
+        values = list(results.values())[:-1]
         self.reports.append("\t".join(map(str, values)))
 
     def persist(self):
@@ -100,14 +104,24 @@ class PredictionReport(callbacks.Callback):
         best_model = Model.from_config(best_epoch['config'])
         best_model.set_weights(best_epoch['weights'])
         fname = '%s{}_%s_rn%2d_ep%2d_ac%.3f{}' % (options['out_path'], dt, run_idx,
-                                                  best_epoch['epoch'], best_epoch['pred_acc'])
+                                                  best_epoch['epoch'], best_epoch['dev_acc'])
 
         # --- predict dev data with best model and write answer file ----------------------
         acc_dev, best_probabilities_dev = \
-            predict(best_model, options, self.df_dev,
-                    epoch=best_epoch['epoch'], pred_acc=best_epoch['pred_acc'],
-                    write_answer=True, print_answer=True)
+            predict(best_model, options, self.values_dev, self.df_dev,
+                    epoch=best_epoch['epoch'], dev_acc=best_epoch['dev_acc'],
+                    write_answer=True, print_answer=False, set_type='dev')
+        # save dev probabilities
+        np.save(fname.format('probabilities-dev', ''), best_probabilities_dev)
         print('acc_dev: {:.3f}'.format(acc_dev))
+
+        # --- predict test data with best model and write answer file ----------------------
+        acc_test, best_probabilities_test = \
+            predict(best_model, options, self.values_test, self.df_test,
+                    epoch=best_epoch['epoch'], dev_acc=best_epoch['dev_acc'],
+                    write_answer=True, print_answer=False, set_type='tst')
+        # save test probabilities
+        np.save(fname.format('probabilities-tst', ''), best_probabilities_test)
 
         # --- save model and metrics and predict test if accuracy above threshold ---------
         if acc_dev > options['threshold']:
@@ -115,45 +129,40 @@ class PredictionReport(callbacks.Callback):
             best_model.save(fname.format('model', '.hdf5'))
             # save dev probabilities
             np.save(fname.format('probabilities-dev', ''), best_probabilities_dev)
-            # predict test data with best model and write answer file
-            acc_test, best_probabilities_test = \
-                predict(best_model, options, self.df_test,
-                        epoch=best_epoch['epoch'], pred_acc=best_epoch['pred_acc'],
-                        write_answer=True, print_answer=True)
-            # save test probabilities
-            np.save(fname.format('probabilities-tst', ''), best_probabilities_test)
 
         filename = '{}report_{}.csv'.format(options['out_path'], dt)
         with open(filename, 'a') as fw:
             fw.write('\n'.join(self.reports))
 
 
-def predict(model, options: dict, df: pd.DataFrame, epoch: int=0, pred_acc: int=0,
-            print_answer: bool=False, write_answer: bool=False):
+def predict(model, options: dict, values: np.ndarray, df: pd.DataFrame, epoch: int=0, dev_acc: int=0,
+            print_answer: bool=False, write_answer: bool=False, set_type: str='dev'):
+
     probabilities = model.predict(
         x={
-            'sequence_layer_input_warrant0': df['warrant0'].values,
-            'sequence_layer_input_warrant1': df['warrant1'].values,
-            'sequence_layer_input_reason': df['reason'].values,
-            'sequence_layer_input_claim': df['claim'].values,
-            'sequence_layer_input_debateTitle': df['debateTitle'].values,
-            'sequence_layer_input_debateInfo': df['debateInfo'].values,
+            'sequence_layer_input_warrant0': values[0],
+            'sequence_layer_input_warrant1': values[1],
+            'sequence_layer_input_reason': values[2],
+            'sequence_layer_input_claim': values[3],
+            'sequence_layer_input_debateTitle': values[4],
+            'sequence_layer_input_debateInfo': values[5],
         },
         batch_size=32,
         verbose=0
     )
-    y_pred = df['predictions'] = (probabilities > 0.5)
+    y_pred = (probabilities > 0.5)
     y_true = df['correctLabelW0orW1'].values
     assert len(y_true) == len(y_pred)
 
     # calculate accuracy score
     acc = accuracy_score(y_true=y_true, y_pred=y_pred)
 
-    # generate answer
-    df_answer = df[[ID, 'predictions']]
-    if write_answer and acc > options['threshold']:
-        fname = '{}answer-dev_{}_rn{:02d}_ep{:02d}_ac{:.3f}.txt'\
-            .format(options['out_path'], options['dt'], options['run'], epoch, pred_acc)
+    # generate answer file
+    df.loc[:, 'pred'] = 1 * y_pred
+    df_answer = df[[ID, 'pred']]
+    if write_answer:
+        fname = '{}answer-{}_{}_rn{:02d}_ep{:02d}_ac{:.3f}.txt'\
+            .format(options['out_path'], set_type, options['dt'], options['run'], epoch, dev_acc)
         df_answer.to_csv(fname, sep='\t', index=False, index_label=[ID, LABEL])
     if print_answer:
         print(df_answer)
@@ -161,18 +170,19 @@ def predict(model, options: dict, df: pd.DataFrame, epoch: int=0, pred_acc: int=
     return acc, probabilities
 
 
-def initialize_results(options: dict, indices_to_vectors):
+def initialize_results(options: dict):
+    options['dt'] = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S-%f')
     return OrderedDict([
-            ('timestamp', datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S-%f')),
+            ('timestamp', options['dt']),
             ('run', options['run']),
             ('epoch', 0),
             ('runtime', ''),
             ('argv', str(sys.argv[1:])),
             ('embedding', options['embedding'].split('.')[0]),
             ('embedding2', options['embedding2'].split('.')[0]),
-            ('vocabulary', len(indices_to_vectors)),
+            ('vocabulary', options['vocabulary']),
             ('words in embeddings', ''),
-            ('dimensionality', len(indices_to_vectors[0])),
+            ('dimensionality', options['dimension']),
             ('backend', options['backend']),
             ('classifier', options['classifier']),
             ('epochs', options['epochs']),
@@ -185,13 +195,16 @@ def initialize_results(options: dict, indices_to_vectors):
             ('activation1', options['activation1']),
             ('activation2', options['activation2']),
             ('vsplit', options['vsplit']),
+            ('alt_split', options['alt_split']),
+            ('dev_test_ratio', options['dev_test_ratio']),
             ('rich', options['rich']),
             ('pre_seed', options['pre_seed']),
             ('runs', options['runs']),
             ('run seed', ''),
             ('val_acc', ''),
-            ('pred_acc', ''),
-        ])
+            ('dev_acc', ''),
+            ('test_acc', ''),
+    ])
 
 
 def __main__():
@@ -208,16 +221,25 @@ def __main__():
         print('TensorFlow version:', tfv)
 
     # --- loading ------------------------------------------------------------------------------------------------------
-    embedding = get_embedding(options)
+    embedding = load_embedding(options)
 
-    df = get_data(dataset=['train', 'dev', 'test'], lowercase=options['lowercase'], use_indexes=True)
-    print('pad sequences')
-    df[CONTENT] = df[CONTENT].applymap(lambda sequence: pad(sequence, padding_size=options['padding']))
-    df_train, df_dev, df_test = split_train_dev_test(df)
-    df_train = add_swap(df_train)
+    if options['alt_split']:
+        df = load_data(dataset=['train', 'dev', 'test'], lc=options['lowercase'], use_indexes=True, options=options)
+        print('pad sequences')
+        df[CONTENT] = df[CONTENT].applymap(lambda sequence: pad(sequence, padding_size=options['padding']))
+        df_train, df_dev, df_test = split_train_dev_test(df, dev_test_ratio=options['dev_test_ratio'])
+        df_train = add_swap(df_train)
+    else:
+        df = load_data(dataset=['train_swap', 'dev', 'test'], lc=options['lowercase'], use_indexes=True, options=options)
+        print('pad sequences')
+        df[CONTENT] = df[CONTENT].applymap(lambda sequence: pad(sequence, padding_size=options['padding']))
+        print('using default split and swap')
+        df_train = df[df['set'] == 'train_swap'].copy(deep=True)
+        df_dev = df[df['set'] == 'dev'].copy(deep=True)
+        df_test = df[df['set'] == 'test'].copy(deep=True)
 
     # --- dictionary to collect result metrics -------------------------------------------------------------------------
-    results = initialize_results(options, embedding)
+    results = initialize_results(options)
 
     # --- preparing loop -----------------------------------------------------------------------------------------------
     # initialize reports list with column headlines
@@ -230,8 +252,7 @@ def __main__():
     for run_idx in range(options['run'], options['run'] + options['runs']):
 
         # --- preparation ----------------------------------------------------------------------------------------------
-        results['start'] = datetime.datetime.now()
-        print(results['start'], type(results['start']))
+        results['start'] = time()
 
         # for reproducibility... you can't have enough seeds
         # although there is still some randomness going on in TensorFlow, maybe due to parallelization
@@ -269,10 +290,9 @@ def __main__():
             verbose=0,
         )
 
-        print('finished in {:.3f} minutes'.format((datetime.datetime.now() - results['start']) / 60))
+        print('finished in {:.3f} minutes'.format((time() - results['start']) / 60))
 
         # --- storing model, predictions, metrics ----------------------------------------------------------------------
-        print('save model')
         cb_epoch_predictions.persist()
 
         # reset reports list after writing reports for this run before the next run starts to remove head

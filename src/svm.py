@@ -5,9 +5,38 @@ np.random.seed(0)
 import pandas as pd
 from sklearn import svm, preprocessing
 from sklearn.metrics import accuracy_score
-from constants import EMB_DIR
-from preprocessing import get_data, add_swap, split_train_dev_test, get_xy
+from constants import EMB_DIR, CONTENT, CONTENT_MIN, LABEL
+from preprocessing import load_data, add_swap, split_train_dev_test, pad, get_vectors
 from argument_parser import get_options
+from gensim.models import word2vec as wv
+
+
+def get_xy(df: pd.DataFrame, options, padding_size=54):
+    print('get x_y')
+
+    lowercase = options['lowercase']
+    print('lowercase', lowercase)
+    fname = EMB_DIR + options['wv_file'] + '.vec'
+    print('loading embeddings from', fname)
+    model = wv.Word2Vec.load(fname)
+    word_vectors = model.wv
+    options['dims'] = dims = len(word_vectors['a'])
+    print('embedding dimensions', dims)
+    zeros = np.zeros(dims)
+
+    # pad data
+    df[CONTENT] = df[CONTENT].applymap(lambda sequence:
+                                       pad(sequence, padding_size=padding_size, padding_symbol='.$.'))
+    # replace with word vectors
+    df[CONTENT] = df[CONTENT].applymap(lambda sequence: get_vectors(sequence, word_vectors, lowercase, zeros))
+
+    x_list = df[CONTENT_MIN].values.tolist()
+    y_list = df[LABEL].values.tolist()
+    x = np.asarray(x_list)
+    x = np.reshape(x, (x.shape[0], x.shape[1] * x.shape[2] * x.shape[3]), order='C')
+    y = np.asarray(y_list, dtype=bool, order='C')
+    assert len(x) == len(y)
+    return x, y
 
 
 def validate(clf, options: dict, x: np.ndarray = None, y: np.ndarray = None,
@@ -50,7 +79,7 @@ def train(predict=False, proba=False, embedding=None, kernel=None, c=None, scale
 
     if alternative_split:
         print('use alternative split')
-        df = get_data(dataset=['train', 'dev', 'test'], lowercase=options['lowercase'])
+        df = load_data(dataset=['train', 'dev', 'test'], lc=options['lowercase'])
         # get data set splits
         # tprint(df, 10)
         # equal ratio:
@@ -59,10 +88,10 @@ def train(predict=False, proba=False, embedding=None, kernel=None, c=None, scale
         # df_train, df_dev, df_test = split_train_dev_test(df)
     else:
         print('use default split')
-        df_train = get_data('train', lowercase=options['lowercase'])
+        df_train = load_data('train', lc=options['lowercase'])
         # df_train_swap = get_data('train_swap', lowercase=options['lowercase'])
-        df_dev = get_data('dev', lowercase=options['lowercase'])
-        df_test = get_data('test', lowercase=options['lowercase'])
+        df_dev = load_data('dev', lc=options['lowercase'])
+        df_test = load_data('test', lc=options['lowercase'])
 
     # upsampling the train set
     df_train = add_swap(df_train)

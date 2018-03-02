@@ -12,16 +12,16 @@ def get_options():
     parser.add_argument('--verbose', default=1, type=int,
                         choices=[0, 1],
                         help='project verbosity should be set to 0 for deployment on cluster')
-    parser.add_argument('--classifier', default='LSTM_01', type=str)
+    parser.add_argument('--classifier', default='LSTM_05conc', type=str)
     parser.add_argument('--lstm_size', default=64, type=int,
                         help='size of the lstm hidden layer')
     parser.add_argument('--dense_factor', default=1.0, type=float,
                         help='factor of the additional dense hidden layer')
     parser.add_argument('--dropout', default=0.9, type=float,
                         help='dropout must be float(x) with 0 < x <= 1. unchecked')
-    parser.add_argument('--epochs', default=20, type=int,
+    parser.add_argument('--epochs', default=30, type=int,
                         help='maximum number of epochs. training may terminate eralier.')
-    parser.add_argument('--patience', default=5, type=int,
+    parser.add_argument('--patience', default=7, type=int,
                         help='for early stopping.')
     parser.add_argument('--padding', default=100, type=int,
                         help='length of padded vectors. choose <= 0 for maximum padding length (no truncation).')
@@ -61,9 +61,11 @@ def get_options():
                         help='specify code path on cluster. default is project dir.')
     parser.add_argument('--save_path', default=os.getcwd()+'/', type=str,
                         help='specify save path on cluster. default is project dir.')
-    parser.add_argument('--emb_dir', default='../embeddings/', type=str,
+    parser.add_argument('--emb_dir', default=os.path.dirname(os.path.abspath(__file__)) + '/../embeddings/', type=str,
                         help='usually leave as is ')
-    parser.add_argument('--out_path', default='out/', type=str,
+    parser.add_argument('--data_dir', default=os.path.dirname(os.path.abspath(__file__)) + '/../data/', type=str,
+                        help='usually leave as is ')
+    parser.add_argument('--out_path', default=os.path.dirname(os.path.abspath(__file__)) + '/../out/', type=str,
                         help='usually leave as is')
     parser.add_argument('--save_models', default=False, type=bool,
                         help='save model with each improving epoch')
@@ -78,6 +80,11 @@ def get_options():
                         help='shortcut for several parameters: emb_dir, spacy, runs, epochs, threshold')
     parser.add_argument('--comment', default='', type=str)
 
+    parser.add_argument('--alt_split', dest='alt_split', action='store_true')
+    parser.add_argument('--no-alt_split', dest='alt_split', action='store_false')
+    parser.set_defaults(alt_split=False)
+    parser.add_argument('--dev_test_ratio', default=0.416, type=float)
+
     # SVM arguments
     parser.add_argument('--shrinking', dest='shrinking', action='store_true')
     parser.add_argument('--no-shrinking', dest='shrinking', action='store_false')
@@ -87,7 +94,7 @@ def get_options():
     parser.set_defaults(scale=False)
     parser.add_argument('--lowercase', dest='lowercase', action='store_true')
     parser.add_argument('--no-lowercase', dest='lowercase', action='store_false')
-    parser.set_defaults(lowercase=False)
+    parser.set_defaults(lowercase=True)
     parser.add_argument('--C', default=1.0, type=float)
     parser.add_argument('--cache_size', default=2000, type=int)
     parser.add_argument('--kernel', default='linear', type=str,
@@ -98,7 +105,8 @@ def get_options():
     if options['padding'] < 1:
         options['padding'] = None
     if options['system'] == 'hpc':
-        options['emb_dir'] = '../embeddings/'
+        options['emb_dir'] = '/gpfs/project/funkea/semeval/embeddings/'
+        options['data_dir'] = '/gpfs/project/funkea/semeval/data/'
         options['spacy'] = '~/.local/lib/python3.4/site-packages/en_core_web_sm/en_core_web_sm-1.2.0/'
         options['runs'] = 10
         options['epochs'] = 20

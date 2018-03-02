@@ -62,6 +62,8 @@ KEYS = [
     'embedding2',
     'rich',
     'runtime',
+    'alt_split',
+    'dev_test_ratio',
     # 'epochs',
     # 'pre_seed',
     'run',
@@ -79,15 +81,17 @@ DEF_KEYS = {
     'padding': True,
     'lstm_size': True,
     'activation1': True,
-    'activation2': True,
+    # 'activation2': True,
     'optimizer': True,
     'loss': True,
     'batch_size': True,
     'dropout': True,
     'vsplit': True,
     'embedding': True,
-    'embedding2': True,
-    'rich': True,
+    # 'embedding2': True,
+    # 'rich': True,
+    'alt_split': True,
+    'dev_test_ratio': True,
 }
 LIM = .45, .75
 
@@ -245,10 +249,12 @@ def load_results(directory=None):
     # loading test-results
     results = []
     for fname in files:
-        result = pd.read_csv(dat_dir + fname, sep='\t',
+        result = pd.read_csv(dat_dir + fname, sep='\t', index_col=None,
                              converters={'classifier': (lambda arg: 'LSTM_01' if arg == 'AttentionLSTM' else arg)})
         result.rename(columns={'pred_acc': 'dev_acc'}, inplace=True)
         results.append(result)
+        print(fname)
+        # tprint(result)
 
     df = pd.concat(results, ignore_index=True)
     if 'test_acc' not in df.keys():
@@ -313,7 +319,7 @@ def plot2(df):
     plt.close('all')
 
 
-def plot3(df_, save=False, directory='', fname=''):
+def plot3(df_, save=False, single_plot: bool=False, directory='', fname=''):
     df = df_.copy(deep=True)
 
     sns.set(color_codes=True, font_scale=1)
@@ -333,14 +339,15 @@ def plot3(df_, save=False, directory='', fname=''):
         axis.set_xlabel('accuracy score: ' + x_key, weight='bold', size=11)
         axis.set_ylabel('accuracy score: ' + y_key, weight='bold', size=11)
 
-    # single scatter plot dev/test
-    fig, ax = plt.subplots(figsize=(5, 3.3))
-    single_scatter(df, 'dev', 'test', ax, ylim=(.45, .65), yticks=[.45, .5, .55, .6, .65])
-    fig.tight_layout()
-    if save:
-        fig.savefig(directory + fname + '_dev-test_scatter.pdf', bbox_inches='tight')
-    plt.show()
-    plt.close('all')
+    if single_plot:
+        # single scatter plot dev/test
+        fig, ax = plt.subplots(figsize=(5, 3.3))
+        single_scatter(df, 'dev', 'test', ax, ylim=(.45, .65), yticks=[.45, .5, .55, .6, .65])
+        fig.tight_layout()
+        if save:
+            fig.savefig(directory + fname + '_dev-test_scatter.pdf', bbox_inches='tight')
+        plt.show()
+        plt.close('all')
 
     # multi-plot
     gs = gridspec.GridSpec(2, 6)
@@ -413,21 +420,24 @@ def reports_evaluator_main(in_directory=None, out_directory='../out/', fname='')
     print('start evaluating')
     df = load_results(in_directory)[KEYS]
 
-    # filter for best epoch
-    keys = ['timestamp', 'run']
-    group = df.groupby(keys)
-    # get the row with the maximum value of 'dev_acc' per group
-    df = df.loc[group['dev_acc'].idxmax()]
-    # reset the index
-    df.set_index(keys, inplace=True)
+    if False:
+        # filter for best epoch
+        keys = ['timestamp', 'run']
+        group = df.groupby(keys)
+        # get the row with the maximum value of 'dev_acc' per group
+        df = df.loc[group['dev_acc'].idxmax()]
+        # reset the index
+        df.set_index(keys, inplace=True)
 
     # print grouped tables
-    # print_results(df)
+    print_results(df)
     # print_metrics(df)
-    # print_stats(df, write=True, directory=out_directory, fname=fname)
+    print_stats(df, write=True, directory=out_directory, fname=fname)
     plot3(df, save=True, directory=out_directory, fname=fname)
 
 
 if __name__ == '__main__':
-    reports_evaluator_main('/media/andreas/Linux_Data/hpc-semeval/tensorL05con2redo2/out/',
-                           fname='results_2560-single_orig-split_rescaled')
+    # reports_evaluator_main('/media/andreas/Linux_Data/hpc-semeval/tensorL05con2redo2/out/',
+    #                        fname='results_2560-single_orig-split_rescaled')
+    reports_evaluator_main('../out/',
+                           fname='test')

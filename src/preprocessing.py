@@ -4,73 +4,68 @@ import ast
 import json
 
 import numpy as np
-
-from results_evaluator import tprint
-
 np.random.seed(0)
 
-from theano.scalar import float32
 import pandas as pd
-from gensim.models import word2vec as wv
 from sklearn.model_selection import train_test_split
 import spacy
 from constants import FILES, WARRANT0, WARRANT1, LABEL, KEYS, EMB_DIR, CONTENT, CONTENT_MIN
 
 SPACY = spacy.load('en')
-PREPRO_PATH = os.path.dirname(os.path.abspath(__file__)) + '/' + '../data/preprocessed/'
+PREPRO_PATH = os.path.dirname(os.path.abspath(__file__)) + '/../data/preprocessed/'
 
 
-def get_embedding(options: dict, seed=0):
+def load_embedding(options: dict, seed=0):
     # TODO: 5) make embedding cache from fastText for own tokenization
 
-    print('load embedding')
-
-    # TODO: 4) check, if <code_path> works on HPC
-    code_path = os.path.dirname(os.path.abspath(__file__)) + '/'
     embedding = options['embedding'].split('.')[0]
-    print('embedding:', embedding)
-    embedding_path = code_path + options['emb_dir'] + options['embedding'] + '.json'
+    embedding_path = options['emb_dir'] + options['embedding'] + '.json'
     lc = True if ('_lc' in embedding) else False
-    print('get_embeddings ... lowercase:', lc)
+    print('load embedding ... lowercase:', lc)
 
+    # the words_to_freq* files are mainly interesting because of the index position of the tokens
+    # the index position results from two reproducible sorts:
+    # - 1) alphabetically and thus uniquely sorted
+    # - 2) by frequency, stable sort
     if lc:
-        freq_path = PREPRO_PATH + 'words_to_freq_lc.tsv'
+        indices_path = options['data_dir'] + 'preprocessed/' + 'words_to_freq_lc.tsv'
     else:
-        freq_path = PREPRO_PATH + 'words_to_freq.tsv'
+        indices_path = options['data_dir'] + 'preprocessed/' + 'words_to_freq.tsv'
+    word_indices_df = pd.read_csv(indices_path, '\t', names=['freq'], squeeze=False, index_col=0, header=None,
+                                  skip_blank_lines=False)
 
+    # loading the words to vectors mapping and converting the dict to a DataFrame
     with open(embedding_path, 'r') as fp:
         print(embedding_path)
         words_to_vectors = json.load(fp)
-        print('len(words_to_vectors)', len(words_to_vectors))
+    # print(words_to_vectors['0'])
+    words_to_vectors_df = pd.DataFrame.from_dict(words_to_vectors, orient='index')
 
-    word_indices_df = pd.read_csv(freq_path, '\t', names=['freq'], squeeze=False, index_col=0, header=None,
-                                  skip_blank_lines=False)
-    print('len(words_to_indices)', len(word_indices_df))
-    print(word_indices_df)
-
-    for word, vector in words_to_vectors.items():
-        # TODO: 1) add vectors as MultiIndex
-        word_indices_df.loc[word, 'vec'] = word
-
-    # for start of sequence and OOV we add random vectors
+    # determining the dimensionality of the embedding
     dimension = len(words_to_vectors['the'])
-    print(dimension)
-
+    # for padding we add a constant vector, for start of sequence and OOV we add random vectors
     np.random.seed(seed)
     vector_padding = np.asarray([0.0] * dimension)
     vector_start_of_sequence = 2 * 0.1 * np.random.rand(dimension) - 0.1
     vector_oov = 2 * 0.1 * np.random.rand(dimension) - 0.1
-    # and add them to the embeddings map (as the first three values)
-    # TODO: 2) add vectors as MultiIndex
-    word_indices_df.loc['$padding$', 'vec'] = 'abc'
-    word_indices_df.loc['$start_of_sequence$', 'vec'] = 'def'
-    word_indices_df.loc['$oov$', 'vec'] = 'ghi'
+    # adding the special vectors to the DataFrame
+    words_to_vectors_df.loc['$padding$'] = pd.Series(vector_padding)
+    words_to_vectors_df.loc['$start_of_sequence$'] = pd.Series(vector_start_of_sequence)
+    words_to_vectors_df.loc['$oov$'] = pd.Series(vector_oov)
 
-    tprint(word_indices_df)
-    print('length:', len(word_indices_df))
-    quit()
+    # combine (join) indices and vectors. By doing so, the vectors are placed at the correct position
+    indices_to_vectors_df = word_indices_df.join(words_to_vectors_df, how='left')
+    indices_to_vectors_df.drop('freq', axis=1, inplace=True)
 
-    return  # TODO: 3) return 2D ndarray
+    assert len(word_indices_df) == len(indices_to_vectors_df)
+    assert word_indices_df.index.equals(indices_to_vectors_df.index)
+
+    options['vocabulary'] = len(indices_to_vectors_df)
+    options['dimension'] = dimension
+    options['lowercase'] = lc
+    print('embeddings.shape', indices_to_vectors_df.values.shape)
+
+    return indices_to_vectors_df.values
 
 
 def get_vectors(sequence, word_vectors, lowercase, zeros):
@@ -82,61 +77,45 @@ def get_vectors(sequence, word_vectors, lowercase, zeros):
     ]
 
 
-def get_xy(df: pd.DataFrame, options, padding_size=54):
-    print('get x_y')
-
-    lowercase = options['lowercase']
-    print('lowercase', lowercase)
-    fname = EMB_DIR + options['wv_file'] + '.vec'
-    print('loading embeddings from', fname)
-    model = wv.Word2Vec.load(fname)
-    word_vectors = model.wv
-    options['dims'] = dims = len(word_vectors['a'])
-    print('embedding dimensions', dims)
-    zeros = np.zeros(dims)
-
-    # pad data
-    df[CONTENT] = df[CONTENT].applymap(lambda sequence:
-                                       pad(sequence, padding_size=padding_size, padding_symbol='.$.'))
-    # replace with word vectors
-    df[CONTENT] = df[CONTENT].applymap(lambda sequence: get_vectors(sequence, word_vectors, lowercase, zeros))
-
-    x_list = df[CONTENT_MIN].values.tolist()
-    y_list = df[LABEL].values.tolist()
-    x = np.asarray(x_list)
-    x = np.reshape(x, (x.shape[0], x.shape[1] * x.shape[2] * x.shape[3]), order='C')
-    y = np.asarray(y_list, dtype=bool, order='C')
-    assert len(x) == len(y)
-    return x, y
-
-
-def get_data_strings(lc=True):
-    if lc:
-        return pd.read_table(PREPRO_PATH + 'preprocessed_lc.tsv')
+def read_data_strings(options: dict=None, lc: bool=True):
+    if options is None:
+        path = PREPRO_PATH
     else:
-        return pd.read_table(PREPRO_PATH + 'preprocessed.tsv')
+        path = options['data_dir'] + 'preprocessed/'
 
-
-def get_data_indexes(lc=True):
     if lc:
-        return pd.read_table(PREPRO_PATH + 'preprocessed_index_lc.tsv')
+        return pd.read_table(path + 'preprocessed_lc.tsv')
     else:
-        return pd.read_table(PREPRO_PATH + 'preprocessed_index.tsv')
+        return pd.read_table(path + 'preprocessed.tsv')
 
 
-def get_data(dataset: [str, list]=None, lowercase: bool=True, use_indexes=False):
+def read_data_ints(options: dict=None, lc: bool=True):
+    if options is None:
+        path = PREPRO_PATH
+    else:
+        path = options['data_dir'] + 'preprocessed/'
+
+    if lc:
+        file = path + 'preprocessed_index_lc.tsv'
+    else:
+        file = path + 'preprocessed_index.tsv'
+    return pd.read_table(file)
+
+
+def load_data(dataset: [str, list]=None, lc: bool=True, use_indexes=False, options: dict=None):
     """ get data """
-    print('loading data for', dataset)
+    print('load data for', dataset, '... lowercase:', lc)
     if use_indexes:
-        df = get_data_indexes(lc=lowercase)
+        df = read_data_ints(options, lc=lc)
     else:
-        df = get_data_strings(lc=lowercase)
+        df = read_data_strings(options, lc=lc)
     if isinstance(dataset, str) and dataset in FILES.keys():
         df = df[df['set'] == dataset]
     elif isinstance(dataset, list):
         df = df[df['set'].isin(dataset)]
     else:
         return None
+    df['pred'] = False
     return df.reset_index(drop=True)
 
 
@@ -156,6 +135,7 @@ def add_swap(df: pd.DataFrame):
     df_copy[LABEL] ^= 1
     df_swapped = pd.concat([df, df_copy]).sort_index(kind="mergesort").reset_index(drop=True)
     df_swapped = df_swapped[KEYS]
+    print(len(df_swapped))
     return df_swapped
 
 
@@ -202,6 +182,7 @@ def preprocess(lc=True):
 
     # create an word to index mapping
     # TODO: add offset
+    # TODO: check if '.' is converted to '0'
     voc = pd.Series(vocabulary, name='frequency')
     voc.index.name = 'words'
     voc.sort_index(inplace=True)

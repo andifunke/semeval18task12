@@ -3,9 +3,37 @@ import json
 import re
 from os import listdir
 from pprint import pprint
-import gensim.models.word2vec as wv
+from gensim import models
 import six.moves.cPickle as cPickle
 import numpy as np
+import pandas as pd
+
+
+def embedding_cache_builder(fpath, lc=True):
+    """
+    create a json-cache file from a given .vec file.
+    """
+    print('loading model', fpath)
+    model = models.KeyedVectors.load_word2vec_format(fpath)
+
+    print('building dict')
+    if lc:
+        wtf = '../data/preprocessed/words_to_freq_lc.tsv'
+    else:
+        wtf = '../data/preprocessed/words_to_freq.tsv'
+    vocabulary = pd.read_csv(wtf, sep='\t', header=None)
+    vector_dict = dict()
+    for token in vocabulary[0]:
+        if token in model.wv:
+            vector_dict[token] = model.wv[token].tolist()
+
+    print(vector_dict)
+    print(len(vector_dict))
+
+    print('saving dict to json')
+    x = '_lc' if lc else ''
+    with open(fpath + x + '_cache.json', 'w', encoding='utf8') as fp:
+        json.dump(vector_dict, fp, ensure_ascii=False, indent=1)
 
 
 def gensim_wrapper_main():
@@ -18,7 +46,7 @@ def gensim_wrapper_main():
 
     for fname in files:
         print('loading model', fname)
-        model = wv.Word2Vec.load(DATA_DIR + fname)
+        model = models.Word2Vec.load(DATA_DIR + fname)
         print('building dict')
 
         # json
@@ -53,7 +81,7 @@ def gensim_wikipedia_embedding_wrapper():
                 vocabulary = json.load(fp)
 
         print('loading model', fname)
-        model = wv.Word2Vec.load(DATA_DIR + fname)
+        model = models.Word2Vec.Word2Vec.load(DATA_DIR + fname)
         print('building dict')
 
         # json
@@ -70,19 +98,20 @@ def gensim_wikipedia_embedding_wrapper():
 
 
 if __name__ == '__main__':
-    DATA_DIR = './embedding_caches/new/'
-    gensim_wikipedia_embedding_wrapper()
+    DATA_DIR = './embeddings/'
+    #gensim_wikipedia_embedding_wrapper()
+    embedding_cache_builder("/media/andreas/Linux_Data/old_workspace/sem_train/remote_vectors/fastText/wiki.en.vec")
 
-    verify = True
+    verify = False
     if verify:
         fname = 'custom_embedding_w2v_hs_iter20_sg_300_lc_wiki.vec'
         with open(DATA_DIR + fname + '.json', 'r') as f:
-            vector_dict = json.load(f)
-        print(vector_dict.keys())
-        print(len(vector_dict))
+            vec_dict = json.load(f)
+        print(vec_dict.keys())
+        print(len(vec_dict))
         with open(DATA_DIR + fname + '.pickle', 'rb') as f:
-            vector_dict = cPickle.load(f)
+            vec_dict = cPickle.load(f)
         np.set_printoptions(precision=6, threshold=50, edgeitems=3, linewidth=1000, suppress=True, nanstr=None,
                             infstr=None, formatter=None)
-        pprint(vector_dict, width=1000)
-        print(len(vector_dict))
+        pprint(vec_dict, width=1000)
+        print(len(vec_dict))

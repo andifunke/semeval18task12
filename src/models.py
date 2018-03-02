@@ -10,7 +10,7 @@ from keras import backend as K
 from constants import *
 
 
-# 'cheating' metric - not working as expected
+# 'pseudo' metric - not working as expected
 def dev_pred(y_true, y_pred):
     return K.cast(0.5, 'float32')
 
@@ -47,13 +47,13 @@ def get_input_layers(names, max_len):
     return il
 
 
-def embed_inputs(input_layers, embeddings, max_len, masking=True):
+def embed_inputs(input_layers, embedding, max_len, masking=True):
     # now define embedded layers of the input
     # embedding layers (el)
-    weights = None if embeddings is None else [embeddings]
+    weights = None if embedding is None else [embedding]
     el = list()
     for input_layer in input_layers:
-        el.append(Embedding(embeddings.shape[0], embeddings.shape[1], input_length=max_len, weights=weights,
+        el.append(Embedding(embedding.shape[0], embedding.shape[1], input_length=max_len, weights=weights,
                             mask_zero=masking)(input_layer))
     return el
 
@@ -141,7 +141,6 @@ def get_model(options: dict, embedding: np.ndarray):
 
     vocabulary = embedding.shape[0]
     dimensionality = embedding.shape[1]
-    print('embeddings.shape', embedding.shape)
 
     # by giving a different set of input layer indexes it is possible to alter the model
     # take care to train the model on related data sources
