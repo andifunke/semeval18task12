@@ -22,7 +22,6 @@ from constants import *
 from preprocessing import load_embedding, load_data, pad, split_train_dev_test, add_swap
 
 
-
 def detail_model(m, mname, save_weights=False):
     mjson = m.to_json()
     with open(mname + '.json', 'w') as fp:

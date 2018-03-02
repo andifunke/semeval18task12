@@ -4,6 +4,9 @@ import ast
 import json
 
 import numpy as np
+
+from results_evaluator import tprint
+
 np.random.seed(0)
 
 import pandas as pd
@@ -38,7 +41,7 @@ def load_embedding(options: dict, seed=0):
     with open(embedding_path, 'r') as fp:
         print(embedding_path)
         words_to_vectors = json.load(fp)
-    # print(words_to_vectors['0'])
+
     words_to_vectors_df = pd.DataFrame.from_dict(words_to_vectors, orient='index')
 
     # determining the dimensionality of the embedding
@@ -57,13 +60,15 @@ def load_embedding(options: dict, seed=0):
     indices_to_vectors_df = word_indices_df.join(words_to_vectors_df, how='left')
     indices_to_vectors_df.drop('freq', axis=1, inplace=True)
 
+    # fill missing with OOV-vector
+    indices_to_vectors_df.fillna(words_to_vectors_df.loc['$oov$'], axis='index', inplace=True)
+
     assert len(word_indices_df) == len(indices_to_vectors_df)
     assert word_indices_df.index.equals(indices_to_vectors_df.index)
 
-    options['vocabulary'] = len(indices_to_vectors_df)
+    options['vocabulary'] = len(words_to_vectors)
     options['dimension'] = dimension
     options['lowercase'] = lc
-    print('embeddings.shape', indices_to_vectors_df.values.shape)
 
     return indices_to_vectors_df.values
 
