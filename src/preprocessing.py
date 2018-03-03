@@ -4,17 +4,13 @@ import ast
 import json
 
 import numpy as np
-
-from results_evaluator import tprint
-
 np.random.seed(0)
 
 import pandas as pd
 from sklearn.model_selection import train_test_split
 import spacy
-from constants import FILES, WARRANT0, WARRANT1, LABEL, KEYS, EMB_DIR, CONTENT, CONTENT_MIN
+from constants import FILES, WARRANT0, WARRANT1, LABEL, KEYS, CONTENT
 
-SPACY = spacy.load('en')
 PREPRO_PATH = os.path.dirname(os.path.abspath(__file__)) + '/../data/preprocessed/'
 
 
@@ -82,49 +78,12 @@ def get_vectors(sequence, word_vectors, lowercase, zeros):
     ]
 
 
-def read_data_strings(options: dict=None, lc: bool=True):
-    if options is None:
-        path = PREPRO_PATH
-    else:
-        path = options['data_dir'] + 'preprocessed/'
-
-    if lc:
-        return pd.read_table(path + 'preprocessed_lc.tsv')
-    else:
-        return pd.read_table(path + 'preprocessed.tsv')
-
-
-def read_data_ints(options: dict=None, lc: bool=True):
-    if options is None:
-        path = PREPRO_PATH
-    else:
-        path = options['data_dir'] + 'preprocessed/'
-
-    if lc:
-        file = path + 'preprocessed_index_lc.tsv'
-    else:
-        file = path + 'preprocessed_index.tsv'
-    return pd.read_table(file)
-
-
-def load_data(dataset: [str, list]=None, lc: bool=True, use_indexes=False, options: dict=None):
-    """ get data """
-    print('load data for', dataset, '... lowercase:', lc)
-    if use_indexes:
-        df = read_data_ints(options, lc=lc)
-    else:
-        df = read_data_strings(options, lc=lc)
-    if isinstance(dataset, str) and dataset in FILES.keys():
-        df = df[df['set'] == dataset]
-    elif isinstance(dataset, list):
-        df = df[df['set'].isin(dataset)]
-    else:
-        return None
-    df['pred'] = False
-    return df.reset_index(drop=True)
-
-
 def split_train_dev_test(df: pd.DataFrame, train_ratio=0.6145, dev_test_ratio=0.416, seed: int=0):
+    if train_ratio is None:
+        train_ratio = 0.6145
+    if dev_test_ratio is None:
+        dev_test_ratio = 0.416
+
     print('split train-dev-test')
     np.random.seed(seed)
     train, dev_test = train_test_split(df, test_size=None, train_size=train_ratio)
@@ -144,15 +103,6 @@ def add_swap(df: pd.DataFrame):
     return df_swapped
 
 
-def tokenize_cell(item, vocabulary=None, lc=True):
-    doc = SPACY(item)
-    tokens = [str(token).lower() if lc else str(token) for token in doc]
-    if vocabulary is not None:
-        for token in tokens:
-            vocabulary[token] = vocabulary.get(token, 0) + 1
-    return tokens
-
-
 def pad(sequence: list, padding_size: int, padding_symbol=0):
     sequence = ast.literal_eval(sequence)
     length = len(sequence)
@@ -166,7 +116,71 @@ def pad(sequence: list, padding_size: int, padding_symbol=0):
     return s
 
 
+def read_data(data_dir: str=None, indexed=False, lc: bool=True):
+    if data_dir:
+        path = data_dir + 'preprocessed/'
+    else:
+        path = PREPRO_PATH
+
+    suffix1 = '_index' if indexed else ''
+    suffix2 = '_lc' if lc else ''
+
+    return pd.read_table(path + 'preprocessed{}{}.tsv'.format(suffix1, suffix2))
+
+
+def load_data(dataset: [str, list]=None, data_dir: dict=None, lc: bool=True, indexed=False):
+    """ get data """
+    print('load data for', dataset, '... lowercase:', lc)
+    if indexed:
+        df = read_data(data_dir, indexed=True, lc=lc)
+    else:
+        df = read_data(data_dir, indexed=False, lc=lc)
+    if isinstance(dataset, str) and dataset in FILES.keys():
+        df = df[df['set'] == dataset]
+    elif isinstance(dataset, list):
+        df = df[df['set'].isin(dataset)]
+    else:
+        return None
+    df['pred'] = False
+    return df.reset_index(drop=True)
+
+
+def get_train_dev_test(options: dict):
+    data_dir = options['data_dir'] if 'data_dir' in options else None
+    lc = options['lowercase'] if 'lowercase' in options else True
+    dev_test_ratio = options['dev_test_ratio'] if 'dev_test_ratio' in options else None
+    padding_size = options['padding'] if 'padding' in options else 54
+
+    if 'alt_split' in options and options['alt_split']:
+        df = load_data(dataset=['train', 'dev', 'test'], data_dir=data_dir, indexed=True, lc=lc)
+        print('pad sequences')
+        df[CONTENT] = df[CONTENT].applymap(lambda sequence: pad(sequence, padding_size=padding_size))
+        df_train, df_dev, df_test = split_train_dev_test(df, dev_test_ratio=dev_test_ratio)
+        df_train = add_swap(df_train)
+    else:
+        df = load_data(dataset=['train_swap', 'dev', 'test'], data_dir=data_dir, indexed=True, lc=lc)
+        print('pad sequences')
+        df[CONTENT] = df[CONTENT].applymap(lambda sequence: pad(sequence, padding_size=padding_size))
+        print('using default split and swap')
+        df_train = df[df['set'] == 'train_swap'].copy(deep=True)
+        df_dev = df[df['set'] == 'dev'].copy(deep=True)
+        df_test = df[df['set'] == 'test'].copy(deep=True)
+
+    return df_train, df_dev, df_test
+
+
+def tokenize_cell(spacy_instance, item: str, vocabulary: dict=None, lc: bool=True):
+    doc = spacy_instance(item)
+    tokens = [str(token).lower() if lc else str(token) for token in doc]
+    if vocabulary is not None:
+        for token in tokens:
+            vocabulary[token] = vocabulary.get(token, 0) + 1
+    return tokens
+
+
 def preprocess(lc=True):
+    spacy_instance = spacy.load('en')
+
     print('read data')
     dfs = []
     for subset in FILES.keys():
@@ -179,7 +193,7 @@ def preprocess(lc=True):
     df = pd.concat(dfs, ignore_index=True)
     df = df[KEYS]
     vocabulary = dict()
-    df[CONTENT] = df[CONTENT].applymap(lambda s: tokenize_cell(s, vocabulary, lc=lc))
+    df[CONTENT] = df[CONTENT].applymap(lambda s: tokenize_cell(spacy_instance, s, vocabulary, lc=lc))
     fname = PREPRO_PATH + 'preprocessed'
     fname = fname + '_lc' if lc else fname
     print('saving to', fname)

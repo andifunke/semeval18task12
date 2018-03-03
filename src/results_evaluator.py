@@ -3,8 +3,9 @@ import re
 from os import listdir
 import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib import pylab, gridspec
+from matplotlib import gridspec
 from matplotlib.ticker import LinearLocator
+from pandas.core.generic import NDFrame
 from tabulate import tabulate
 import matplotlib.cm as cm
 from matplotlib.colors import Normalize
@@ -96,11 +97,16 @@ DEF_KEYS = {
 LIM = .45, .75
 
 
-def tprint(df: pd.DataFrame, head=0, to_latex=False):
+def tprint(df: NDFrame, head=0, to_latex=False):
+
+    if isinstance(df, pd.Series):
+        df = pd.DataFrame(df)
+
     if head > 0:
         df = df.head(head)
     elif head < 0:
         df = df.tail(-head)
+
     print(tabulate(df, headers="keys", tablefmt="pipe", floatfmt=".3f") + '\n')
 
     if to_latex:
@@ -335,7 +341,7 @@ def plot3(df_, save=False, single_plot: bool=False, directory='', fname=''):
             axis.set_xticks(xticks)
         if yticks is not None:
             axis.set_yticks(yticks)
-        sns.regplot(x=data[x_key], y=data[y_key], ax=axis, scatter=True, fit_reg=False, scatter_kws={'s': 4})
+        sns.regplot(x=data[x_key], y=data[y_key], ax=axis, scatter=True, fit_reg=False, scatter_kws={'s': 20})
         axis.set_xlabel('accuracy score: ' + x_key, weight='bold', size=11)
         axis.set_ylabel('accuracy score: ' + y_key, weight='bold', size=11)
 
@@ -343,6 +349,7 @@ def plot3(df_, save=False, single_plot: bool=False, directory='', fname=''):
         # single scatter plot dev/test
         fig, ax = plt.subplots(figsize=(5, 3.3))
         single_scatter(df, 'dev', 'test', ax, ylim=(.45, .65), yticks=[.45, .5, .55, .6, .65])
+        single_scatter(df, 'dev', 'test', ax, ylim=(.5, .7), yticks=[.5, .55, .6, .65, .7])
         fig.tight_layout()
         if save:
             fig.savefig(directory + fname + '_dev-test_scatter.pdf', bbox_inches='tight')
@@ -413,14 +420,17 @@ def print_results(df, write=False, directory=None, fname=''):
         df.to_csv(fname, sep='\t')
 
 
-def reports_evaluator_main(in_directory=None, out_directory='../out/', fname=''):
+def reports_evaluator_main(in_directory=None, out_directory='../out/', fname='', ts_filter=None):
     """
     a given directory overwrites the defaults. The function will look for all test-result files in this directory.
     """
     print('start evaluating')
     df = load_results(in_directory)[KEYS]
 
-    if False:
+    if ts_filter:
+        df = df[df.timestamp.isin(ts_filter)]
+
+    if True:
         # filter for best epoch
         keys = ['timestamp', 'run']
         group = df.groupby(keys)
@@ -433,11 +443,13 @@ def reports_evaluator_main(in_directory=None, out_directory='../out/', fname='')
     print_results(df)
     # print_metrics(df)
     print_stats(df, write=True, directory=out_directory, fname=fname)
-    plot3(df, save=True, directory=out_directory, fname=fname)
+    plot3(df, save=True, directory=out_directory, fname=fname, single_plot=True)
 
 
 if __name__ == '__main__':
-    # reports_evaluator_main('/media/andreas/Linux_Data/hpc-semeval/tensorL05con2redo2/out/',
-    #                        fname='results_2560-single_orig-split_rescaled')
-    reports_evaluator_main('../out/',
-                           fname='test')
+    reports_evaluator_main('/media/andreas/Linux_Data/hpc-semeval/alt_split_odd/out/',
+                           fname='alt_split_odd_single_model___',
+                           # ts_filter=['2018-03-01_18-30-24-504362', '2018-03-01_18-14-17-396595'],
+                           ts_filter=['2018-03-01_16-05-28-331497', '2018-03-01_16-19-01-272353'],
+                           )
+    # reports_evaluator_main('../out/', fname='test')

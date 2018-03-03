@@ -19,7 +19,7 @@ from sklearn.metrics import accuracy_score
 from argument_parser import get_options
 from models import get_model
 from constants import *
-from preprocessing import load_embedding, load_data, pad, split_train_dev_test, add_swap
+from preprocessing import load_embedding, get_train_dev_test
 
 
 def detail_model(m, mname, save_weights=False):
@@ -84,9 +84,10 @@ class PredictionReport(callbacks.Callback):
             best_epoch['test_acc'] = results['test_acc']
             best_epoch['config'] = self.model.get_config()
             best_epoch['weights'] = self.model.get_weights()
-        print('run {:02d} epoch {:02d} has finished with, loss={:.3f}, val_acc={:.3f}, dev_acc={:.3f}, test_acc={:.3f} | '
+        print('run {:02d} | epoch {:02d}: loss={:.3f}, val_acc={:.3f}, dev_acc={:.3f}, test_acc={:.3f} | '
               'best epoch: {:02d}, val_acc={:.3f}, dev_acc={:.3f}, test_acc={:.3f}'
-              .format(results['run'], epoch + 1, logs['loss'], results['val_acc'], results['dev_acc'], results['test_acc'],
+              .format(results['run'], epoch + 1, logs['loss'],
+                      results['val_acc'], results['dev_acc'], results['test_acc'],
                       best_epoch['epoch'], best_epoch['val_acc'], best_epoch['dev_acc'], best_epoch['test_acc']))
 
         # add report for epoch to reports list
@@ -125,9 +126,8 @@ class PredictionReport(callbacks.Callback):
         # --- save model and metrics and predict test if accuracy above threshold ---------
         if acc_dev > options['threshold']:
             print('saving model')
+            # TODO: check model integrity and reproducability
             best_model.save(fname.format('model', '.hdf5'))
-            # save dev probabilities
-            np.save(fname.format('probabilities-dev', ''), best_probabilities_dev)
 
         filename = '{}report_{}.csv'.format(options['out_path'], dt)
         with open(filename, 'a') as fw:
@@ -150,7 +150,7 @@ def predict(model, options: dict, values: np.ndarray, df: pd.DataFrame, epoch: i
         verbose=0
     )
     y_pred = (probabilities > 0.5)
-    y_true = df['correctLabelW0orW1'].values
+    y_true = df[LABEL].values
     assert len(y_true) == len(y_pred)
 
     # calculate accuracy score
@@ -221,21 +221,7 @@ def __main__():
 
     # --- loading ------------------------------------------------------------------------------------------------------
     embedding = load_embedding(options)
-
-    if options['alt_split']:
-        df = load_data(dataset=['train', 'dev', 'test'], lc=options['lowercase'], use_indexes=True, options=options)
-        print('pad sequences')
-        df[CONTENT] = df[CONTENT].applymap(lambda sequence: pad(sequence, padding_size=options['padding']))
-        df_train, df_dev, df_test = split_train_dev_test(df, dev_test_ratio=options['dev_test_ratio'])
-        df_train = add_swap(df_train)
-    else:
-        df = load_data(dataset=['train_swap', 'dev', 'test'], lc=options['lowercase'], use_indexes=True, options=options)
-        print('pad sequences')
-        df[CONTENT] = df[CONTENT].applymap(lambda sequence: pad(sequence, padding_size=options['padding']))
-        print('using default split and swap')
-        df_train = df[df['set'] == 'train_swap'].copy(deep=True)
-        df_dev = df[df['set'] == 'dev'].copy(deep=True)
-        df_test = df[df['set'] == 'test'].copy(deep=True)
+    df_train, df_dev, df_test = get_train_dev_test(options)
 
     # --- dictionary to collect result metrics -------------------------------------------------------------------------
     results = initialize_results(options)
@@ -281,7 +267,7 @@ def __main__():
                 'sequence_layer_input_debateTitle': train[4],
                 'sequence_layer_input_debateInfo': train[5],
             },
-            y=df_train['correctLabelW0orW1'],
+            y=df_train[LABEL],
             epochs=options['epochs'],
             batch_size=options['batch_size'],
             validation_split=options['vsplit'],
@@ -299,6 +285,4 @@ def __main__():
 
 
 if __name__ == "__main__":
-    # np.set_printoptions(precision=6, threshold=50, edgeitems=3, linewidth=1000, suppress=True, nanstr=None,
-    #                     infstr=None, formatter=None)
     __main__()
