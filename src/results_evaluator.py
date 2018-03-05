@@ -447,9 +447,10 @@ def reports_evaluator_main(in_directory=None, out_directory='../out/', fname='',
 
 
 if __name__ == '__main__':
-    reports_evaluator_main('/media/andreas/Linux_Data/hpc-semeval/alt_split_odd/out/',
+    reports_evaluator_main('/home/andreas/Schreibtisch/out/',
+        # '/media/andreas/Linux_Data/hpc-semeval/alt_split_odd/out/',
                            fname='alt_split_odd_single_model___',
                            # ts_filter=['2018-03-01_18-30-24-504362', '2018-03-01_18-14-17-396595'],
-                           ts_filter=['2018-03-01_16-05-28-331497', '2018-03-01_16-19-01-272353'],
+                           # ts_filter=['2018-03-01_16-05-28-331497', '2018-03-01_16-19-01-272353'],
                            )
     # reports_evaluator_main('../out/', fname='test')

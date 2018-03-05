@@ -84,6 +84,7 @@ class PredictionReport(callbacks.Callback):
             best_epoch['test_acc'] = results['test_acc']
             best_epoch['config'] = self.model.get_config()
             best_epoch['weights'] = self.model.get_weights()
+
         print('run {:02d} | epoch {:02d}: loss={:.3f}, val_acc={:.3f}, dev_acc={:.3f}, test_acc={:.3f} | '
               'best epoch: {:02d}, val_acc={:.3f}, dev_acc={:.3f}, test_acc={:.3f}'
               .format(results['run'], epoch + 1, logs['loss'],
@@ -103,8 +104,8 @@ class PredictionReport(callbacks.Callback):
         # --- get best epoch and its predictions for this run -----------------------------
         best_model = Model.from_config(best_epoch['config'])
         best_model.set_weights(best_epoch['weights'])
-        fname = '%s{}_%s_rn%2d_ep%2d_ac%.3f{}' % (options['out_path'], dt, run_idx,
-                                                  best_epoch['epoch'], best_epoch['dev_acc'])
+        fname = '%s{}_%s_rn%02d_ep%02d_ac%.3f{}' % (options['out_path'], dt, run_idx,
+                                                    best_epoch['epoch'], best_epoch['dev_acc'])
 
         # --- predict dev data with best model and write answer file ----------------------
         acc_dev, best_probabilities_dev = \
