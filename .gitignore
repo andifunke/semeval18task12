@@ -206,7 +206,7 @@ embedding_caches/
 embeddings/
 results/
 attention_lstm_dir/
-data/
+data/submissions/
 svm/
 test*.txt
 prob/
