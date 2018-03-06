@@ -210,4 +210,5 @@ data/
 svm/
 test*.txt
 prob/
-# src/deprecated/
+src/deprecated/
+detailed_results/
