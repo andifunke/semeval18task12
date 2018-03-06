@@ -341,12 +341,13 @@ def plot3(df_, save=False, single_plot: bool=False, directory='', fname=''):
             axis.set_xticks(xticks)
         if yticks is not None:
             axis.set_yticks(yticks)
-        sns.regplot(x=data[x_key], y=data[y_key], ax=axis, scatter=True, fit_reg=False, scatter_kws={'s': 20})
+        sns.regplot(x=data[x_key], y=data[y_key], ax=axis, scatter=True, fit_reg=False, scatter_kws={'s': 2})
         axis.set_xlabel('accuracy score: ' + x_key, weight='bold', size=11)
         axis.set_ylabel('accuracy score: ' + y_key, weight='bold', size=11)
 
     if single_plot:
         # single scatter plot dev/test
+        fig, ax = plt.subplots(figsize=(5, 5))
         fig, ax = plt.subplots(figsize=(5, 3.3))
         single_scatter(df, 'dev', 'test', ax, ylim=(.45, .65), yticks=[.45, .5, .55, .6, .65])
         single_scatter(df, 'dev', 'test', ax, ylim=(.5, .7), yticks=[.5, .55, .6, .65, .7])
@@ -447,9 +448,10 @@ def reports_evaluator_main(in_directory=None, out_directory='../out/', fname='',
 
 
 if __name__ == '__main__':
-    reports_evaluator_main('/home/andreas/Schreibtisch/out/',
-        # '/media/andreas/Linux_Data/hpc-semeval/alt_split_odd/out/',
-                           fname='alt_split_odd_single_model___',
+    reports_evaluator_main(
+        # '/home/andreas/Schreibtisch/out/',
+        '/media/andreas/Linux_Data/hpc-semeval/alt_split_odd_both/',
+        fname='alt_split_odd_2560_small',
                            # ts_filter=['2018-03-01_18-30-24-504362', '2018-03-01_18-14-17-396595'],
                            # ts_filter=['2018-03-01_16-05-28-331497', '2018-03-01_16-19-01-272353'],
                            )

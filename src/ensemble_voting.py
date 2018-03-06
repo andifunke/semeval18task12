@@ -12,12 +12,11 @@ from results_evaluator import tprint
 import seaborn as sns
 
 
-def combine(y_true, y_pred, conf):
+def vote(y_true, y_pred, conf):
     """ confidence vote """
     conf_argmax = np.argmax(conf, axis=0)
     conf_vote = y_pred.T[np.arange(len(y_pred.T)), conf_argmax]
     acc_conf = accuracy_score(y_true=y_true, y_pred=conf_vote)
-    # print('combined accuracy by confidence: {:.3f}'.format(acc_conf))
 
     """ majority vote """
     pred = np.mean(y_pred, axis=0)
@@ -26,7 +25,6 @@ def combine(y_true, y_pred, conf):
     pred[tie] = conf_vote[tie]
     pred = (pred >= 0.5)
     acc_major = accuracy_score(y_true=y_true, y_pred=pred)
-    # print('combined accuracy by majority vote: {:.3f}'.format(acc_major))
 
     return acc_conf, acc_major
 
@@ -67,8 +65,6 @@ def plot_axis(df, ax, legend_pos='orig1'):
     # ax.xaxis.set_major_locator(majorLocator_x)
     ax.yaxis.set_major_locator(majorLocator_y)
     ax.yaxis.set_major_formatter(majorFormatter_y)
-
-    # for the minor ticks, use no labels; default NullFormatter
     ax.yaxis.set_minor_locator(minorLocator_y)
 
 
@@ -116,7 +112,7 @@ def build_df(files, y_true):
 def main():
     names = {
         # 'tensorL05con2redo2': '/media/andreas/Linux_Data/hpc-semeval/tensorL05con2redo2/out/',
-        'alt_split_odd': '/media/andreas/Linux_Data/hpc-semeval/alt_split_odd/out/',
+        'alt_split_odd': '/media/andreas/Linux_Data/hpc-semeval/alt_split_odd_both/',
     }
 
     _, df_dev_data, df_tst_data = get_train_dev_test(options=dict(alt_split=True))
@@ -160,11 +156,9 @@ def main():
         dev_major_scores = list()
         tst_major_scores = list()
 
-        length = range(1, len(df)+1)
-        # length = range(1, 100)
-        for i in length:
-            acc_conf_dev, acc_major_dev = combine(dev_true, y_pred=dev_preds_np[:i], conf=dev_confs_np[:i])
-            acc_conf_tst, acc_major_tst = combine(tst_true, y_pred=tst_preds_np[:i], conf=tst_confs_np[:i])
+        for i in range(1, len(df)+1):
+            acc_conf_dev, acc_major_dev = vote(dev_true, y_pred=dev_preds_np[:i], conf=dev_confs_np[:i])
+            acc_conf_tst, acc_major_tst = vote(tst_true, y_pred=tst_preds_np[:i], conf=tst_confs_np[:i])
             dev_conf_scores.append(acc_conf_dev)
             tst_conf_scores.append(acc_conf_tst)
             dev_major_scores.append(acc_major_dev)
@@ -182,14 +176,14 @@ def main():
 
         df = pd.DataFrame(mtrx)
         plot_figure([df], k + 'all_')
-        # df.to_csv('../figures/alt-split.csv', sep='\t')
+        # df.to_csv('../out/alt-split_2560.csv', sep='\t')
 
 
 if __name__ == '__main__':
     # main()
-    df1 = pd.read_csv('../out/orig-split.csv', sep='\t')
-    df2 = pd.read_csv('../out/alt-split.csv', sep='\t')
-    plot_figure([df1], '../out/orig-split_2', save=True, legend_pos=['orig1'])
-    plot_figure([df2], '../out/alt-split_2', save=True, legend_pos=['alt1'])
-    plot_figure([df1, df2], '../out/ensemble_h_2', save=True, legend_pos=['orig2', 'alt2'], align='h')
-    plot_figure([df1, df2], '../out/ensemble_v_2', save=True, legend_pos=['orig2', 'alt2'], align='v')
+    # df1 = pd.read_csv('../out/orig-split.csv', sep='\t')
+    df2 = pd.read_csv('../out/alt-split_2560.csv', sep='\t')
+    # plot_figure([df1], '../out/orig-split_2', save=True, legend_pos=['orig1'])
+    plot_figure([df2], '../out/alt-split_2560', save=True, legend_pos=['alt1'])
+    # plot_figure([df1, df2], '../out/ensemble_h_2', save=True, legend_pos=['orig2', 'alt2'], align='h')
+    # plot_figure([df1, df2], '../out/ensemble_v_2', save=True, legend_pos=['orig2', 'alt2'], align='v')
