@@ -1,18 +1,20 @@
-""" converts gensim embeddings to json/pickle objetcs """
+"""
+Converts gensim embeddings to json/pickle objects.
+"""
+
 import json
 import re
 from os import listdir
 from pprint import pprint
-from gensim import models
-import six.moves.cPickle as cPickle
+
 import numpy as np
 import pandas as pd
+import six.moves.cPickle as cPickle
+from gensim import models
 
 
 def embedding_cache_builder(fpath, lc=True):
-    """
-    create a json-cache file from a given .vec file.
-    """
+    """Creates a json-cache file from a given .vec file."""
     print('loading model', fpath)
     model = models.KeyedVectors.load_word2vec_format(fpath)
 
@@ -36,9 +38,10 @@ def embedding_cache_builder(fpath, lc=True):
         json.dump(vector_dict, fp, ensure_ascii=False, indent=1)
 
 
+# TODO: deprecated
 def gensim_wrapper_main():
     """
-    since gensim cannot be installed on the hpc this small script replaces
+    Since gensim cannot be installed on the hpc this small script replaces
     gensim KeyedVectors by plain old vanilla python dicts
     """
 
@@ -62,11 +65,12 @@ def gensim_wrapper_main():
             cPickle.dump(vector_dict, fp)
 
 
+# TODO: deprecated
 def gensim_wikipedia_embedding_wrapper():
     """
     since gensim cannot be installed on the hpc this small script replaces
     gensim KeyedVectors by plain old vanilla python dicts
-    for the wikipedia embeddings it also reduces the vector set to tokens in the vocabulary
+    for the Wikipedia embeddings it also reduces the vector set to tokens in the vocabulary
     (i.e. building a cache file)
     """
 
@@ -99,7 +103,6 @@ def gensim_wikipedia_embedding_wrapper():
 
 if __name__ == '__main__':
     DATA_DIR = './embeddings/'
-    #gensim_wikipedia_embedding_wrapper()
     embedding_cache_builder("/media/andreas/Linux_Data/old_workspace/sem_train/remote_vectors/fastText/wiki.en.vec")
 
     verify = False

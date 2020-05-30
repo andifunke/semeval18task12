@@ -6,20 +6,19 @@ from time import time
 
 import numpy as np
 np.random.seed(12345)
-
+import pandas as pd
 import tensorflow as tf
 tf.set_random_seed(12345)
-
-from tensorflow import __version__ as tfv
-from theano import __version__ as thv
 from keras import __version__ as kv, backend as K, callbacks
 from keras.models import Model
-import pandas as pd
 from sklearn.metrics import accuracy_score
-from argument_parser import get_options
-from models import get_model
-from constants import *
-from preprocessing import load_embedding, get_train_dev_test
+from tensorflow import __version__ as tfv
+from theano import __version__ as thv
+
+from .argument_parser import get_options
+from .constants import *
+from .models import get_model
+from .preprocessing import load_embedding, get_train_dev_test
 
 
 def detail_model(m, mname, save_weights=False):
@@ -211,7 +210,7 @@ def __main__():
     options = get_options()
     options['backend'] = K.backend()
 
-    # --- verbosity ----------------------------------------------------------------------------------------------------
+    # --- verbosity -------------------------------------------------------------------------------
     print('argv:', sys.argv[1:])
     print('Python version:', sys.version)
     print('Keras version:', kv)
@@ -220,28 +219,28 @@ def __main__():
     elif options['backend'] == 'tensorflow':
         print('TensorFlow version:', tfv)
 
-    # --- loading ------------------------------------------------------------------------------------------------------
+    # --- loading ---------------------------------------------------------------------------------
     embedding = load_embedding(options)
     df_train, df_dev, df_test = get_train_dev_test(options)
 
-    # --- dictionary to collect result metrics -------------------------------------------------------------------------
+    # --- dictionary to collect result metrics ----------------------------------------------------
     results = initialize_results(options)
 
-    # --- preparing loop -----------------------------------------------------------------------------------------------
+    # --- preparing loop --------------------------------------------------------------------------
     # initialize reports list with column headlines
     keys = list(results.keys())
     report_head = "\t".join(map(str, keys))
     reports = [report_head]
 
-    # --- loop -> fit model with different seeds -----------------------------------------------------------------------
+    # --- loop -> fit model with different seeds --------------------------------------------------
     # reproducibility from the 2nd run onwards works only with Theano, not with TensorFlow
     for run_idx in range(options['run'], options['run'] + options['runs']):
 
-        # --- preparation ----------------------------------------------------------------------------------------------
+        # --- preparation -------------------------------------------------------------------------
         results['start'] = time()
 
-        # for reproducibility... you can't have enough seeds
-        # although there is still some randomness going on in TensorFlow, maybe due to parallelization
+        # for reproducibility... you can't have enough seeds although there is still some
+        # randomness going on in TensorFlow, maybe due to parallelization
         results['run'] = run_idx
         run_seed = results['run seed'] = options['pre_seed'] + run_idx
         np.random.seed(run_seed)
@@ -249,10 +248,10 @@ def __main__():
         print("Run: ", run_idx)
         print('seed=' + str(run_seed), 'random int=' + str(np.random.randint(100000)))
 
-        # --- initializing model ---------------------------------------------------------------------------------------
+        # --- initializing model ------------------------------------------------------------------
         model = get_model(options, embedding)
 
-        # --- training model -------------------------------------------------------------------------------------------
+        # --- training model ----------------------------------------------------------------------
         # define training callbacks
         cb_epoch_stopping = callbacks.EarlyStopping(monitor='dev_pred', mode='max', patience=options['patience'])
         cb_epoch_predictions = PredictionReport(model, options, results, reports, df_dev, df_test)
@@ -278,10 +277,11 @@ def __main__():
 
         print('finished in {:.3f} minutes'.format((time() - results['start']) / 60))
 
-        # --- storing model, predictions, metrics ----------------------------------------------------------------------
+        # --- storing model, predictions, metrics -------------------------------------------------
         cb_epoch_predictions.persist()
 
-        # reset reports list after writing reports for this run before the next run starts to remove head
+        # reset reports list after writing reports for this run before the next run starts to
+        # remove head
         reports = ['']
 
 

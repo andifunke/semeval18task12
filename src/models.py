@@ -1,13 +1,18 @@
 """
-Neural models - new approach with sandwich design
+Neural models - new approach with 'sandwich' design
 """
-import numpy as np
+
 import keras
-from keras.engine import Input, Model, Layer
-from keras.layers import concatenate, Lambda, Dense, Dropout, Embedding, LSTM, Bidirectional, multiply, Concatenate, \
-    Flatten, ConvLSTM2D, Conv2D, Conv1D, MaxPooling1D, Multiply, Add, Average, Maximum, Dot, PReLU, Reshape
+import numpy as np
 from keras import backend as K
-from constants import *
+from keras.engine import Input, Model, Layer
+from keras.layers import (
+    concatenate, Lambda, Dense, Dropout, Embedding, LSTM, Bidirectional, multiply, Concatenate,
+    Flatten, ConvLSTM2D, Conv2D, Conv1D, MaxPooling1D, Multiply, Add, Average, Maximum, Dot, PReLU,
+    Reshape
+)
+
+from .constants import *
 
 
 # 'pseudo' metric - not working as expected
@@ -40,7 +45,8 @@ class NonMasking(Layer):
 
 
 def get_input_layers(names, max_len):
-    # define basic four input layers - for warrant0, warrant1, reason, claim, debateTitle, debateInfo
+    # define basic four input layers - for warrant0, warrant1, reason, claim, debateTitle,
+    # debateInfo
     il = list()
     for name in names:
         il.append(Input(shape=(max_len,), dtype='int32', name="sequence_layer_input_{}".format(name)))
@@ -260,7 +266,7 @@ def get_model(options: dict, embedding: np.ndarray):
         dense1 = Dense(int(lstm_size * dense_factor), activation=activation1, name='dense_main')(dropout_layer)
         output_input = dense1
 
-    # --- Main model -----------------------------------------------------------------------------------------
+    # --- Main model ------------------------------------------------------------------------------
 
     # LSTM_05 - process reason and claim with each warrant independently
     # without suffix: multiply - no good results
@@ -279,7 +285,7 @@ def get_model(options: dict, embedding: np.ndarray):
         dense = Dense(int(lstm_size * dense_factor), activation=activation1, name='dense_w')(dropout_layer)
         output_input = dense
 
-    # --- more variants --------------------------------------------------------------------------------------
+    # --- more variants ---------------------------------------------------------------------------
 
     # LSTM_05 variant using Advanced Activation Function
     elif classifier[:7] == 'LSTM_15':
@@ -299,7 +305,8 @@ def get_model(options: dict, embedding: np.ndarray):
         dense = PReLU()(dense)
         output_input = dense
 
-    # LSTM_06 - similar to LSTM_05, but concatenates claim and reson before merging with warrants and uses dot product
+    # LSTM_06 - similar to LSTM_05, but concatenates claim and reson before merging with
+    # warrants and uses dot product
     elif classifier == 'LSTM_06':
         il = get_input_layers(names, padding)
         el = embed_inputs(il, embedding, padding)
@@ -339,9 +346,10 @@ def get_model(options: dict, embedding: np.ndarray):
         dense = Dense(int(lstm_size * dense_factor), activation=activation1, name='dense_w')(dropout_layer)
         output_input = dense
 
-    # --- CNN --------------------------------------------------------------------------------------------
+    # --- CNN -------------------------------------------------------------------------------------
 
-    # CNN_LSTM_02 - using multiple (parallel) CNN filters before the LSTM. only warrant 0 and 1 are used!
+    # CNN_LSTM_02 - using multiple (parallel) CNN filters before the LSTM. only warrant 0 and 1
+    # are used!
     elif classifier == 'CNN_LSTM_02':
         il = get_input_layers(names, padding)
         el = embed_inputs(il, embedding, padding, masking=False)
@@ -355,8 +363,8 @@ def get_model(options: dict, embedding: np.ndarray):
         dense1 = Dense(int(lstm_size * dense_factor), activation=activation1, name='dense_main')(dropout_layer)
         output_input = dense1
 
-    # CNN_LSTM_02b - like CNN_LSTM_02, but uses custom activation function on all layers (reLu by default)
-    # more efficient, but bad results
+    # CNN_LSTM_02b - like CNN_LSTM_02, but uses custom activation function on all layers (reLu
+    # by default) more efficient, but bad results
     elif classifier == 'CNN_LSTM_02b':
         il = get_input_layers(names, padding)
         el = embed_inputs(il, embedding, padding, masking=False)
@@ -370,7 +378,8 @@ def get_model(options: dict, embedding: np.ndarray):
         dense1 = Dense(int(lstm_size * dense_factor), activation=activation1, name='dense_main')(dropout_layer)
         output_input = dense1
 
-    # using ConvLSTM2D layer and all input layers short of debate - not working yet because of input shape (5d)
+    # using ConvLSTM2D layer and all input layers short of debate - not working yet because of
+    # input shape (5d)
     elif classifier == 'CNN_LSTM_03':
         il = get_input_layers(names, padding)
         el = embed_inputs(il, embedding, padding)
@@ -380,7 +389,8 @@ def get_model(options: dict, embedding: np.ndarray):
         dense1 = Dense(int(lstm_size * dense_factor), activation=activation1, name='dense_main')(dropout_layer)
         output_input = dense1
 
-    # using ConvLSTM2D layer, like CNN_LSTM_03, but more simple without additional layers - also not working
+    # using ConvLSTM2D layer, like CNN_LSTM_03, but more simple without additional layers - also
+    # not working
     elif classifier == 'CNN_LSTM_04':
         il = get_input_layers(names, padding)
         el = embed_inputs(il, embedding, padding)
@@ -405,7 +415,8 @@ def get_model(options: dict, embedding: np.ndarray):
         dense1 = Dense(int(lstm_size * dense_factor), activation=activation1, name='dense_main')(dropout_layer)
         output_input = dense1
 
-    # using ConvLSTM2D layer, like CNN_LSTM_03, but more simple without additional layers - also not working
+    # using ConvLSTM2D layer, like CNN_LSTM_03, but more simple without additional layers - also
+    # not working
     elif classifier == 'CNN_01':
         il = get_input_layers(names, padding)
         el = embed_inputs(il, embedding, padding, masking=False)
@@ -413,7 +424,8 @@ def get_model(options: dict, embedding: np.ndarray):
         conc = concatenate(cnn[:2])
         output_input = Bidirectional(LSTM(lstm_size, dropout=0.2))(conc)
 
-    # using ConvLSTM2D layer, like CNN_LSTM_03, but more simple without additional layers - also not working
+    # using ConvLSTM2D layer, like CNN_LSTM_03, but more simple without additional layers - also
+    # not working
     elif classifier == 'CNN_02':
         il = get_input_layers(names, padding)
         el = embed_inputs(il, embedding, padding, masking=False)
@@ -421,7 +433,8 @@ def get_model(options: dict, embedding: np.ndarray):
         cnn = Conv1D(padding, (5,), activation='relu')(conc)
         output_input = Bidirectional(LSTM(lstm_size, dropout=0.2))(cnn)
 
-    # using ConvLSTM2D layer, like CNN_LSTM_03, but more simple without additional layers - also not working
+    # using ConvLSTM2D layer, like CNN_LSTM_03, but more simple without additional layers - also
+    # not working
     elif classifier == 'CNN_03':
         il = get_input_layers(names, padding)
         print(il[0].shape)
@@ -437,9 +450,10 @@ def get_model(options: dict, embedding: np.ndarray):
         output_input = Bidirectional(LSTM(lstm_size, dropout=0.2))(cnn)
         print(output_input.shape)
 
-    # --- ATTENTION ------------------------------------------------------------------------------------
+    # --- ATTENTION -------------------------------------------------------------------------------
 
-    # based on ATT_LSTM_01 (https://github.com/philipperemy/keras-attention-mechanism/blob/master/attention_dense.py)
+    # based on ATT_LSTM_01
+    # (https://github.com/philipperemy/keras-attention-mechanism/blob/master/attention_dense.py)
     # too random
     elif classifier == 'ATT_LSTM_02':
         il = get_input_layers(names, padding)
@@ -519,9 +533,11 @@ def get_baseline_model(options: dict, embedding: np.ndarray):
     dense1 = Dense(int(lstm_size), activation=activation1)(dropout_layer)
     output_layer = Dense(1, activation=activation2)(dense1)
 
-    model = Model(inputs=[sequence_layer_warrant0_input, sequence_layer_warrant1_input, sequence_layer_reason_input,
-                          sequence_layer_claim_input, sequence_layer_debate_title_input,
-                          sequence_layer_debate_info_input], outputs=output_layer)
+    model = Model(inputs=[
+        sequence_layer_warrant0_input, sequence_layer_warrant1_input, sequence_layer_reason_input,
+        sequence_layer_claim_input, sequence_layer_debate_title_input,
+        sequence_layer_debate_info_input
+    ], outputs=output_layer)
     model.compile(loss=loss, optimizer=optimizer, metrics=['accuracy', dev_pred])
 
     return model

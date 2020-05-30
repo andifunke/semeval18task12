@@ -1,14 +1,18 @@
-""" train a baseline SVM model """
-import six.moves.cPickle as cPickle
+"""
+Trains a baseline SVM model.
+"""
+
 import numpy as np
 np.random.seed(0)
 import pandas as pd
+import six.moves.cPickle as cPickle
+from gensim.models import word2vec as wv
 from sklearn import svm, preprocessing
 from sklearn.metrics import accuracy_score
-from constants import EMB_DIR, CONTENT, CONTENT_MIN, LABEL
-from preprocessing import load_data, add_swap, split_train_dev_test, pad, get_vectors
-from argument_parser import get_options
-from gensim.models import word2vec as wv
+
+from .argument_parser import get_options
+from .constants import EMB_DIR, CONTENT, CONTENT_MIN, LABEL
+from .preprocessing import load_data, add_swap, split_train_dev_test, pad, get_vectors
 
 
 def get_xy(df: pd.DataFrame, options, padding_size=54):
@@ -93,7 +97,7 @@ def train(predict=False, proba=False, embedding=None, kernel=None, c=None, scale
         df_dev = load_data('dev', lc=options['lowercase'])
         df_test = load_data('test', lc=options['lowercase'])
 
-    # upsampling the train set
+    # up-sampling the train set
     df_train = add_swap(df_train)
     # get X and y vectors from the splits
     x_train, y_train = get_xy(df_train, options=options)

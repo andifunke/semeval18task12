@@ -1,16 +1,17 @@
 import random
 import re
 from os import listdir
-import pandas as pd
+
+import matplotlib.cm as cm
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
 from matplotlib import gridspec
+from matplotlib.colors import Normalize
 from matplotlib.ticker import LinearLocator
 from pandas.core.generic import NDFrame
 from tabulate import tabulate
-import matplotlib.cm as cm
-from matplotlib.colors import Normalize
-import numpy as np
-import seaborn as sns
 
 # making stuff more human readable
 AXES = {
@@ -199,7 +200,7 @@ def aggregate_group(dfs, df_descriptions, keys, to_latex=False):
     dfs can be a single DataFrame or list/tuple of DataFrame.
     prints out some interesting aggregations for given keys.
     """
-    print('********************************************************************************************************')
+    print('*' * 100)
     print('AGGREGATIONS FOR KEYED GROUP:', keys)
     print()
 
@@ -245,7 +246,7 @@ def aggregate_group(dfs, df_descriptions, keys, to_latex=False):
         print("mean of all columns - sorted by {}:".format(main_metric))
         tprint(group.mean()[columns_reduced].sort_values(main_metric, ascending=False), to_latex=to_latex)
 
-    print('********************************************************************************************************')
+    print('*' * 100)
 
 
 def load_results(directory=None):
@@ -452,7 +453,8 @@ if __name__ == '__main__':
         # '/home/andreas/Schreibtisch/out/',
         '/media/andreas/Linux_Data/hpc-semeval/alt_split_odd_both/',
         fname='alt_split_odd_2560_small',
-                           # ts_filter=['2018-03-01_18-30-24-504362', '2018-03-01_18-14-17-396595'],
-                           # ts_filter=['2018-03-01_16-05-28-331497', '2018-03-01_16-19-01-272353'],
-                           )
+        # TODO: clean up
+        # ts_filter=['2018-03-01_18-30-24-504362', '2018-03-01_18-14-17-396595'],
+        # ts_filter=['2018-03-01_16-05-28-331497', '2018-03-01_16-19-01-272353'],
+       )
     # reports_evaluator_main('../out/', fname='test')

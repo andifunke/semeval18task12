@@ -1,15 +1,19 @@
-""" combining predictions based on votes by a set of answer files """
-import pandas as pd
+"""
+Combines predictions based on votes by a set of answer files.
+"""
+
+import re
+from os import listdir
+
+import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+import seaborn as sns
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 from sklearn.metrics import accuracy_score
-from os import listdir
-import re
-import matplotlib.pyplot as plt
-from constants import LABEL
-from preprocessing import get_train_dev_test
-from results_evaluator import tprint
-import seaborn as sns
+
+from .constants import LABEL
+from .preprocessing import get_train_dev_test
 
 
 def vote(y_true, y_pred, conf):
@@ -20,7 +24,7 @@ def vote(y_true, y_pred, conf):
 
     """ majority vote """
     pred = np.mean(y_pred, axis=0)
-    # in case of a tie use the predictions from the condifdence vote
+    # in case of a tie use the predictions from the confidence vote
     tie = np.isclose(pred, 0.5)
     pred[tie] = conf_vote[tie]
     pred = (pred >= 0.5)
@@ -180,6 +184,7 @@ def main():
 
 
 if __name__ == '__main__':
+    # TODO: clean up code or add argument flags
     # main()
     # df1 = pd.read_csv('../out/orig-split.csv', sep='\t')
     df2 = pd.read_csv('../out/alt-split_2560.csv', sep='\t')

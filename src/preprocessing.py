@@ -1,15 +1,19 @@
-""" pre-tokenizes and case-folds the data set to prevent randomness """
-import os
+"""
+Tokenizes and case-folds the data-set to prevent randomness.
+"""
+
 import ast
 import json
+import os
 
 import numpy as np
 np.random.seed(0)
-
 import pandas as pd
-from sklearn.model_selection import train_test_split
 import spacy
-from constants import FILES, WARRANT0, WARRANT1, LABEL, KEYS, CONTENT
+from sklearn.model_selection import train_test_split
+
+from .constants import FILES, WARRANT0, WARRANT1, LABEL, KEYS, CONTENT
+
 
 PREPRO_PATH = os.path.dirname(os.path.abspath(__file__)) + '/../data/preprocessed/'
 
@@ -52,7 +56,8 @@ def load_embedding(options: dict, seed=0):
     words_to_vectors_df.loc['$start_of_sequence$'] = pd.Series(vector_start_of_sequence)
     words_to_vectors_df.loc['$oov$'] = pd.Series(vector_oov)
 
-    # combine (join) indices and vectors. By doing so, the vectors are placed at the correct position
+    # combine (join) indices and vectors. By doing so, the vectors are placed at the correct
+    # position
     indices_to_vectors_df = word_indices_df.join(words_to_vectors_df, how='left')
     indices_to_vectors_df.drop('freq', axis=1, inplace=True)
 

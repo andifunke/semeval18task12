@@ -1,4 +1,7 @@
-""" defines constants and files often used in the project """
+"""
+Defines constants and project files.
+"""
+
 ID = '#id'
 SET = 'set'
 LABEL = 'correctLabelW0orW1'
@@ -18,9 +21,7 @@ KEYS = META + CONTENT
 
 FILES = dict(
     dev='../data/dev/dev-full.txt',
-    # dev_true='../data/dev/dev-only-labels.txt',
     test='../data/test/test-full.txt',
-    # test_true='../data/test/test-only-labels.txt',
     train='../data/train/train-full.txt',
     train_swap='../data/train/train-w-swap-full.txt',
 )
@@ -82,5 +83,3 @@ EMB_FILES = dict(
     ce_wiki_i20_100_lc="custom_embedding_w2v_hs_iter20_sg_100_lc_wiki.vec",
     ce_wiki_i20_300_lc="custom_embedding_w2v_hs_iter20_sg_300_lc_wiki.vec",
 )
-
-

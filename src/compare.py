@@ -1,11 +1,15 @@
-""" simple script to compare dev and test accuracy of answer files in dicretory d """
-from os import listdir
-import pandas as pd
-import matplotlib.pyplot as plt
-import re
-from sklearn.metrics import accuracy_score
-from constants import *
+"""
+Compares dev and test accuracy of answer files.
+"""
 
+import re
+from os import listdir
+
+import matplotlib.pyplot as plt
+import pandas as pd
+from sklearn.metrics import accuracy_score
+
+from .constants import FILES, ID
 
 dev_true = pd.read_csv(FILES['dev'], sep='\t', index_col=ID, usecols=[0, 3], names=[ID, 'true'],
                        header=0)

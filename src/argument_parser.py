@@ -1,7 +1,11 @@
-""" parsing arguments and setting default values """
-import os
+"""
+Parses arguments and sets default values.
+"""
+
 import argparse
-from constants import *
+import os
+
+from .constants import EMB_FILES
 
 
 def get_options():

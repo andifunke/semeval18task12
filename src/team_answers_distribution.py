@@ -1,9 +1,15 @@
-""" the script plots the distribution of the number of overall correctly labeled data points """
+"""
+Plots the distribution of the number of overall correctly labeled data points.
+"""
+
 from os import listdir
-import pandas as pd
-from constants import FILES
+
 import matplotlib.pyplot as plt
+import pandas as pd
 import seaborn as sns
+
+from .constants import FILES
+
 sns.set(color_codes=True)
 
 true = pd.read_csv(FILES['test_true'], sep='\s+', index_col=[0], header=None, comment='#', squeeze=True)

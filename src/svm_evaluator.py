@@ -1,7 +1,11 @@
-""" compare the accuracy distribution of dev and test validation from the SVM models """
+"""
+Compares the accuracy distribution of dev and test validations from the SVM models.
+"""
+
 import random
-import pandas as pd
+
 import matplotlib.pyplot as plt
+import pandas as pd
 import seaborn as sns
 
 DAT_DIR = '../out/'
