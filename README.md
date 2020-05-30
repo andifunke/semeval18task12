@@ -27,7 +27,7 @@ This repository contains code and data of this contribution as described in
   > → https://www.aclweb.org/anthology/S18-1188/
 
 
-Beside custom trained vectors pre-trained vectors from the following sources were used:
+Besides custom trained vectors we also used pre-trained vectors from the following sources:
 
 - https://github.com/facebookresearch/fastText/blob/master/pretrained-vectors.md
 - https://github.com/tca19/dict2vec
