@@ -32,3 +32,14 @@ Besides custom trained vectors we also used pre-trained vectors from the followi
 - https://github.com/facebookresearch/fastText/blob/master/pretrained-vectors.md
 - https://github.com/tca19/dict2vec
 - https://nlp.stanford.edu/projects/glove/
+
+### Hyperparameter Search
+
+Due to the small size of the training set and the models itself, training a model was done fairly
+quickly. This gave us the opportunity to perform a substantial hyperparameter search.
+We performed a broad search first followed by a second, fine-grained search using multiple seeds.
+
+The accuracies are documented here:
+
+- [Broad Search](detailed_results_broad_search.md)
+- [Fine-Grained Search](detailed_results_finegrained_search.md)
