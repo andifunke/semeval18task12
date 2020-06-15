@@ -2,6 +2,12 @@
 
 #### [The Argument Reasoning Comprehension Task](https://competitions.codalab.org/competitions/17327)
 
+<img align="right" width="348" height="348"
+     src="ensemble_alt-split_2560.png" style="margin:10px"
+     alt="ensemble accuracies sorted by single model dev accuracy">
+
+<p style="text-align: left;">
+
 The Research Group for Databases and Information Systems of the
 Heinrich-Heine-University Duesseldorf contributed to the 
 [Argument Reasoning Comprehension Task](https://competitions.codalab.org/competitions/17327)
@@ -26,6 +32,7 @@ This repository contains code and data of this contribution as described in
   > 
   > → https://www.aclweb.org/anthology/S18-1188/
 
+</P>
 
 Besides custom trained vectors we also used pre-trained vectors from the following sources:
 
